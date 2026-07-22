@@ -1,0 +1,411 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:gerex/features/exercise/domain/entities/exercise.dart';
+import 'package:gerex/features/workout/domain/entities/workout_entities.dart';
+import 'package:gerex/features/workout/domain/repositories/workout_repository.dart';
+
+class WorkoutProvider extends ChangeNotifier {
+  final WorkoutRepository _workoutRepository;
+
+  WorkoutProvider(this._workoutRepository);
+
+  List<Workout> _workouts = [];
+  List<WorkoutSession> _sessions = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  // Active Live Session State
+  Workout? _activeTemplate;
+  String _activeSessionName = '';
+  DateTime? _sessionStartedAt;
+  int _sessionDurationSeconds = 0;
+  Timer? _sessionTimer;
+
+  // Live Sets Logging: Exercise ID -> List of LoggedSets
+  final Map<String, List<LoggedSet>> _liveSets = {};
+  final List<Exercise> _liveExercisesOrder = [];
+
+  // Rest Timer State
+  int _restTimeRemaining = 0;
+  int _restTimerTotal = 0;
+  Timer? _restTimer;
+  bool _isRestActive = false;
+
+  // Getters
+  List<Workout> get workouts => _workouts;
+  List<WorkoutSession> get sessions => _sessions;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+
+  bool get isSessionActive => _sessionStartedAt != null;
+  String get activeSessionName => _activeSessionName;
+  int get sessionDurationSeconds => _sessionDurationSeconds;
+  List<Exercise> get liveExercises => _liveExercisesOrder;
+  Map<String, List<LoggedSet>> get liveSets => _liveSets;
+
+  int get restTimeRemaining => _restTimeRemaining;
+  int get restTimerTotal => _restTimerTotal;
+  bool get isRestActive => _isRestActive;
+
+  // ----------------------------------------------------
+  // Templates & Sessions Data Fetching
+  // ----------------------------------------------------
+
+  Future<void> fetchWorkouts() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _workoutRepository.getWorkouts();
+
+    result.fold(
+      onSuccess: (data) {
+        _workouts = data;
+        _isLoading = false;
+      },
+      onFailure: (failure) {
+        _errorMessage = failure.message;
+        _isLoading = false;
+      },
+    );
+    notifyListeners();
+  }
+
+  Future<void> fetchSessions() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _workoutRepository.getWorkoutSessions();
+
+    result.fold(
+      onSuccess: (data) {
+        _sessions = data;
+        _isLoading = false;
+      },
+      onFailure: (failure) {
+        _errorMessage = failure.message;
+        _isLoading = false;
+      },
+    );
+    notifyListeners();
+  }
+
+  Future<bool> createWorkoutTemplate(
+    String name,
+    List<WorkoutExercise> exercises,
+  ) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final workout = Workout(
+      id: '',
+      name: name,
+      createdAt: DateTime.now(),
+      exercises: const [],
+    );
+
+    final result = await _workoutRepository.createWorkout(workout, exercises);
+
+    return result.fold(
+      onSuccess: (newWorkout) {
+        _workouts.insert(0, newWorkout);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      onFailure: (failure) {
+        _errorMessage = failure.message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+  }
+
+  // ----------------------------------------------------
+  // Live Workout Session Controller
+  // ----------------------------------------------------
+
+  void startWorkoutSession(Workout template) {
+    if (isSessionActive) return; // session already running
+
+    _activeTemplate = template;
+    _activeSessionName = template.name;
+    _sessionStartedAt = DateTime.now();
+    _sessionDurationSeconds = 0;
+
+    _liveSets.clear();
+    _liveExercisesOrder.clear();
+
+    for (final templateEx in template.exercises) {
+      if (templateEx.exercise == null) continue;
+      final exercise = templateEx.exercise!;
+      _liveExercisesOrder.add(exercise);
+
+      final sets = List.generate(
+        templateEx.sets,
+        (index) => LoggedSet(
+          id: '',
+          sessionId: '',
+          exerciseId: exercise.id,
+          exercise: exercise,
+          setNumber: index + 1,
+          reps: templateEx.reps,
+          weight: templateEx.weight,
+          isCompleted: false,
+        ),
+      );
+      _liveSets[exercise.id] = sets;
+    }
+
+    _startDurationTimer();
+    notifyListeners();
+  }
+
+  void startEmptyWorkoutSession() {
+    if (isSessionActive) return;
+
+    _activeTemplate = null;
+    _activeSessionName = 'Custom Quick Workout';
+    _sessionStartedAt = DateTime.now();
+    _sessionDurationSeconds = 0;
+
+    _liveSets.clear();
+    _liveExercisesOrder.clear();
+
+    _startDurationTimer();
+    notifyListeners();
+  }
+
+  void addExerciseToSession(Exercise exercise) {
+    if (!isSessionActive) return;
+    if (_liveSets.containsKey(exercise.id)) return; // already added
+
+    _liveExercisesOrder.add(exercise);
+    _liveSets[exercise.id] = [
+      LoggedSet(
+        id: '',
+        sessionId: '',
+        exerciseId: exercise.id,
+        exercise: exercise,
+        setNumber: 1,
+        reps: 10,
+        weight: 0,
+        isCompleted: false,
+      ),
+    ];
+    notifyListeners();
+  }
+
+  void addSetToExercise(String exerciseId) {
+    final sets = _liveSets[exerciseId];
+    if (sets == null || sets.isEmpty) return;
+
+    final lastSet = sets.last;
+    sets.add(
+      LoggedSet(
+        id: '',
+        sessionId: '',
+        exerciseId: exerciseId,
+        exercise: lastSet.exercise,
+        setNumber: sets.length + 1,
+        reps: lastSet.reps,
+        weight: lastSet.weight,
+        isCompleted: false,
+      ),
+    );
+    notifyListeners();
+  }
+
+  void removeSetFromExercise(String exerciseId, int index) {
+    final sets = _liveSets[exerciseId];
+    if (sets == null || sets.length <= 1) return;
+
+    sets.removeAt(index);
+    // Re-index sets
+    for (int i = 0; i < sets.length; i++) {
+      sets[i] = LoggedSet(
+        id: sets[i].id,
+        sessionId: sets[i].sessionId,
+        exerciseId: sets[i].exerciseId,
+        exercise: sets[i].exercise,
+        setNumber: i + 1,
+        reps: sets[i].reps,
+        weight: sets[i].weight,
+        isCompleted: sets[i].isCompleted,
+      );
+    }
+    notifyListeners();
+  }
+
+  void updateSetValues(
+    String exerciseId,
+    int index, {
+    int? reps,
+    double? weight,
+  }) {
+    final sets = _liveSets[exerciseId];
+    if (sets == null) return;
+
+    final current = sets[index];
+    sets[index] = LoggedSet(
+      id: current.id,
+      sessionId: current.sessionId,
+      exerciseId: current.exerciseId,
+      exercise: current.exercise,
+      setNumber: current.setNumber,
+      reps: reps ?? current.reps,
+      weight: weight ?? current.weight,
+      isCompleted: current.isCompleted,
+    );
+    notifyListeners();
+  }
+
+  void toggleSetComplete(String exerciseId, int index) {
+    final sets = _liveSets[exerciseId];
+    if (sets == null) return;
+
+    final current = sets[index];
+    final nextState = !current.isCompleted;
+
+    sets[index] = LoggedSet(
+      id: current.id,
+      sessionId: current.sessionId,
+      exerciseId: current.exerciseId,
+      exercise: current.exercise,
+      setNumber: current.setNumber,
+      reps: current.reps,
+      weight: current.weight,
+      isCompleted: nextState,
+    );
+
+    // If completed, trigger rest timer
+    if (nextState) {
+      _triggerRestTimerForExercise(exerciseId);
+    }
+
+    notifyListeners();
+  }
+
+  void _triggerRestTimerForExercise(String exerciseId) {
+    // Check if we can find rest time in templates
+    int rest = 60; // default 60s
+    if (_activeTemplate != null) {
+      final match = _activeTemplate!.exercises
+          .where((e) => e.exerciseId == exerciseId);
+      if (match.isNotEmpty) {
+        rest = match.first.restTime;
+      }
+    }
+    startRestTimer(rest);
+  }
+
+  // ----------------------------------------------------
+  // Timer Helpers
+  // ----------------------------------------------------
+
+  void _startDurationTimer() {
+    _sessionTimer?.cancel();
+    _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _sessionDurationSeconds++;
+      notifyListeners();
+    });
+  }
+
+  void startRestTimer(int duration) {
+    _restTimer?.cancel();
+    _restTimerTotal = duration;
+    _restTimeRemaining = duration;
+    _isRestActive = true;
+    notifyListeners();
+
+    _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_restTimeRemaining > 0) {
+        _restTimeRemaining--;
+        notifyListeners();
+      } else {
+        _isRestActive = false;
+        _restTimer?.cancel();
+        notifyListeners();
+      }
+    });
+  }
+
+  void skipRestTimer() {
+    _isRestActive = false;
+    _restTimer?.cancel();
+    _restTimeRemaining = 0;
+    notifyListeners();
+  }
+
+  // ----------------------------------------------------
+  // Finish Session
+  // ----------------------------------------------------
+
+  Future<bool> finishWorkoutSession() async {
+    if (!isSessionActive) return false;
+
+    _isLoading = true;
+    notifyListeners();
+
+    // 1. Gather all logged sets that are completed (or all logged sets)
+    final flatSets = <LoggedSet>[];
+    for (final exerciseId in _liveSets.keys) {
+      final sets = _liveSets[exerciseId] ?? [];
+      flatSets.addAll(sets);
+    }
+
+    final session = WorkoutSession(
+      id: '',
+      workoutId: _activeTemplate?.id,
+      name: _activeSessionName,
+      startedAt: _sessionStartedAt!,
+      completedAt: DateTime.now(),
+      durationSeconds: _sessionDurationSeconds,
+      loggedSets: const [],
+    );
+
+    final result = await _workoutRepository.saveWorkoutSession(session, flatSets);
+
+    return result.fold(
+      onSuccess: (savedSession) {
+        _sessions.insert(0, savedSession);
+        _stopSessionState();
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      },
+      onFailure: (failure) {
+        _errorMessage = failure.message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+  }
+
+  void cancelWorkoutSession() {
+    _stopSessionState();
+    notifyListeners();
+  }
+
+  void _stopSessionState() {
+    _sessionTimer?.cancel();
+    _restTimer?.cancel();
+    _sessionStartedAt = null;
+    _sessionDurationSeconds = 0;
+    _restTimeRemaining = 0;
+    _isRestActive = false;
+    _liveSets.clear();
+    _liveExercisesOrder.clear();
+    _activeTemplate = null;
+  }
+
+  @override
+  void dispose() {
+    _sessionTimer?.cancel();
+    _restTimer?.cancel();
+    super.dispose();
+  }
+}
