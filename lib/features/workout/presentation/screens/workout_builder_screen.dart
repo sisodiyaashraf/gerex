@@ -32,79 +32,75 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
     final workoutProvider = Provider.of<WorkoutProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Template'),
-      ),
+      appBar: AppBar(title: const Text('Create Template')),
       body: LiquidBackground(
         child: Form(
           key: _formKey,
           child: Column(
-          children: [
-            // Template Name Input
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Template Name',
-                  hintText: 'e.g. Upper Body Focus',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+            children: [
+              // Template Name Input
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Template Name',
+                    hintText: 'e.g. Upper Body Focus',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'Please enter a name' : null,
+                  onSaved: (val) => _name = val ?? '',
                 ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Please enter a name' : null,
-                onSaved: (val) => _name = val ?? '',
               ),
-            ),
 
-            // Exercises Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Exercises',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _showAddExerciseSelector(context),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Exercise'),
-                  ),
-                ],
+              // Exercises Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Exercises', style: theme.textTheme.titleLarge),
+                    TextButton.icon(
+                      onPressed: () => _showAddExerciseSelector(context),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Exercise'),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const Divider(),
+              const Divider(),
 
-            // List of exercises in template
-            Expanded(
-              child: _exercises.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No exercises added yet.\nTap "Add Exercise" to start.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
+              // List of exercises in template
+              Expanded(
+                child: _exercises.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No exercises added yet.\nTap "Add Exercise" to start.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _exercises.length,
-                      itemBuilder: (context, index) {
-                        final item = _exercises[index];
-                        return GlassContainer(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _exercises.length,
+                        itemBuilder: (context, index) {
+                          final item = _exercises[index];
+                          return GlassContainer(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -166,8 +162,10 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                                     Expanded(
                                       child: TextFormField(
                                         initialValue: item.weight.toString(),
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(decimal: true),
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                              decimal: true,
+                                            ),
                                         decoration: const InputDecoration(
                                           labelText: 'Weight (kg)',
                                           isDense: true,
@@ -202,61 +200,61 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                               ],
                             ),
                           );
-                      },
-                    ),
-            ),
-
-            // Save Panel
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                ),
-                onPressed: workoutProvider.isLoading
-                    ? null
-                    : () async {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          _formKey.currentState?.save();
-                          if (_exercises.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Add at least one exercise.'),
-                              ),
-                            );
-                            return;
-                          }
-
-                          final success = await workoutProvider
-                              .createWorkoutTemplate(_name, _exercises);
-
-                          if (success && context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Workout template saved!'),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                child: workoutProvider.isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text(
-                        'Save Template',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        },
                       ),
               ),
-            ),
-          ],
+
+              // Save Panel
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                  onPressed: workoutProvider.isLoading
+                      ? null
+                      : () async {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            _formKey.currentState?.save();
+                            if (_exercises.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Add at least one exercise.'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final success = await workoutProvider
+                                .createWorkoutTemplate(_name, _exercises);
+
+                            if (success && context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Workout template saved!'),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: workoutProvider.isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text(
+                          'Save Template',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _updateExercise(
     int index, {

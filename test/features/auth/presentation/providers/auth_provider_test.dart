@@ -16,8 +16,8 @@ class MockAuthRepository implements AuthRepository {
       if (mockUser != null) {
         return Success(mockUser!);
       }
-      return Success(
-        const User(
+      return const Success(
+        User(
           id: 'user_123',
           appMetadata: {},
           userMetadata: {},
