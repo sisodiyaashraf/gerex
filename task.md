@@ -1,0 +1,10 @@
+- [x] Create `lib/core/presentation/utils/responsive_helper.dart` with screen categorization and BuildContext extensions
+- [x] Audit and refactor `lib/features/auth/presentation/screens/onboarding_screen.dart` layout scaling and scroll contexts
+- [x] Harden `lib/features/auth/presentation/screens/login_screen.dart` text fields and margins for keyboard overlay safety
+- [x] Apply screen scaling & safe area margins to `lib/features/workout/presentation/screens/workouts_tab.dart`
+- [x] Secure stats widgets, body weight cards and preference settings in `lib/features/profile/presentation/screens/profile_screen.dart` against text scaling overflows
+- [x] Harden streaks widgets and consistency blocks in `lib/features/metrics/presentation/screens/metrics_dashboard_screen.dart`
+- [x] Harden chat bubbles limits, input floating offsets and empty states in `lib/features/ai/presentation/screens/ai_coach_chat_screen.dart`
+- [x] Fix builder cards constraints and alternatives modal sheet dimensions in `lib/features/workout/presentation/screens/workout_builder_screen.dart`
+- [x] Adjust glass blur rendering parameters in `lib/core/presentation/widgets/glass_container.dart` for optimized frame rates
+- [x] Verify clean compilation and full unit tests stability

@@ -1,6 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+class GerexGradients {
+  GerexGradients._();
+
+  static const LinearGradient darkBaseBackground = LinearGradient(
+    colors: [Color(0xFF070B19), Color(0xFF0F172A)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient lightBaseBackground = LinearGradient(
+    colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient primaryCTA = LinearGradient(
+    colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static final LinearGradient darkGlassCard = LinearGradient(
+    colors: [
+      Colors.white.withValues(alpha: 0.07),
+      Colors.white.withValues(alpha: 0.01),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static final LinearGradient lightGlassCard = LinearGradient(
+    colors: [
+      Colors.black.withValues(alpha: 0.03),
+      Colors.black.withValues(alpha: 0.005),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient accentBorder = LinearGradient(
+    colors: [Color(0xFFA78BFA), Color(0xFF60A5FA)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+}
+
 class AppTheme {
   AppTheme._();
 

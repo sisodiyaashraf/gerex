@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/exercise/presentation/screens/exercise_library_screen.dart';
 import '../../features/metrics/presentation/screens/metrics_dashboard_screen.dart';
 import '../../features/workout/presentation/screens/live_session_screen.dart';
@@ -11,7 +12,11 @@ import '../../features/workout/presentation/screens/workouts_tab.dart';
 import '../../features/ai/presentation/screens/ai_coach_chat_screen.dart';
 import '../../features/ai/presentation/screens/ai_plan_generator_screen.dart';
 import '../../features/ai/presentation/screens/pose_feedback_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../di/injection_container.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../presentation/widgets/glass_container.dart';
+import '../theme/app_theme.dart';
 
 class AppRouter {
   AppRouter._();
@@ -24,13 +29,23 @@ class AppRouter {
       final isAuthenticated = authProvider.isAuthenticated;
       final isLoggingIn = state.matchedLocation == '/login';
       final isSplashing = state.matchedLocation == '/splash';
+      final isOnboarding = state.matchedLocation == '/onboarding';
+
+      if (!authProvider.isInitialized) {
+        return '/splash';
+      }
+
+      if (!authProvider.onboardingCompleted) {
+        if (isOnboarding) return null;
+        return '/onboarding';
+      }
 
       if (!isAuthenticated) {
-        if (isSplashing) return null;
+        if (isLoggingIn || isOnboarding) return null;
         return '/login';
       }
 
-      if (isAuthenticated && (isLoggingIn || isSplashing)) {
+      if (isAuthenticated && (isLoggingIn || isSplashing || isOnboarding)) {
         return '/';
       }
 
@@ -40,6 +55,10 @@ class AppRouter {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -69,6 +88,10 @@ class AppRouter {
         path: '/pose-feedback',
         builder: (context, state) => const PoseFeedbackScreen(),
       ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
     ],
   );
 }
@@ -94,36 +117,75 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _tabs,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (idx) {
-          setState(() {
-            _currentIndex = idx;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.fitness_center_outlined),
-            selectedIcon: Icon(Icons.fitness_center_rounded),
-            label: 'Workouts',
+      extendBody: true, // Allows body stack to bleed behind navigation overlay
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _tabs,
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.library_books_outlined),
-            selectedIcon: Icon(Icons.library_books_rounded),
-            label: 'Exercises',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.analytics_outlined),
-            selectedIcon: Icon(Icons.analytics_rounded),
-            label: 'Analytics',
+          
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 12 + MediaQuery.of(context).padding.bottom,
+            child: GlassContainer(
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              borderRadius: 28,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(0, FontAwesomeIcons.dumbbell, 'Workouts', theme),
+                  _buildNavItem(1, FontAwesomeIcons.bookOpen, 'Exercises', theme),
+                  _buildNavItem(2, FontAwesomeIcons.chartSimple, 'Analytics', theme),
+                ],
+              ),
+            ),
           ),
         ],
-        backgroundColor: theme.colorScheme.surface,
-        indicatorColor: theme.colorScheme.primaryContainer,
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, dynamic icon, String label, ThemeData theme) {
+    final isActive = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: isActive ? GerexGradients.primaryCTA : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(
+              icon,
+              size: isActive ? 18.0 : 16.0,
+              color: isActive ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            if (isActive) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

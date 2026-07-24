@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/features/ai/domain/repositories/ai_repository.dart';
 import 'package:gerex/core/error/failures.dart';
@@ -34,6 +36,30 @@ class MockAIRepository implements AIRepository {
       return const FailureResult(ServerFailure('Coach failed to respond'));
     }
   }
+
+  @override
+  Future<Result<String, Failure>> getDailyInsight({
+    required List<String> recentWorkoutsSummary,
+  }) async {
+    return const Success('Insight: Consistency builds progress.');
+  }
+
+  @override
+  Future<Result<List<String>, Failure>> getExerciseSwap({
+    required String exerciseName,
+    required String muscleGroup,
+  }) async {
+    return const Success(['Swap A', 'Swap B', 'Swap C']);
+  }
+
+  @override
+  Future<Result<String, Failure>> getProgressSummary({
+    required List<String> sessionsSummary,
+  }) async {
+    return const Success(
+      'Progress Summary: You are performing exceptionally well.',
+    );
+  }
 }
 
 void main() {
@@ -41,7 +67,12 @@ void main() {
     late MockAIRepository mockRepo;
     late AIProvider aiProvider;
 
-    setUp(() {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      if (!di.sl.isRegistered<SharedPreferences>()) {
+        di.sl.registerLazySingleton<SharedPreferences>(() => prefs);
+      }
       mockRepo = MockAIRepository();
       aiProvider = AIProvider(mockRepo);
     });
@@ -60,7 +91,10 @@ void main() {
         experienceLevel: 'Intermediate',
       );
 
-      expect(aiProvider.generatedWorkoutPlan, 'Generated Weekly Routine Split Plan');
+      expect(
+        aiProvider.generatedWorkoutPlan,
+        'Generated Weekly Routine Split Plan',
+      );
       expect(aiProvider.isPlanLoading, false);
       expect(aiProvider.planError, null);
       expect(mockRepo.planCallCount, 1);
@@ -95,7 +129,31 @@ void main() {
       expect(aiProvider.chatMessages[0]['role'], 'user');
       expect(aiProvider.chatMessages[0]['text'], 'Should I eat bananas?');
       expect(aiProvider.chatMessages[1]['role'], 'model');
-      expect(aiProvider.chatMessages[1]['text'], 'Coach Gerex: Keep pushing your limits!');
+      expect(
+        aiProvider.chatMessages[1]['text'],
+        'Coach Gerex: Keep pushing your limits!',
+      );
+    });
+
+    test('loadDailyInsight success sets dailyInsight text', () async {
+      await aiProvider.loadDailyInsight([]);
+      expect(aiProvider.dailyInsight, 'Insight: Consistency builds progress.');
+      expect(aiProvider.isInsightLoading, false);
+    });
+
+    test('loadProgressSummary success sets progressSummary text', () async {
+      await aiProvider.loadProgressSummary([]);
+      expect(
+        aiProvider.progressSummary,
+        'Progress Summary: You are performing exceptionally well.',
+      );
+      expect(aiProvider.isSummaryLoading, false);
+    });
+
+    test('getExerciseAlternatives returns list of swap alternatives', () async {
+      final list = await aiProvider.getExerciseAlternatives('Squat', 'Legs');
+      expect(list.length, 3);
+      expect(list[0], 'Swap A');
     });
   });
 }

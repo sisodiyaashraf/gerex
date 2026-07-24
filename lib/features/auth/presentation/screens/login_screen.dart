@@ -4,6 +4,8 @@ import '../providers/auth_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
+import 'package:gerex/core/presentation/utils/responsive_helper.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -25,14 +27,19 @@ class LoginScreen extends StatelessWidget {
                 // Gym/Sports Branding Header
                 Icon(
                   Icons.fitness_center_rounded,
-                  size: 80,
+                  size: context.responsive.select(
+                    smallPhone: 56.0,
+                    standardPhone: 80.0,
+                    largePhone: 96.0,
+                  ),
                   color: theme.colorScheme.primary,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: context.h(2)),
                 Text(
                   'Gerex',
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.w900,
+                    fontSize: context.sp(32),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -41,10 +48,11 @@ class LoginScreen extends StatelessWidget {
                   'Gym & Sports Exercise Tracker',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    fontSize: context.sp(15),
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
+                SizedBox(height: context.h(4)),
 
                 // Card interface for Sign In
                 GlassContainer(
@@ -54,7 +62,9 @@ class LoginScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Welcome Back',
-                        style: theme.textTheme.titleLarge,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontSize: context.sp(20),
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
@@ -64,10 +74,11 @@ class LoginScreen extends StatelessWidget {
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.6,
                           ),
+                          fontSize: context.sp(14),
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: context.h(2.5)),
 
                       // Error Banner if exists
                       if (authProvider.errorMessage != null) ...[
@@ -132,12 +143,12 @@ class LoginScreen extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.g_mobiledata_rounded,
-                                  size: 28,
-                                  color: theme.colorScheme.primary,
+                                SvgPicture.asset(
+                                  'assets/svg icons/google icon.svg',
+                                  width: 22,
+                                  height: 22,
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 12),
                                 const Text(
                                   'Sign in with Google',
                                   style: TextStyle(

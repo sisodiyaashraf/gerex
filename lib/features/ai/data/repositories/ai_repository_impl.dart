@@ -24,7 +24,7 @@ class AIRepositoryImpl implements AIRepository {
 
     try {
       final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         apiKey: _apiKey,
       );
 
@@ -65,7 +65,7 @@ class AIRepositoryImpl implements AIRepository {
 
     try {
       final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         apiKey: _apiKey,
       );
 
@@ -102,6 +102,112 @@ class AIRepositoryImpl implements AIRepository {
       }
 
       return Success(text);
+    } catch (e) {
+      return FailureResult(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<String, Failure>> getDailyInsight({
+    required List<String> recentWorkoutsSummary,
+  }) async {
+    if (_apiKey.isEmpty || _apiKey == 'placeholder-gemini-key') {
+      return const FailureResult(
+        ServerFailure('Gemini API key is not configured.'),
+      );
+    }
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: _apiKey,
+      );
+
+      final prompt =
+          'Based on the user\'s recent workout sessions: $recentWorkoutsSummary, generate one short, highly personalized fitness insight, recovery tip, or motivational line (maximum 2 sentences). Avoid generic suggestions; be direct, actionable, and encouraging.';
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      final text = response.text;
+
+      if (text == null || text.isEmpty) {
+        return const FailureResult(
+          ServerFailure('Failed to generate daily insight.'),
+        );
+      }
+      return Success(text.trim());
+    } catch (e) {
+      return FailureResult(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<List<String>, Failure>> getExerciseSwap({
+    required String exerciseName,
+    required String muscleGroup,
+  }) async {
+    if (_apiKey.isEmpty || _apiKey == 'placeholder-gemini-key') {
+      return const FailureResult(
+        ServerFailure('Gemini API key is not configured.'),
+      );
+    }
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: _apiKey,
+      );
+
+      final prompt =
+          'Provide exactly 3 exercise alternatives to replace \'$exerciseName\' that target the same muscle group \'$muscleGroup\'. '
+          'Return ONLY a comma-separated list of the exercise names (e.g. \'Push Up, Chest Fly, Dumbbell Press\'). '
+          'Do not return any other text, explanations, or numbers.';
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      final text = response.text;
+
+      if (text == null || text.isEmpty) {
+        return const FailureResult(
+          ServerFailure('Failed to generate exercise swaps.'),
+        );
+      }
+
+      final list = text
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+
+      return Success(list);
+    } catch (e) {
+      return FailureResult(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<String, Failure>> getProgressSummary({
+    required List<String> sessionsSummary,
+  }) async {
+    if (_apiKey.isEmpty || _apiKey == 'placeholder-gemini-key') {
+      return const FailureResult(
+        ServerFailure('Gemini API key is not configured.'),
+      );
+    }
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: _apiKey,
+      );
+
+      final prompt =
+          'Based on the user\'s workout history: $sessionsSummary, generate a natural-language fitness progress recap for the week/month (maximum 3 sentences) summarizing how many times they trained, their primary muscle focus, and their volume/consistency progression. Make it sound professional, motivating, and clean.';
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      final text = response.text;
+
+      if (text == null || text.isEmpty) {
+        return const FailureResult(
+          ServerFailure('Failed to generate progress summary.'),
+        );
+      }
+      return Success(text.trim());
     } catch (e) {
       return FailureResult(ServerFailure(e.toString()));
     }

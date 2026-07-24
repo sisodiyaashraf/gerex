@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gerex/features/exercise/domain/entities/exercise.dart';
 import 'package:gerex/features/workout/domain/entities/workout_entities.dart';
 import 'package:gerex/features/workout/domain/repositories/workout_repository.dart';
+import 'package:gerex/core/utils/logger.dart';
 
 class WorkoutProvider extends ChangeNotifier {
   final WorkoutRepository _workoutRepository;
@@ -64,7 +65,8 @@ class WorkoutProvider extends ChangeNotifier {
         _isLoading = false;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('fetchWorkouts failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
       },
     );
@@ -84,7 +86,8 @@ class WorkoutProvider extends ChangeNotifier {
         _isLoading = false;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('fetchSessions failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
       },
     );
@@ -115,7 +118,8 @@ class WorkoutProvider extends ChangeNotifier {
         return true;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('createWorkoutTemplate failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
         notifyListeners();
         return false;
@@ -377,7 +381,8 @@ class WorkoutProvider extends ChangeNotifier {
         return true;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('saveWorkoutSession failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
         notifyListeners();
         return false;

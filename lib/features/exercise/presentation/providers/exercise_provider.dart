@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../domain/entities/exercise.dart';
 import '../../domain/repositories/exercise_repository.dart';
+import '../../../../core/utils/logger.dart';
 
 class ExerciseProvider extends ChangeNotifier {
   final ExerciseRepository _exerciseRepository;
@@ -20,6 +22,8 @@ class ExerciseProvider extends ChangeNotifier {
   String get searchQuery => _searchQuery;
   String get selectedMuscleGroup => _selectedMuscleGroup;
 
+  Timer? _searchDebounce;
+
   Future<void> fetchExercises() async {
     _isLoading = true;
     _errorMessage = null;
@@ -36,7 +40,8 @@ class ExerciseProvider extends ChangeNotifier {
         _isLoading = false;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('fetchExercises failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
       },
     );
@@ -45,7 +50,10 @@ class ExerciseProvider extends ChangeNotifier {
 
   void updateSearchQuery(String query) {
     _searchQuery = query;
-    fetchExercises();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      fetchExercises();
+    });
   }
 
   void updateMuscleGroup(String muscleGroup) {
@@ -80,7 +88,8 @@ class ExerciseProvider extends ChangeNotifier {
         return true;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('addCustomExercise failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
         notifyListeners();
         return false;

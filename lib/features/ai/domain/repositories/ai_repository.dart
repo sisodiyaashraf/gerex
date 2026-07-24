@@ -12,4 +12,17 @@ abstract class AIRepository {
     required String prompt,
     required List<Map<String, String>> chatHistory,
   });
+
+  Future<Result<String, Failure>> getDailyInsight({
+    required List<String> recentWorkoutsSummary,
+  });
+
+  Future<Result<List<String>, Failure>> getExerciseSwap({
+    required String exerciseName,
+    required String muscleGroup,
+  });
+
+  Future<Result<String, Failure>> getProgressSummary({
+    required List<String> sessionsSummary,
+  });
 }

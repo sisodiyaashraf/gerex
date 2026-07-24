@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../workout/domain/entities/workout_entities.dart';
 import '../../domain/entities/metrics_entities.dart';
 import '../../domain/repositories/metrics_repository.dart';
+import 'package:gerex/core/utils/logger.dart';
 
 class MetricsProvider extends ChangeNotifier {
   final MetricsRepository _metricsRepository;
@@ -44,7 +45,8 @@ class MetricsProvider extends ChangeNotifier {
         _isLoading = false;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('fetchWeightLogs failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
       },
     );
@@ -73,7 +75,8 @@ class MetricsProvider extends ChangeNotifier {
         return true;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('logWeight failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
         notifyListeners();
         return false;
@@ -98,7 +101,8 @@ class MetricsProvider extends ChangeNotifier {
         _isLoading = false;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('fetchVolumeProgression failed', failure.message);
+        _errorMessage = SecureLogger.sanitizeException(failure.message);
         _isLoading = false;
       },
     );

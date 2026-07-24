@@ -20,6 +20,9 @@ dependencies:
   google_mlkit_pose_detection: ^0.12.0
   camera: ^0.10.5
   google_fonts: ^8.2.0
+  font_awesome_flutter: ^11.0.0
+  shared_preferences: ^2.2.3
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -30,7 +33,11 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/app icon/gerexap.png"
+  image_path: "assets/images/app icon/gerex-app-icon.jpeg"
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/.env
+    - assets/images/app icon/
+    - assets/svg icons/

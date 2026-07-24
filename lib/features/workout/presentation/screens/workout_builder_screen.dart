@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
 import '../../domain/entities/workout_entities.dart';
 import '../providers/workout_provider.dart';
+import '../../../exercise/domain/entities/exercise.dart';
+import '../../../ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/validation/validators.dart';
 
 class WorkoutBuilderScreen extends StatefulWidget {
   const WorkoutBuilderScreen({super.key});
@@ -49,8 +52,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Please enter a name' : null,
+                  validator: Validators.validateWorkoutName,
                   onSaved: (val) => _name = val ?? '',
                 ),
               ),
@@ -103,12 +105,44 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        item.exercise?.name ?? 'Exercise',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.exercise?.name ?? 'Exercise',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          GestureDetector(
+                                            onTap: () => _suggestAlternatives(
+                                                context, index, item),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.swap_horiz_rounded,
+                                                  size: 14,
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Suggest Swap',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        theme.colorScheme.primary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     IconButton(
@@ -133,6 +167,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                                           labelText: 'Sets',
                                           isDense: true,
                                         ),
+                                        validator: Validators.validateSetsCount,
                                         onChanged: (val) {
                                           _updateExercise(
                                             index,
@@ -150,6 +185,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                                           labelText: 'Reps',
                                           isDense: true,
                                         ),
+                                        validator: Validators.validateReps,
                                         onChanged: (val) {
                                           _updateExercise(
                                             index,
@@ -170,6 +206,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                                           labelText: 'Weight (kg)',
                                           isDense: true,
                                         ),
+                                        validator: Validators.validateWeight,
                                         onChanged: (val) {
                                           _updateExercise(
                                             index,
@@ -304,7 +341,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
                 itemCount: exProvider.exercises.length,
                 itemBuilder: (context, idx) {
                   final ex = exProvider.exercises[idx];
@@ -332,6 +369,164 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                     },
                   );
                 },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _suggestAlternatives(
+    BuildContext context,
+    int index,
+    WorkoutExercise item,
+  ) {
+    final theme = Theme.of(context);
+    final aiProvider = context.read<AIProvider>();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return GlassContainer(
+          borderRadius: 24,
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
+          child: FutureBuilder<List<String>>(
+            future: aiProvider.getExerciseAlternatives(
+              item.exercise?.name ?? '',
+              item.exercise?.muscleGroup ?? '',
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 20),
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text(
+                      'Analyzing alternatives with Coach AI...',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                );
+              }
+
+              if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'AI swap failed. Please try again.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                );
+              }
+
+              final alternatives = snapshot.data!;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'AI Alternatives for ${item.exercise?.name}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Select an alternative to swap instantly:',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: alternatives.map((altName) {
+                          return Card(
+                            color: Colors.transparent,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              title: Text(
+                                altName,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                'Targets: ${item.exercise?.muscleGroup ?? "Same group"}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              trailing: Icon(
+                                Icons.swap_horiz_rounded,
+                                color: theme.colorScheme.primary,
+                              ),
+                              onTap: () {
+                                final replacement = Exercise(
+                                  id: 'swapped_${DateTime.now().millisecondsSinceEpoch}',
+                                  name: altName,
+                                  muscleGroup: item.exercise?.muscleGroup ?? 'Other',
+                                  equipment: item.exercise?.equipment ?? 'Other',
+                                  instructions: const [],
+                                );
+                                setState(() {
+                                  _exercises[index] = WorkoutExercise(
+                                    id: item.id,
+                                    workoutId: item.workoutId,
+                                    exerciseId: replacement.id,
+                                    exercise: replacement,
+                                    sets: item.sets,
+                                    reps: item.reps,
+                                    weight: item.weight,
+                                    restTime: item.restTime,
+                                    sequenceOrder: item.sequenceOrder,
+                                  );
+                                });
+                                Navigator.pop(context);
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),

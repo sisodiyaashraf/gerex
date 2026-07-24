@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../workout/presentation/providers/workout_provider.dart';
 import '../providers/metrics_provider.dart';
+import '../../../ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/validation/validators.dart';
 
 class MetricsDashboardScreen extends StatefulWidget {
   const MetricsDashboardScreen({super.key});
@@ -23,12 +26,16 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
     });
   }
 
-  void _loadData() {
+  void _loadData({bool forceRefresh = false}) {
     context.read<MetricsProvider>().fetchWeightLogs();
     final workouts = context.read<WorkoutProvider>();
     workouts.fetchSessions().then((_) {
       if (mounted) {
         context.read<MetricsProvider>().computeStreaks(workouts.sessions);
+        context.read<AIProvider>().loadProgressSummary(
+          workouts.sessions,
+          forceRefresh: forceRefresh,
+        );
       }
     });
   }
@@ -52,294 +59,409 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
     final startWeekday = firstDayOfMonth.weekday; // 1 = Monday, 7 = Sunday
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics & Progress'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
-        ],
-      ),
       body: LiquidBackground(
         child: RefreshIndicator(
-        onRefresh: () async {
-          _loadData();
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. Streaks Dashboard Panel
-              GlassContainer(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStreakIndicator(
-                        context,
-                        'Current Streak',
-                        '${metricsProvider.currentStreak} Days',
-                        Icons.local_fire_department_rounded,
-                        theme.colorScheme.primary,
-                      ),
-                      VerticalDivider(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                        thickness: 1,
-                        width: 24,
-                      ),
-                      _buildStreakIndicator(
-                        context,
-                        'Longest Streak',
-                        '${metricsProvider.longestStreak} Days',
-                        Icons.emoji_events_rounded,
-                        theme.colorScheme.secondary,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-              // 2. Consistency Calendar Grid
-              GlassContainer(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Workout Consistency — ${_getMonthName(now.month)} ${now.year}',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      // Weekday labels
-                      const Row(
-                        children: [
-                          _CalendarDayHeader(label: 'M'),
-                          _CalendarDayHeader(label: 'T'),
-                          _CalendarDayHeader(label: 'W'),
-                          _CalendarDayHeader(label: 'T'),
-                          _CalendarDayHeader(label: 'F'),
-                          _CalendarDayHeader(label: 'S'),
-                          _CalendarDayHeader(label: 'S'),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Calendar grid
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 7,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                        ),
-                        itemCount: daysInMonth + (startWeekday - 1),
-                        itemBuilder: (context, index) {
-                          // Before first day of month
-                          if (index < startWeekday - 1) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final day = index - (startWeekday - 2);
-                          final dateStr =
-                              '${now.year}-${now.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
-                          final completed =
-                              metricsProvider.workoutDates.contains(dateStr);
-
-                          return Container(
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: completed
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.surfaceContainerHighest
-                                      .withValues(alpha: 0.4),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: completed
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.outline.withValues(
-                                        alpha: 0.1,
-                                      ),
-                              ),
+          onRefresh: () async {
+            _loadData(forceRefresh: true);
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              const SliverAppBar.large(
+                title: Text('Analytics & Progress'),
+                backgroundColor: Colors.transparent,
+                scrolledUnderElevation: 0,
+                elevation: 0,
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // AI Progress Summary Card
+                    Consumer<AIProvider>(
+                      builder: (context, ai, _) {
+                        if (ai.isSummaryLoading) {
+                          return GlassContainer(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 24,
+                              horizontal: 16,
                             ),
-                            child: Text(
-                              '$day',
-                              style: TextStyle(
-                                color: completed
-                                    ? theme.colorScheme.onPrimary
-                                    : theme.colorScheme.onSurface,
-                                fontWeight: completed
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  'Analyzing your logs recap...',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
-                        },
-                      ),
-                    ],
-                  ),
-              ),
-              const SizedBox(height: 16),
+                        }
 
-              // 3. Weight Tracking Chart Card
-              GlassContainer(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Weight Progress Chart',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 24),
-                      if (metricsProvider.weightLogs.length < 2)
-                        Container(
-                          height: 180,
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Log at least 2 weight values to generate a progression graph.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
+                        if (ai.progressSummary != null) {
+                          return GlassContainer(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    FaIcon(
+                                      FontAwesomeIcons.chartSimple,
+                                      color: theme.colorScheme.secondary,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'AI Progress Summary',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.secondary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  ai.progressSummary!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.85),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      else
-                        SizedBox(
-                          height: 180,
-                          child: CustomPaint(
-                            painter: _LineChartPainter(
-                              theme: theme,
-                              logs: metricsProvider.weightLogs,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-              ),
-              const SizedBox(height: 16),
+                          );
+                        }
 
-              // 4. Body Metrics Weight Logs Logger
-              GlassContainer(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Body Weight Log',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
+                        return const SizedBox.shrink();
+                      },
+                    ),
+
+                    // 1. Streaks Dashboard Panel
+                    GlassContainer(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _weightController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
-                              decoration: const InputDecoration(
-                                labelText: 'Log Weight (kg)',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
+                          _buildStreakIndicator(
+                            context,
+                            'Current Streak',
+                            '${metricsProvider.currentStreak} Days',
+                            FontAwesomeIcons.fire,
+                            theme.colorScheme.primary,
+                          ),
+                          Container(
+                            height: 40,
+                            width: 1,
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.15,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                            ),
-                            onPressed: metricsProvider.isLoading
-                                ? null
-                                : () async {
-                                    final val = double.tryParse(
-                                      _weightController.text,
-                                    );
-                                    if (val != null && val > 0) {
-                                      final done =
-                                          await metricsProvider.logWeight(val);
-                                      if (done && context.mounted) {
-                                        _weightController.clear();
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Weight logged!'),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
-                            child: const Text('Save'),
+                          _buildStreakIndicator(
+                            context,
+                            'Longest Streak',
+                            '${metricsProvider.longestStreak} Days',
+                            FontAwesomeIcons.trophy,
+                            theme.colorScheme.secondary,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      // History List
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: metricsProvider.weightLogs.length > 5
-                            ? 5
-                            : metricsProvider.weightLogs.length,
-                        itemBuilder: (context, idx) {
-                          // Show in descending order
-                          final log = metricsProvider.weightLogs[
-                              metricsProvider.weightLogs.length - 1 - idx];
-                          return ListTile(
-                            dense: true,
-                            leading: Icon(
-                              Icons.monitor_weight_outlined,
-                              color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 2. Consistency Calendar Grid
+                    GlassContainer(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_getMonthName(now.month)} ${now.year} - Consistency',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              FaIcon(
+                                FontAwesomeIcons.calendarCheck,
+                                color: theme.colorScheme.primary,
+                                size: 18,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          // Weekday headers
+                          const Row(
+                            children: [
+                              _CalendarDayHeader(label: 'M'),
+                              _CalendarDayHeader(label: 'T'),
+                              _CalendarDayHeader(label: 'W'),
+                              _CalendarDayHeader(label: 'T'),
+                              _CalendarDayHeader(label: 'F'),
+                              _CalendarDayHeader(label: 'S'),
+                              _CalendarDayHeader(label: 'S'),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 7,
+                                  mainAxisSpacing: 6,
+                                  crossAxisSpacing: 6,
+                                ),
+                            itemCount: daysInMonth + startWeekday - 1,
+                            itemBuilder: (context, index) {
+                              if (index < startWeekday - 1) {
+                                return const SizedBox.shrink();
+                              }
+                              final day = index - startWeekday + 2;
+                              final dateStr =
+                                  '${now.year}-${now.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+                              final hasWorkout = metricsProvider.workoutDates
+                                  .contains(dateStr);
+
+                              return Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: hasWorkout
+                                      ? theme.colorScheme.primary.withValues(
+                                          alpha: 0.25,
+                                        )
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: hasWorkout
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.outline.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$day',
+                                    style: TextStyle(
+                                      fontWeight: hasWorkout
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: hasWorkout
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 3. Weight Chart Section
+                    GlassContainer(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Weight Progress Chart',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
-                            title: Text(
-                              '${log.value} kg',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            trailing: Text(
-                              '${log.loggedAt.day}/${log.loggedAt.month}/${log.loggedAt.year}',
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
+                          ),
+                          const SizedBox(height: 16),
+                          if (metricsProvider.weightLogs.length < 2)
+                            Container(
+                              height: 180,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface.withValues(
+                                  alpha: 0.05,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Text(
+                                    'Log at least 2 weight values to generate a progression graph.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              height: 180,
+                              padding: const EdgeInsets.only(
+                                right: 8.0,
+                                top: 8.0,
+                              ),
+                              child: CustomPaint(
+                                painter: _LineChartPainter(
+                                  theme: theme,
+                                  logs: metricsProvider.weightLogs,
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            icon: const FaIcon(
+                              FontAwesomeIcons.weightScale,
+                              size: 14,
+                            ),
+                            label: const Text('Add Weight Log'),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(
+                                        context,
+                                      ).viewInsets.bottom,
+                                    ),
+                                    child: GlassContainer(
+                                      borderRadius: 24,
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Center(
+                                            child: Container(
+                                              width: 40,
+                                              height: 5,
+                                              decoration: BoxDecoration(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(alpha: 0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          Text(
+                                            'Log Body Weight',
+                                            style: theme.textTheme.titleLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          TextField(
+                                            controller: _weightController,
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                ),
+                                            decoration: InputDecoration(
+                                              labelText: 'Weight (kg)',
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              prefixIcon: const Padding(
+                                                padding: EdgeInsets.all(12.0),
+                                                child: FaIcon(
+                                                  FontAwesomeIcons.weightScale,
+                                                  size: 16,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                              ),
+                                            ),
+                                             onPressed: () async {
+                                               final error = Validators.validateBodyWeightLog(
+                                                 _weightController.text,
+                                               );
+                                               if (error != null) {
+                                                 ScaffoldMessenger.of(context).showSnackBar(
+                                                   SnackBar(content: Text(error)),
+                                                 );
+                                                 return;
+                                               }
+                                               final val = double.tryParse(_weightController.text)!;
+                                               await metricsProvider.logWeight(val);
+                                               _weightController.clear();
+                                               if (context.mounted) {
+                                                 Navigator.pop(context);
+                                               }
+                                             },
+                                            child: const Text('Log Weight'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 24),
+                  ]),
+                ),
               ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildStreakIndicator(
     BuildContext context,
     String title,
     String value,
-    IconData icon,
+    dynamic icon,
     Color color,
   ) {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, color: color, size: 36),
+        FaIcon(icon, color: color, size: 30.0),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,11 +541,9 @@ class _LineChartPainter extends CustomPainter {
 
     final values = logs.map((l) => l.value as double).toList();
 
-    // Min and Max weight
     double maxVal = values.reduce((curr, next) => curr > next ? curr : next);
     double minVal = values.reduce((curr, next) => curr < next ? curr : next);
 
-    // Padding values range slightly to draw correctly
     if (maxVal == minVal) {
       maxVal += 5.0;
       minVal -= 5.0;
@@ -435,7 +555,6 @@ class _LineChartPainter extends CustomPainter {
 
     final double valRange = maxVal - minVal;
 
-    // Draw grid lines and labels
     final paintGrid = Paint()
       ..color = theme.colorScheme.outline.withValues(alpha: 0.15)
       ..strokeWidth = 1.0;
@@ -445,7 +564,6 @@ class _LineChartPainter extends CustomPainter {
       fontSize: 10,
     );
 
-    // Horizontal grid lines (3 divisions)
     for (int i = 0; i <= 2; i++) {
       final y = paddingTop + height * (i / 2.0);
       canvas.drawLine(
@@ -455,10 +573,7 @@ class _LineChartPainter extends CustomPainter {
       );
 
       final val = maxVal - valRange * (i / 2.0);
-      final textSpan = TextSpan(
-        text: val.toStringAsFixed(1),
-        style: textStyle,
-      );
+      final textSpan = TextSpan(text: val.toStringAsFixed(1), style: textStyle);
       final textPainter = TextPainter(
         text: textSpan,
         textDirection: TextDirection.ltr,
@@ -470,9 +585,10 @@ class _LineChartPainter extends CustomPainter {
       );
     }
 
-    // Points logic
     final points = <Offset>[];
-    final double xStep = values.length > 1 ? width / (values.length - 1) : width;
+    final double xStep = values.length > 1
+        ? width / (values.length - 1)
+        : width;
 
     for (int i = 0; i < values.length; i++) {
       final x = paddingLeft + i * xStep;
@@ -480,9 +596,9 @@ class _LineChartPainter extends CustomPainter {
       points.add(Offset(x, y));
     }
 
-    // Paint Area Fill Gradient
     if (points.length > 1) {
-      final pathArea = Path()..moveTo(points.first.dx, size.height - paddingBottom);
+      final pathArea = Path()
+        ..moveTo(points.first.dx, size.height - paddingBottom);
       for (final p in points) {
         pathArea.lineTo(p.dx, p.dy);
       }
@@ -490,26 +606,26 @@ class _LineChartPainter extends CustomPainter {
       pathArea.close();
 
       final paintArea = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            theme.colorScheme.primary.withValues(alpha: 0.35),
-            theme.colorScheme.primary.withValues(alpha: 0.0),
-          ],
-        ).createShader(
-          Rect.fromLTRB(
-            paddingLeft,
-            paddingTop,
-            size.width - paddingRight,
-            size.height - paddingBottom,
-          ),
-        );
+        ..shader =
+            LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: 0.35),
+                theme.colorScheme.primary.withValues(alpha: 0.0),
+              ],
+            ).createShader(
+              Rect.fromLTRB(
+                paddingLeft,
+                paddingTop,
+                size.width - paddingRight,
+                size.height - paddingBottom,
+              ),
+            );
 
       canvas.drawPath(pathArea, paintArea);
     }
 
-    // Paint Neon Connection Line
     final paintLine = Paint()
       ..color = theme.colorScheme.primary
       ..strokeWidth = 3.0
@@ -522,7 +638,6 @@ class _LineChartPainter extends CustomPainter {
     }
     canvas.drawPath(linePath, paintLine);
 
-    // Paint Dots on values
     final paintDotOuter = Paint()..color = theme.colorScheme.surface;
     final paintDotInner = Paint()..color = theme.colorScheme.primary;
 

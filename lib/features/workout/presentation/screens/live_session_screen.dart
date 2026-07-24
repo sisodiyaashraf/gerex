@@ -335,7 +335,7 @@ class LiveSessionScreen extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
                 itemCount: exProvider.exercises.length,
                 itemBuilder: (context, idx) {
                   final ex = exProvider.exercises[idx];

@@ -17,14 +17,21 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../features/ai/data/repositories/ai_repository_impl.dart';
 import '../../features/ai/domain/repositories/ai_repository.dart';
 import '../../features/ai/presentation/providers/ai_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../features/profile/presentation/providers/profile_provider.dart';
 import '../network/network_info.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
   // External
+  final sharedPrefs = await SharedPreferences.getInstance();
+  sl.registerLazySingleton<SharedPreferences>(() => sharedPrefs);
+
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
-  sl.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn());
+  sl.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn(
+        serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
+      ));
 
   // Core
   sl.registerLazySingleton<NetworkInfo>(() => const NetworkInfoImpl());
@@ -58,4 +65,7 @@ Future<void> init() async {
     () => AIRepositoryImpl(dotenv.get('GEMINI_API_KEY')),
   );
   sl.registerLazySingleton<AIProvider>(() => AIProvider(sl()));
+
+  // Features - Profile Settings
+  sl.registerLazySingleton<ProfileProvider>(() => ProfileProvider(sl()));
 }

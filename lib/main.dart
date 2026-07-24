@@ -12,12 +12,13 @@ import 'features/exercise/presentation/providers/exercise_provider.dart';
 import 'features/workout/presentation/providers/workout_provider.dart';
 import 'features/metrics/presentation/providers/metrics_provider.dart';
 import 'features/ai/presentation/providers/ai_provider.dart';
+import 'features/profile/presentation/providers/profile_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load environment variables
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: 'assets/.env');
 
   // Initialize Supabase with custom secure storage adapter
   await Supabase.initialize(
@@ -40,6 +41,7 @@ void main() async {
         ChangeNotifierProvider.value(value: di.sl<WorkoutProvider>()),
         ChangeNotifierProvider.value(value: di.sl<MetricsProvider>()),
         ChangeNotifierProvider.value(value: di.sl<AIProvider>()),
+        ChangeNotifierProvider.value(value: di.sl<ProfileProvider>()),
       ],
       child: const MainApp(),
     ),
