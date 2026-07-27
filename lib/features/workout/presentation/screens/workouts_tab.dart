@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/workout_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ai/presentation/providers/ai_provider.dart';
+import '../../../metrics/presentation/providers/metrics_provider.dart';
+import 'package:gerex/core/providers/activity_provider.dart';
+import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
 class WorkoutsTab extends StatefulWidget {
@@ -23,18 +27,69 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final wp = context.read<WorkoutProvider>();
+      final mp = context.read<MetricsProvider>();
       await wp.fetchWorkouts();
       await wp.fetchSessions();
+      await mp.fetchWeightLogs();
       if (mounted) {
         context.read<AIProvider>().loadDailyInsight(wp.sessions);
       }
     });
   }
 
+  double _calculateBmi(double weightKg, double heightCm) {
+    if (heightCm <= 0) return 0.0;
+    final heightM = heightCm / 100.0;
+    return weightKg / (heightM * heightM);
+  }
+
+  String _getBmiStatus(double bmi) {
+    if (bmi <= 0) return 'Unknown';
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi < 25.0) return 'Normal Weight';
+    if (bmi < 30.0) return 'Overweight';
+    return 'Obese';
+  }
+
+  Color _getBmiColor(double bmi, ThemeData theme) {
+    if (bmi < 18.5) return Colors.blueAccent;
+    if (bmi < 25.0) return theme.colorScheme.primary;
+    if (bmi < 30.0) return Colors.orangeAccent;
+    return Colors.redAccent;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = Provider.of<WorkoutProvider>(context);
+    final workoutProvider = Provider.of<WorkoutProvider>(context);
+    final metricsProvider = Provider.of<MetricsProvider>(context);
+    final activity = Provider.of<ActivityProvider>(context);
+    final notifications = Provider.of<NotificationProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
+
+    // Personalized greeting names
+    final displayName = auth.user?.userMetadata?['full_name'] ??
+        auth.user?.userMetadata?['name'] ??
+        auth.user?.email?.split('@').first ??
+        'Aesthetic Athlete';
+
+    // BMI computation
+    final double latestWeight = metricsProvider.weightLogs.isNotEmpty
+        ? metricsProvider.weightLogs.last.value
+        : 72.0; // Default fallback
+    final double userHeight = activity.userHeight;
+    final double bmiValue = _calculateBmi(latestWeight, userHeight);
+    final String bmiStatus = _getBmiStatus(bmiValue);
+    final Color bmiColor = _getBmiColor(bmiValue, theme);
+
+    // Check if user completed workout today
+    final now = DateTime.now();
+    final bool completedToday = workoutProvider.sessions.any((s) {
+      final compDate = s.completedAt ?? s.startedAt;
+      return compDate.year == now.year &&
+          compDate.month == now.month &&
+          compDate.day == now.day;
+    });
 
     String formatDuration(int totalSeconds) {
       final mins = totalSeconds ~/ 60;
@@ -46,29 +101,31 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
         child: RefreshIndicator(
           onRefresh: () async {
             final ai = context.read<AIProvider>();
-            await provider.fetchWorkouts();
-            await provider.fetchSessions();
-            await ai.loadDailyInsight(provider.sessions, forceRefresh: true);
+            await workoutProvider.fetchWorkouts();
+            await workoutProvider.fetchSessions();
+            await metricsProvider.fetchWeightLogs();
+            await ai.loadDailyInsight(workoutProvider.sessions, forceRefresh: true);
           },
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              SliverAppBar.large(
-                title: const Text('Gerex Workout'),
+              // Custom AppBar with avatar and notification bell
+              SliverAppBar(
+                floating: true,
+                title: const Text(
+                  'Gerex Dashboard',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 backgroundColor: Colors.transparent,
                 scrolledUnderElevation: 0,
                 elevation: 0,
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16.0),
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: Center(
                     child: Consumer<AuthProvider>(
                       builder: (context, auth, _) {
                         final photoUrl = auth.user?.userMetadata?['avatar_url'] ??
                             auth.user?.userMetadata?['picture'];
-                        final displayName = auth.user?.userMetadata?['full_name'] ??
-                            auth.user?.userMetadata?['name'] ??
-                            auth.user?.email ??
-                            '';
                         final initials = displayName.isNotEmpty
                             ? displayName.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
                             : 'G';
@@ -76,7 +133,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         return GestureDetector(
                           onTap: () => context.push('/profile'),
                           child: CircleAvatar(
-                            radius: 18,
+                            radius: 16,
                             backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
                             backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
                             child: photoUrl == null
@@ -84,7 +141,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                     initials,
                                     style: TextStyle(
                                       color: theme.colorScheme.primary,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   )
@@ -94,14 +151,51 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       },
                     ),
                   ),
+                ),
+                actions: [
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.solidBell, size: 18),
+                        onPressed: () => context.push('/notifications'),
+                      ),
+                      if (notifications.unreadCount > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '${notifications.unreadCount}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
                 ],
               ),
+
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // Live Session Alert Banner if active
-                    if (provider.isSessionActive) ...[
+                    if (workoutProvider.isSessionActive) ...[
                       GlassContainer(
                         color: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
                         child: ListTile(
@@ -117,7 +211,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                             ),
                           ),
                           subtitle: Text(
-                            'Active Session: ${provider.activeSessionName}',
+                            'Active Session: ${workoutProvider.activeSessionName}',
                             style: TextStyle(
                               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
@@ -132,6 +226,340 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                           },
                         ),
                       ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // 1. Personalized Greeting
+                    Text(
+                      'Welcome back,',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    Text(
+                      displayName,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 2. BMI Summary Glass Card
+                    GlassContainer(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          // Left: Dial Progress Ring
+                          SizedBox(
+                            height: 64,
+                            width: 64,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  value: (bmiValue / 40.0).clamp(0.0, 1.0),
+                                  strokeWidth: 6,
+                                  color: bmiColor,
+                                  backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.1),
+                                ),
+                                Text(
+                                  bmiValue.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // Right Info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Body Mass Index (BMI)',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Status: $bmiStatus',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: bmiColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                InkWell(
+                                  onTap: () => context.push('/activity-tracker'),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'View more metrics',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 14,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 3. Today's Target glass row
+                    GlassContainer(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            completedToday ? Icons.check_circle : Icons.circle_outlined,
+                            color: completedToday ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Today\'s Routine Target',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  completedToday 
+                                      ? 'Daily Target achieved!' 
+                                      : 'Complete at least 1 workout session today.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 4. Three Compact Glass Stat Cards (Water, Sleep, Calories)
+                    Row(
+                      children: [
+                        _buildStatCard(
+                          context,
+                          theme,
+                          title: 'Water Intake',
+                          value: '${activity.waterIntake} ml',
+                          iconPath: 'assets/svg icons/water-bottle.svg',
+                          fallbackIcon: FontAwesomeIcons.glassWater,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatCard(
+                          context,
+                          theme,
+                          title: 'Sleep Tracker',
+                          value: '${activity.sleepHours} hrs',
+                          iconPath: 'assets/svg icons/sleep icon.svg',
+                          fallbackIcon: FontAwesomeIcons.bed,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatCard(
+                          context,
+                          theme,
+                          title: 'Burned',
+                          value: '${activity.calories} kcal',
+                          iconPath: '',
+                          fallbackIcon: FontAwesomeIcons.fire,
+                          iconColor: Colors.orangeAccent,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 5. Activity Status (heart-rate sparkline placeholder)
+                    GlassContainer(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Heart Rate Status',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'UI-Only / Sensor Needed',
+                                  style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Text(
+                                '72',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'BPM',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              const Spacer(),
+                              // Custom sparkline layout
+                              SizedBox(
+                                width: 120,
+                                height: 32,
+                                child: CustomPaint(
+                                  painter: _HeartSparklinePainter(theme: theme),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 6. Workout Progress Weekly completion summary
+                    GlassContainer(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Workout Consistency Progress',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: List.generate(7, (index) {
+                              final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                              // Find if completed workout on this day
+                              final dayOffset = 6 - index;
+                              final checkDate = now.subtract(Duration(days: dayOffset));
+                              final isCompleted = workoutProvider.sessions.any((s) {
+                                final compDate = s.completedAt ?? s.startedAt;
+                                return compDate.year == checkDate.year &&
+                                    compDate.month == checkDate.month &&
+                                    compDate.day == checkDate.day;
+                              });
+
+                              return Column(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 12,
+                                    backgroundColor: isCompleted
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.surface.withValues(alpha: 0.1),
+                                    child: isCompleted
+                                        ? const Icon(Icons.check, size: 12, color: Colors.white)
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    weekdays[index],
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 7. Latest Workouts
+                    if (workoutProvider.sessions.isNotEmpty) ...[
+                      Text(
+                        'Latest Completed Workouts',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...workoutProvider.sessions.take(2).map((session) {
+                        final compDate = session.completedAt ?? session.startedAt;
+                        return GlassContainer(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                child: FaIcon(
+                                  FontAwesomeIcons.circleCheck,
+                                  color: theme.colorScheme.primary,
+                                  size: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      session.name,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    ),
+                                    Text(
+                                      'Completed on ${compDate.day}/${compDate.month} at ${compDate.hour}:${compDate.minute.toString().padLeft(2, '0')}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 16),
                     ],
 
@@ -210,7 +638,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         Expanded(
                           child: InkWell(
                             onTap: () {
-                              provider.startEmptyWorkoutSession();
+                              workoutProvider.startEmptyWorkoutSession();
                               context.push('/session');
                             },
                             borderRadius: BorderRadius.circular(16),
@@ -237,7 +665,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
@@ -246,10 +674,30 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            icon: FaIcon(FontAwesomeIcons.circlePlus, color: theme.colorScheme.primary, size: 16),
+                            icon: FaIcon(FontAwesomeIcons.circlePlus, color: theme.colorScheme.primary, size: 14),
                             label: const Text('New Template'),
                             onPressed: () {
                               context.push('/builder');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Workout Tracker navigation button
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                              foregroundColor: theme.colorScheme.primary,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            icon: const FaIcon(FontAwesomeIcons.chartLine, size: 14),
+                            label: const Text('Tracker'),
+                            onPressed: () {
+                              context.push('/workout-tracker');
                             },
                           ),
                         ),
@@ -343,9 +791,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (provider.isLoading && provider.workouts.isEmpty)
+                    if (workoutProvider.isLoading && workoutProvider.workouts.isEmpty)
                       const Center(child: CircularProgressIndicator())
-                    else if (provider.workouts.isEmpty)
+                    else if (workoutProvider.workouts.isEmpty)
                       GlassContainer(
                         padding: const EdgeInsets.all(24.0),
                         child: Text(
@@ -362,13 +810,12 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: provider.workouts.length,
+                        itemCount: workoutProvider.workouts.length,
                         itemBuilder: (context, index) {
-                          final workout = provider.workouts[index];
+                          final workout = workoutProvider.workouts[index];
                           return AnimatedTappable(
                             onTap: () {
-                              provider.startWorkoutSession(workout);
-                              context.push('/session');
+                              context.push('/workout-details', extra: workout);
                             },
                             child: GlassContainer(
                               margin: const EdgeInsets.only(bottom: 12),
@@ -402,9 +849,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                     ),
                                   ),
                                   Icon(
-                                    Icons.play_arrow_rounded,
+                                    Icons.arrow_forward_ios_rounded,
                                     color: theme.colorScheme.primary,
-                                    size: 28,
+                                    size: 16,
                                   ),
                                 ],
                               ),
@@ -423,9 +870,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (provider.isLoading && provider.sessions.isEmpty)
+                    if (workoutProvider.isLoading && workoutProvider.sessions.isEmpty)
                       const Center(child: CircularProgressIndicator())
-                    else if (provider.sessions.isEmpty)
+                    else if (workoutProvider.sessions.isEmpty)
                       GlassContainer(
                         padding: const EdgeInsets.all(24.0),
                         child: Text(
@@ -442,9 +889,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: provider.sessions.length,
+                        itemCount: workoutProvider.sessions.length,
                         itemBuilder: (context, index) {
-                          final session = provider.sessions[index];
+                          final session = workoutProvider.sessions[index];
                           final date = session.completedAt ?? session.startedAt;
                           return GlassContainer(
                             margin: const EdgeInsets.only(bottom: 12),
@@ -513,4 +960,91 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
       ),
     );
   }
+
+  Widget _buildStatCard(
+    BuildContext context,
+    ThemeData theme, {
+    required String title,
+    required String value,
+    required String iconPath,
+    required dynamic fallbackIcon,
+    Color? iconColor,
+  }) {
+    return Expanded(
+      child: AnimatedTappable(
+        onTap: () => context.push('/activity-tracker'),
+        child: GlassContainer(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              iconPath.isNotEmpty
+                  ? SvgPicture.asset(
+                      iconPath,
+                      width: 20,
+                      height: 20,
+                      colorFilter: ColorFilter.mode(
+                        iconColor ?? theme.colorScheme.primary,
+                        BlendMode.srcIn,
+                      ),
+                      errorBuilder: (c, e, s) => FaIcon(
+                        fallbackIcon as FaIconData,
+                        color: iconColor ?? theme.colorScheme.primary,
+                        size: 14,
+                      ),
+                    )
+                  : FaIcon(
+                      fallbackIcon as FaIconData,
+                      color: iconColor ?? theme.colorScheme.primary,
+                      size: 16,
+                    ),
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeartSparklinePainter extends CustomPainter {
+  final ThemeData theme;
+
+  _HeartSparklinePainter({required this.theme});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.redAccent
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()
+      ..moveTo(0, size.height * 0.5)
+      ..lineTo(size.width * 0.25, size.height * 0.5)
+      ..lineTo(size.width * 0.35, size.height * 0.2)
+      ..lineTo(size.width * 0.45, size.height * 0.8)
+      ..lineTo(size.width * 0.55, size.height * 0.1)
+      ..lineTo(size.width * 0.65, size.height * 0.6)
+      ..lineTo(size.width * 0.75, size.height * 0.5)
+      ..lineTo(size.width, size.height * 0.5);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

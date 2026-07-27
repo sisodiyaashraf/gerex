@@ -5,7 +5,7 @@ class GerexGradients {
   GerexGradients._();
 
   static const LinearGradient darkBaseBackground = LinearGradient(
-    colors: [Color(0xFF070B19), Color(0xFF0F172A)],
+    colors: [Color(0xFF131416), Color(0xFF0B0B0C)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
@@ -17,7 +17,7 @@ class GerexGradients {
   );
 
   static const LinearGradient primaryCTA = LinearGradient(
-    colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
+    colors: [Color(0xFF10B981), Color(0xFF14B8A6)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -41,7 +41,19 @@ class GerexGradients {
   );
 
   static const LinearGradient accentBorder = LinearGradient(
-    colors: [Color(0xFFA78BFA), Color(0xFF60A5FA)],
+    colors: [Color(0xFF34D399), Color(0xFF2DD4BF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient secondaryCard = LinearGradient(
+    colors: [Color(0xFF3B2E5C), Color(0xFF261D3E)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient destructive = LinearGradient(
+    colors: [Color(0xFFEF4444), Color(0xFFF43F5E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -50,14 +62,14 @@ class GerexGradients {
 class AppTheme {
   AppTheme._();
 
-  // Dark Palette (Sleek Slate & Electric Cyan)
-  static const Color darkBackground = Color(0xFF0F172A); // Slate 900
-  static const Color darkSurface = Color(0xFF1E293B); // Slate 800
-  static const Color darkPrimary = Color(0xFF06B6D4); // Cyan 500
-  static const Color darkAccent = Color(0xFFF97316); // Orange 500
-  static const Color darkOnBackground = Color(0xFFF8FAFC); // Slate 50
-  static const Color darkOnSurface = Color(0xFFE2E8F0); // Slate 200
-  static const Color darkMuted = Color(0xFF64748B); // Slate 500
+  // Dark Palette (Dark Charcoal & Emerald Green/Teal)
+  static const Color darkBackground = Color(0xFF0B0B0C);
+  static const Color darkSurface = Color(0xFF131416);
+  static const Color darkPrimary = Color(0xFF10B981);
+  static const Color darkAccent = Color(0xFF14B8A6);
+  static const Color darkOnBackground = Color(0xFFF8FAFC);
+  static const Color darkOnSurface = Color(0xFFE2E8F0);
+  static const Color darkMuted = Color(0xFF64748B);
 
   // Light Palette (Soft Slate & Teal)
   static const Color lightBackground = Color(0xFFF8FAFC); // Slate 50

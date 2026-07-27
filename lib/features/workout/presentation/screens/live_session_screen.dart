@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
 import '../../domain/entities/workout_entities.dart';
 import '../providers/workout_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/widgets/slide_to_confirm_button.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class LiveSessionScreen extends StatelessWidget {
   const LiveSessionScreen({super.key});
@@ -149,35 +152,24 @@ class LiveSessionScreen extends StatelessWidget {
                         label: const Text('Add Exercise'),
                       ),
                       const SizedBox(height: 24),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(50),
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                        ),
-                        onPressed: provider.isLoading
-                            ? null
-                            : () async {
-                                final done =
-                                    await provider.finishWorkoutSession();
+                      provider.isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SlideToConfirmButton(
+                              label: 'Slide to Finish Workout',
+                              knobIcon: FontAwesomeIcons.solidCircleCheck,
+                              onConfirm: () async {
+                                final done = await provider.finishWorkoutSession();
                                 if (done && context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Workout complete! Saved to logs.'),
+                                      backgroundColor: Colors.green,
                                     ),
                                   );
+                                  context.pop();
                                 }
                               },
-                        child: provider.isLoading
-                            ? const CircularProgressIndicator()
-                            : const Text(
-                                'Finish Workout',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
+                            ),
                       const SizedBox(height: 40),
                     ],
                   );

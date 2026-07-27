@@ -66,6 +66,8 @@ class ExerciseProvider extends ChangeNotifier {
     required String muscleGroup,
     required String equipment,
     required List<String> instructions,
+    String? imagePath,
+    bool removeBackground = false,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -76,6 +78,8 @@ class ExerciseProvider extends ChangeNotifier {
       muscleGroup: muscleGroup,
       equipment: equipment,
       instructions: instructions,
+      imagePath: imagePath,
+      removeBackground: removeBackground,
     );
 
     final result = await _exerciseRepository.createCustomExercise(exercise);

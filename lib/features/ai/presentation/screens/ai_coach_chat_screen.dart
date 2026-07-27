@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ai_provider.dart';
+import 'offline_download_screen.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -62,18 +63,67 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
           children: [
             // Chat history log bubbles
             Expanded(
-              child: provider.chatMessages.isEmpty
-                  ? _buildEmptyState(theme)
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                      itemCount: provider.chatMessages.length,
-                      itemBuilder: (context, index) {
-                        final message = provider.chatMessages[index];
-                        final isUser = message['role'] == 'user';
-                        return _buildChatBubble(theme, isUser, message['text'] ?? '');
+              child: Column(
+                children: [
+                  if (!provider.isModelDownloaded)
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const OfflineDownloadScreen()),
+                        );
                       },
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.download_for_offline_outlined, color: theme.colorScheme.primary, size: 22),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Gerex Offline AI Available',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Setup local Gemma LLM (1.2 GB) for free offline chat.',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary, size: 20),
+                          ],
+                        ),
+                      ),
                     ),
+                  Expanded(
+                    child: provider.chatMessages.isEmpty
+                        ? _buildEmptyState(theme)
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                            itemCount: provider.chatMessages.length,
+                            itemBuilder: (context, index) {
+                              final message = provider.chatMessages[index];
+                              return _buildChatBubble(theme, message);
+                            },
+                          ),
+                  ),
+                ],
+              ),
             ),
 
             // Loading spinner
@@ -236,29 +286,116 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
     );
   }
 
-  Widget _buildChatBubble(ThemeData theme, bool isUser, String text) {
+  void _escalateQuery(String replyText) {
+    final provider = Provider.of<AIProvider>(context, listen: false);
+    final messages = provider.chatMessages;
+    
+    int replyIndex = -1;
+    for (int i = 0; i < messages.length; i++) {
+      if (messages[i]['text'] == replyText && messages[i]['role'] == 'model') {
+        replyIndex = i;
+        break;
+      }
+    }
+    
+    if (replyIndex > 0) {
+      final userQuery = messages[replyIndex - 1]['text'] ?? '';
+      if (userQuery.isNotEmpty) {
+        provider.escalateMessageToCoach(userQuery);
+        _scrollToBottom();
+      }
+    }
+  }
+
+  Widget _buildChatBubble(ThemeData theme, Map<String, String> message) {
+    final isUser = message['role'] == 'user';
+    final text = message['text'] ?? '';
+    final source = message['source'] ?? 'online';
+
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
         ),
-        child: GlassContainer(
-          borderRadius: 16,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          borderGradient: isUser ? GerexGradients.primaryCTA : null,
-          color: isUser
-              ? theme.colorScheme.primary.withValues(alpha: 0.15)
-              : theme.colorScheme.surface.withValues(alpha: 0.1),
-          child: Text(
-            text,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface,
-              fontSize: 14,
-              height: 1.4,
+        child: Column(
+          crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            GlassContainer(
+              borderRadius: 16,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              borderGradient: isUser ? GerexGradients.primaryCTA : null,
+              color: isUser
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.surface.withValues(alpha: 0.1),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
             ),
-          ),
+            if (!isUser) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: source == 'offline'
+                            ? Colors.green.withValues(alpha: 0.15)
+                            : Colors.indigo.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: source == 'offline'
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : Colors.indigo.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Text(
+                        source == 'offline' ? 'Offline' : 'Cloud',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: source == 'offline' ? Colors.green : Colors.indigoAccent,
+                        ),
+                      ),
+                    ),
+                    if (source == 'offline') ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => _escalateQuery(text),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.cloud_sync_outlined,
+                              size: 11,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Ask Cloud',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

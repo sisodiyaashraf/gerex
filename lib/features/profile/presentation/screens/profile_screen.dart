@@ -6,11 +6,13 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../workout/presentation/providers/workout_provider.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
 import '../providers/profile_provider.dart';
+import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import '../../../../core/presentation/providers/theme_provider.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
+import 'package:gerex/core/providers/activity_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -37,6 +39,7 @@ class ProfileScreen extends StatelessWidget {
     final workoutProvider = Provider.of<WorkoutProvider>(context);
     final metricsProvider = Provider.of<MetricsProvider>(context);
     final profileProvider = Provider.of<ProfileProvider>(context);
+    final activity = Provider.of<ActivityProvider>(context);
 
     // Profile Details
     final user = authProvider.user;
@@ -264,6 +267,59 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           textAlign: TextAlign.center,
                         ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  '${activity.userHeight.toInt()} cm',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                Text(
+                                  'Height',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(width: 1, height: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+                            Column(
+                              children: [
+                                Text(
+                                  formatWeight(currentWeight),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                Text(
+                                  'Weight',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(width: 1, height: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+                            Column(
+                              children: [
+                                const Text(
+                                  '24 yrs',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                Text(
+                                  'Age',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -344,7 +400,7 @@ class ProfileScreen extends StatelessWidget {
                                   style: theme.textTheme.headlineMedium?.copyWith(
                                     fontFamily: 'Outfit',
                                     fontWeight: FontWeight.w900,
-                                    color: Colors.purpleAccent,
+                                    color: const Color(0xFF818CF8),
                                     fontSize: context.sp(28),
                                   ),
                                 ),
@@ -424,6 +480,141 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
+                  // Account Section
+                  Text(
+                    'Account details',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.solidUser,
+                    title: 'Personal Data',
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      size: 14,
+                    ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text('Personal Data'),
+                          content: Text('Name: $displayName\nEmail: $email\nHeight: ${activity.userHeight.toInt()} cm\nWeight: ${currentWeight ?? 70.0} kg'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(c),
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.award,
+                    title: 'Achievements Badges',
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      size: 14,
+                    ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (c) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          child: GlassContainer(
+                            padding: const EdgeInsets.all(20),
+                            borderRadius: 24,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'My Achievements Badges',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                _buildBadgeRow(
+                                  theme,
+                                  title: 'Consistency Champion',
+                                  description: 'Keep a workout streak of 3+ days.',
+                                  unlocked: streak >= 3,
+                                  icon: FontAwesomeIcons.fire,
+                                  color: Colors.orangeAccent,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildBadgeRow(
+                                  theme,
+                                  title: 'Iron Initiate',
+                                  description: 'Log 5+ completed workouts in total.',
+                                  unlocked: workoutsCount >= 5,
+                                  icon: FontAwesomeIcons.dumbbell,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(height: 12),
+                                 _buildBadgeRow(
+                                   theme,
+                                   title: 'AI Disciple',
+                                   description: 'Leverage AI Coach or Plan Generation.',
+                                   unlocked: true,
+                                   icon: FontAwesomeIcons.wandMagicSparkles,
+                                   color: const Color(0xFF818CF8),
+                                 ),
+                                const SizedBox(height: 20),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(c),
+                                  child: const Text('Awesome'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.calendarCheck,
+                    title: 'Activity History Log',
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      size: 14,
+                    ),
+                    onTap: () => context.push('/activity-tracker'),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.chartLine,
+                    title: 'Workout Progress Chart',
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      size: 14,
+                    ),
+                    onTap: () => context.push('/workout-tracker'),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.images,
+                    title: 'Progress Photos Gallery',
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      size: 14,
+                    ),
+                    onTap: () => context.push('/progress-photos'),
+                  ),
+
+                  const SizedBox(height: 24),
+
                   // Settings Section Title
                   Text(
                     'Preferences & Settings',
@@ -490,6 +681,35 @@ class ProfileScreen extends StatelessWidget {
                         }
                       },
                     ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Offline-Only AI toggle settings item
+                  Consumer<AIProvider>(
+                    builder: (context, aiProvider, _) {
+                      return _buildSettingsRow(
+                        icon: FontAwesomeIcons.robot,
+                        title: 'Offline-Only AI Coach',
+                        trailing: Switch.adaptive(
+                          value: aiProvider.isOfflineOnly,
+                          activeThumbColor: theme.colorScheme.primary,
+                          onChanged: (val) => aiProvider.setOfflineOnly(val),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Subscription Plan settings item
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.creditCard,
+                    title: 'Subscription Plan',
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      size: 14,
+                    ),
+                    onTap: () => context.push('/select-plan'),
                   ),
                   const SizedBox(height: 8),
 
@@ -602,6 +822,73 @@ class ProfileScreen extends StatelessWidget {
             trailing,
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBadgeRow(
+    ThemeData theme, {
+    required String title,
+    required String description,
+    required bool unlocked,
+    required dynamic icon,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: (unlocked ? color : Colors.grey).withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: unlocked ? color : Colors.grey.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+            ),
+            child: Center(
+              child: FaIcon(
+                icon,
+                color: unlocked ? color : Colors.grey,
+                size: 16,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: unlocked ? null : Colors.grey,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            unlocked ? 'Unlocked' : 'Locked',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: unlocked ? theme.colorScheme.primary : Colors.grey,
+            ),
+          ),
+        ],
       ),
     );
   }

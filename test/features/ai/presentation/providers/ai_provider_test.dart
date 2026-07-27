@@ -12,6 +12,9 @@ class MockAIRepository implements AIRepository {
   int planCallCount = 0;
 
   @override
+  bool get lastCallWasOffline => false;
+
+  @override
   Future<Result<String, Failure>> generateWorkoutPlan({
     required String goal,
     required String equipment,
@@ -29,6 +32,7 @@ class MockAIRepository implements AIRepository {
   Future<Result<String, Failure>> getCoachResponse({
     required String prompt,
     required List<Map<String, String>> chatHistory,
+    bool forceEscalate = false,
   }) async {
     if (shouldCoachSucceed) {
       return const Success('Coach Gerex: Keep pushing your limits!');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
+import '../../../exercise/presentation/screens/exercise_detail_screen.dart';
 import '../../domain/entities/workout_entities.dart';
 import '../providers/workout_provider.dart';
 import '../../../exercise/domain/entities/exercise.dart';
@@ -349,23 +350,38 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                     title: Text(ex.name),
                     subtitle: Text('${ex.muscleGroup} • ${ex.equipment}'),
                     trailing: const Icon(Icons.add_circle_outline),
-                    onTap: () {
-                      setState(() {
-                        _exercises.add(
-                          WorkoutExercise(
-                            id: '',
-                            workoutId: '',
-                            exerciseId: ex.id,
+                    onTap: () async {
+                      // Navigate to ExerciseDetailScreen as a picker
+                      final dynamic resultReps = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ExerciseDetailScreen(
                             exercise: ex,
-                            sets: 3,
-                            reps: 10,
-                            weight: 0,
-                            restTime: 60,
-                            sequenceOrder: _exercises.length,
+                            isPicker: true,
                           ),
-                        );
-                      });
-                      Navigator.pop(context);
+                        ),
+                      );
+
+                      if (resultReps != null && resultReps is int) {
+                        setState(() {
+                          _exercises.add(
+                            WorkoutExercise(
+                              id: '',
+                              workoutId: '',
+                              exerciseId: ex.id,
+                              exercise: ex,
+                              sets: 3,
+                              reps: resultReps,
+                              weight: 0,
+                              restTime: 60,
+                              sequenceOrder: _exercises.length,
+                            ),
+                          );
+                        });
+                      }
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
                     },
                   );
                 },

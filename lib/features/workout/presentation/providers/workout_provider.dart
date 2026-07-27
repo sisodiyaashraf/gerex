@@ -4,6 +4,8 @@ import 'package:gerex/features/exercise/domain/entities/exercise.dart';
 import 'package:gerex/features/workout/domain/entities/workout_entities.dart';
 import 'package:gerex/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gerex/core/utils/logger.dart';
+import 'package:gerex/core/di/injection_container.dart' as di;
+import 'package:gerex/core/providers/notification_provider.dart';
 
 class WorkoutProvider extends ChangeNotifier {
   final WorkoutRepository _workoutRepository;
@@ -378,6 +380,12 @@ class WorkoutProvider extends ChangeNotifier {
         _stopSessionState();
         _isLoading = false;
         notifyListeners();
+        try {
+          di.sl<NotificationProvider>().sendNotification(
+            'Workout Completed!',
+            'Fantastic! You completed "${savedSession.name}" in ${savedSession.durationSeconds ~/ 60} minutes.',
+          );
+        } catch (_) {}
         return true;
       },
       onFailure: (failure) {

@@ -4,7 +4,10 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
-import '../../features/exercise/presentation/screens/exercise_library_screen.dart';
+import '../../features/challenges/presentation/screens/select_challenge_screen.dart';
+import '../../features/challenges/presentation/screens/challenge_detail_screen.dart';
+import '../../features/challenges/domain/entities/challenge.dart';
+import '../../features/profile/presentation/screens/select_plan_screen.dart';
 import '../../features/metrics/presentation/screens/metrics_dashboard_screen.dart';
 import '../../features/workout/presentation/screens/live_session_screen.dart';
 import '../../features/workout/presentation/screens/workout_builder_screen.dart';
@@ -13,6 +16,24 @@ import '../../features/ai/presentation/screens/ai_coach_chat_screen.dart';
 import '../../features/ai/presentation/screens/ai_plan_generator_screen.dart';
 import '../../features/ai/presentation/screens/pose_feedback_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/workout/presentation/screens/workout_tracker_screen.dart';
+import '../../features/workout/domain/entities/workout_entities.dart';
+import '../../features/workout/presentation/screens/workout_details_screen.dart';
+import '../../features/metrics/presentation/screens/activity_tracker_screen.dart';
+import '../../features/profile/presentation/screens/notification_screen.dart';
+import '../../features/profile/presentation/screens/progress_photos_screen.dart';
+import '../../features/metrics/presentation/screens/sleep_tracker_screen.dart';
+import '../../features/metrics/presentation/screens/sleep_schedule_screen.dart';
+import '../../features/metrics/presentation/screens/add_alarm_screen.dart';
+import '../../features/nutrition/presentation/screens/meal_planner_screen.dart';
+import '../../features/nutrition/presentation/screens/meal_details_screen.dart';
+import '../../features/nutrition/domain/entities/meal_entities.dart';
+import '../../features/exercise/presentation/screens/exercise_detail_screen.dart';
+import '../../features/exercise/domain/entities/exercise.dart';
+import '../../features/nutrition/presentation/screens/meal_schedule_screen.dart';
+import '../../features/nutrition/presentation/screens/meal_browse_screen.dart';
+import '../../features/profile/presentation/screens/guided_photo_capture_screen.dart';
+import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
 import '../di/injection_container.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../presentation/widgets/glass_container.dart';
@@ -92,6 +113,86 @@ class AppRouter {
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
       ),
+      GoRoute(
+        path: '/workout-tracker',
+        builder: (context, state) => const WorkoutTrackerScreen(),
+      ),
+      GoRoute(
+        path: '/workout-details',
+        builder: (context, state) => WorkoutDetailsScreen(
+          workout: state.extra as Workout,
+        ),
+      ),
+      GoRoute(
+        path: '/activity-tracker',
+        builder: (context, state) => const ActivityTrackerScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationScreen(),
+      ),
+      GoRoute(
+        path: '/progress-photos',
+        builder: (context, state) => const ProgressPhotosScreen(),
+      ),
+      GoRoute(
+        path: '/sleep-tracker',
+        builder: (context, state) => const SleepTrackerScreen(),
+      ),
+      GoRoute(
+        path: '/sleep-schedule',
+        builder: (context, state) => const SleepScheduleScreen(),
+      ),
+      GoRoute(
+        path: '/add-alarm',
+        builder: (context, state) => const AddAlarmScreen(),
+      ),
+      GoRoute(
+        path: '/meal-planner',
+        builder: (context, state) => const MealPlannerScreen(),
+      ),
+      GoRoute(
+        path: '/meal-details',
+        builder: (context, state) => MealDetailsScreen(
+          recipe: state.extra as Recipe,
+        ),
+      ),
+      GoRoute(
+        path: '/exercise-detail',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ExerciseDetailScreen(
+            exercise: extra['exercise'] as Exercise,
+            isPicker: extra['isPicker'] as bool? ?? false,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/meal-schedule',
+        builder: (context, state) => const MealScheduleScreen(),
+      ),
+      GoRoute(
+        path: '/meal-browse',
+        builder: (context, state) => const MealBrowseScreen(),
+      ),
+      GoRoute(
+        path: '/guided-capture',
+        builder: (context, state) => const GuidedPhotoCaptureScreen(),
+      ),
+      GoRoute(
+        path: '/progress-compare',
+        builder: (context, state) => const ProgressComparisonScreen(),
+      ),
+      GoRoute(
+        path: '/challenge-detail',
+        builder: (context, state) => ChallengeDetailScreen(
+          challenge: state.extra as Challenge,
+        ),
+      ),
+      GoRoute(
+        path: '/select-plan',
+        builder: (context, state) => const SelectPlanScreen(),
+      ),
     ],
   );
 }
@@ -108,7 +209,8 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
 
   final List<Widget> _tabs = const [
     WorkoutsTab(),
-    ExerciseLibraryScreen(),
+    SelectChallengeScreen(),
+    MealPlannerScreen(),
     MetricsDashboardScreen(),
   ];
 
@@ -138,8 +240,9 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildNavItem(0, FontAwesomeIcons.dumbbell, 'Workouts', theme),
-                  _buildNavItem(1, FontAwesomeIcons.bookOpen, 'Exercises', theme),
-                  _buildNavItem(2, FontAwesomeIcons.chartSimple, 'Analytics', theme),
+                  _buildNavItem(1, FontAwesomeIcons.compass, 'Explore', theme),
+                  _buildNavItem(2, FontAwesomeIcons.bowlFood, 'Meals', theme),
+                  _buildNavItem(3, FontAwesomeIcons.chartSimple, 'Analytics', theme),
                 ],
               ),
             ),

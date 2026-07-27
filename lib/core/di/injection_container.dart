@@ -17,9 +17,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../features/ai/data/repositories/ai_repository_impl.dart';
 import '../../features/ai/domain/repositories/ai_repository.dart';
 import '../../features/ai/presentation/providers/ai_provider.dart';
+import '../../features/ai/data/services/offline_ai_service.dart';
+import '../../features/ai/data/services/gemini_ai_service.dart';
+import '../../features/ai/data/services/ai_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/profile/presentation/providers/profile_provider.dart';
+import '../../features/profile/presentation/providers/progress_photos_provider.dart';
+import '../../features/metrics/presentation/providers/sleep_provider.dart';
+import '../../features/nutrition/presentation/providers/meal_provider.dart';
 import '../network/network_info.dart';
+import '../providers/activity_provider.dart';
+import '../providers/notification_provider.dart';
+import '../../features/challenges/domain/repositories/challenge_repository.dart';
+import '../../features/challenges/data/repositories/challenge_repository_impl.dart';
+import '../../features/challenges/presentation/providers/challenge_provider.dart';
 
 final sl = GetIt.instance;
 
@@ -61,11 +72,33 @@ Future<void> init() async {
   sl.registerLazySingleton<MetricsProvider>(() => MetricsProvider(sl()));
 
   // Features - AI
+  sl.registerLazySingleton<OfflineAIService>(() => OfflineAIService());
+  sl.registerLazySingleton<GeminiAIService>(
+    () => GeminiAIService(dotenv.get('GEMINI_API_KEY', fallback: '')),
+  );
+  sl.registerLazySingleton<AIRouter>(
+    () => AIRouter(sl<OfflineAIService>(), sl<GeminiAIService>()),
+  );
   sl.registerLazySingleton<AIRepository>(
-    () => AIRepositoryImpl(dotenv.get('GEMINI_API_KEY')),
+    () => AIRepositoryImpl(sl<AIRouter>()),
   );
   sl.registerLazySingleton<AIProvider>(() => AIProvider(sl()));
 
   // Features - Profile Settings
   sl.registerLazySingleton<ProfileProvider>(() => ProfileProvider(sl()));
+  sl.registerLazySingleton<ProgressPhotosProvider>(() => ProgressPhotosProvider(sl(), sl(), sl()));
+
+  // Features - Challenges
+  sl.registerLazySingleton<ChallengeRepository>(
+    () => ChallengeRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<ChallengeProvider>(() => ChallengeProvider(sl()));
+
+  // Features - Sleep & Nutrition Metrics
+  sl.registerLazySingleton<SleepProvider>(() => SleepProvider(sl(), sl()));
+  sl.registerLazySingleton<MealProvider>(() => MealProvider(sl()));
+
+  // Core tracking & notifications
+  sl.registerLazySingleton<ActivityProvider>(() => ActivityProvider(sl()));
+  sl.registerLazySingleton<NotificationProvider>(() => NotificationProvider(sl()));
 }

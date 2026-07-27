@@ -2,43 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../domain/repositories/ai_repository.dart';
-import '../../../../core/config/rate_limit_config.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/providers/notification_provider.dart';
 
 class AIProvider extends ChangeNotifier {
   final AIRepository _aiRepository;
 
-  AIProvider(this._aiRepository);
+  bool _isOfflineOnly = false;
+  bool _isModelDownloaded = false;
 
-  Future<bool> _checkAndRecordAiCall() async {
+  bool get isOfflineOnly => _isOfflineOnly;
+  bool get isModelDownloaded => _isModelDownloaded;
+
+  AIProvider(this._aiRepository) {
+    _loadOfflineState();
+  }
+
+  void _loadOfflineState() {
     try {
       final prefs = di.sl<SharedPreferences>();
-      final now = DateTime.now();
-      const windowDuration = Duration(hours: RateLimitConfig.aiCallsWindowHours);
+      _isOfflineOnly = prefs.getBool('offline_only_ai_assistant') ?? false;
+      _isModelDownloaded = prefs.getBool('offline_gemma_model_downloaded') ?? false;
+    } catch (_) {}
+  }
 
-      // Load existing call history
-      final List<String> history = prefs.getStringList('ai_calls_history') ?? [];
-      
-      // Parse and filter history to include only calls within the rate limit window
-      final List<DateTime> validCalls = history
-          .map((t) => DateTime.tryParse(t))
-          .whereType<DateTime>()
-          .where((dt) => now.difference(dt).compareTo(windowDuration) <= 0)
-          .toList();
+  Future<void> setOfflineOnly(bool value) async {
+    _isOfflineOnly = value;
+    notifyListeners();
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      await prefs.setBool('offline_only_ai_assistant', value);
+    } catch (_) {}
+  }
 
-      if (validCalls.length >= RateLimitConfig.aiMaxCallsPerHour) {
-        return false;
-      }
+  Future<void> setOfflineModelDownloaded(bool value) async {
+    _isModelDownloaded = value;
+    notifyListeners();
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      await prefs.setBool('offline_gemma_model_downloaded', value);
+    } catch (_) {}
+  }
 
-      // Add current call and persist
-      validCalls.add(now);
-      final newHistory = validCalls.map((dt) => dt.toIso8601String()).toList();
-      await prefs.setStringList('ai_calls_history', newHistory);
-      return true;
-    } catch (_) {
-      // If SharedPreferences fails, allow call to avoid blocking users
-      return true;
-    }
+  Future<bool> _checkAndRecordAiCall() async {
+    // Centralized cloud call checking is now handled directly by the AIRouter
+    return true;
   }
 
   // Cache Generated Plan state
@@ -142,20 +150,7 @@ class AIProvider extends ChangeNotifier {
     _chatError = null;
     notifyListeners();
 
-    // Rate Limit Check
-    final allowed = await _checkAndRecordAiCall();
-    if (!allowed) {
-      _chatError = 'AI call limit reached.';
-      _chatMessages.add({
-        'role': 'model',
-        'text': 'You have reached the maximum number of coach queries allowed per hour. Please wait a bit before asking again.',
-      });
-      _isChatLoading = false;
-      notifyListeners();
-      return;
-    }
-
-    // 2. Prepare context history (excluding system prompt helper)
+    // 2. Prepare context history
     final historyForApi = _chatMessages
         .sublist(0, _chatMessages.length - 1)
         .map((m) => {'role': m['role']!, 'text': m['text']!})
@@ -169,7 +164,12 @@ class AIProvider extends ChangeNotifier {
 
     result.fold(
       onSuccess: (reply) {
-        _chatMessages.add({'role': 'model', 'text': reply});
+        final isOffline = _aiRepository.lastCallWasOffline;
+        _chatMessages.add({
+          'role': 'model',
+          'text': reply,
+          'source': isOffline ? 'offline' : 'online',
+        });
         _isChatLoading = false;
       },
       onFailure: (failure) {
@@ -177,10 +177,72 @@ class AIProvider extends ChangeNotifier {
         final sanitized = SecureLogger.sanitizeException(failure.message);
         _chatError = sanitized;
         _isChatLoading = false;
+        final isOffline = _aiRepository.lastCallWasOffline;
+
+        if (failure.message.contains('CLOUD_LIMIT_REACHED')) {
+          _chatMessages.add({
+            'role': 'model',
+            'text': 'Cloud request limit reached. Please check your offline model or try again later.',
+            'source': 'online',
+          });
+        } else {
+          _chatMessages.add({
+            'role': 'model',
+            'text': 'Sorry, I hit an issue: $sanitized Please try again.',
+            'source': isOffline ? 'offline' : 'online',
+          });
+        }
+      },
+    );
+    notifyListeners();
+  }
+
+  Future<void> escalateMessageToCoach(String text) async {
+    if (text.trim().isEmpty) return;
+
+    _isChatLoading = true;
+    _chatError = null;
+    notifyListeners();
+
+    final historyForApi = _chatMessages
+        .sublist(0, _chatMessages.length - 1)
+        .map((m) => {'role': m['role']!, 'text': m['text']!})
+        .toList();
+
+    final result = await _aiRepository.getCoachResponse(
+      prompt: text,
+      chatHistory: historyForApi,
+      forceEscalate: true,
+    );
+
+    result.fold(
+      onSuccess: (reply) {
         _chatMessages.add({
           'role': 'model',
-          'text': 'Sorry, I hit an issue: $sanitized Please try again.',
+          'text': reply,
+          'source': 'online',
         });
+        _isChatLoading = false;
+      },
+      onFailure: (failure) {
+        SecureLogger.logError('escalateMessageToCoach failed', failure.message);
+        final sanitized = SecureLogger.sanitizeException(failure.message);
+        _chatError = sanitized;
+        _isChatLoading = false;
+        
+        if (failure.message.contains('CLOUD_LIMIT_REACHED')) {
+          _chatMessages.add({
+            'role': 'model',
+            'text': 'Cloud request limit reached. Please try again later.',
+            'source': 'online',
+          });
+        } else {
+          _chatMessages.add({
+            'role': 'model',
+            'text': 'Sorry, I hit an issue: $sanitized Please try again.',
+            'source': 'online',
+          });
+        }
       },
     );
     notifyListeners();
@@ -248,6 +310,10 @@ class AIProvider extends ChangeNotifier {
           final prefs = di.sl<SharedPreferences>();
           prefs.setString('daily_insight_date', todayStr);
           prefs.setString('daily_insight_text', insight);
+          di.sl<NotificationProvider>().sendNotification(
+            'AI Coach Advice Generated',
+            'Your virtual Coach Gerex has parsed your recent routines and updated today\'s advice!',
+          );
         } catch (_) {}
       },
       onFailure: (failure) {

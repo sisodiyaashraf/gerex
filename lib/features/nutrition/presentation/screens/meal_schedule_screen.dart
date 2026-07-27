@@ -1,0 +1,395 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../providers/meal_provider.dart';
+import '../../domain/entities/meal_entities.dart';
+import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/theme/app_theme.dart';
+
+class MealScheduleScreen extends StatefulWidget {
+  const MealScheduleScreen({super.key});
+
+  @override
+  State<MealScheduleScreen> createState() => _MealScheduleScreenState();
+}
+
+class _MealScheduleScreenState extends State<MealScheduleScreen> {
+  DateTime _selectedDate = DateTime.now();
+
+  final List<String> _months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  void _changeMonth(int offset) {
+    setState(() {
+      _selectedDate = DateTime(
+        _selectedDate.year,
+        _selectedDate.month + offset,
+        _selectedDate.day,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final mealProvider = Provider.of<MealProvider>(context);
+
+    // Filter meals for the selected date
+    final dateMeals = mealProvider.mealPlan.where((m) =>
+        m.date.day == _selectedDate.day &&
+        m.date.month == _selectedDate.month &&
+        m.date.year == _selectedDate.year).toList();
+
+    // Grouping helper
+    Map<String, List<MealPlanEntry>> groupedMeals = {
+      'Breakfast': [],
+      'Lunch': [],
+      'Dinner': [],
+      'Snack': [],
+    };
+
+    double totalCalories = 0;
+    double totalProtein = 0;
+    double totalCarbs = 0;
+    double totalFat = 0;
+
+    for (final entry in dateMeals) {
+      if (groupedMeals.containsKey(entry.mealType)) {
+        groupedMeals[entry.mealType]!.add(entry);
+      } else {
+        groupedMeals['Snack']!.add(entry);
+      }
+      totalCalories += entry.calories;
+      totalProtein += entry.protein;
+      totalCarbs += entry.carbs;
+      totalFat += entry.fat;
+    }
+
+    return Scaffold(
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: GerexGradients.primaryCTA,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.primary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          onPressed: () => context.push('/meal-browse'),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      ),
+      body: LiquidBackground(
+        child: Column(
+          children: [
+            // Custom Month Header Toolbar
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                      onPressed: () => _changeMonth(-1),
+                    ),
+                    Text(
+                      '${_months[_selectedDate.month - 1]} ${_selectedDate.year}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios_rounded),
+                      onPressed: () => _changeMonth(1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Horizontal Day Selector Bar
+            _buildDaySelectorBar(theme),
+
+            Expanded(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16.0),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        // Meal groups
+                        ...groupedMeals.entries.map((group) {
+                          final typeName = group.key;
+                          final list = group.value;
+                          final totalGroupCals = list.fold<double>(0.0, (val, item) => val + item.calories);
+
+                          dynamic iconData = FontAwesomeIcons.bowlFood;
+                          Color typeColor = Colors.orangeAccent;
+                          if (typeName == 'Breakfast') {
+                            iconData = FontAwesomeIcons.mugSaucer;
+                            typeColor = Colors.amberAccent;
+                          } else if (typeName == 'Lunch') {
+                            iconData = FontAwesomeIcons.utensils;
+                            typeColor = Colors.orangeAccent;
+                          } else if (typeName == 'Dinner') {
+                            iconData = FontAwesomeIcons.bowlFood;
+                            typeColor = Colors.indigoAccent;
+                          } else {
+                            iconData = FontAwesomeIcons.cookie;
+                            typeColor = Colors.lightGreenAccent;
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      typeName,
+                                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      '${list.length} logged • ${totalGroupCals.toInt()} kcal',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (list.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 16.0),
+                                  child: GlassContainer(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    child: Center(
+                                      child: Text(
+                                        'No meals scheduled for $typeName.',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                ...list.map((meal) {
+                                  // Look up recipe object in provider recipes list
+                                  final recipe = mealProvider.recipes.firstWhere(
+                                    (r) => r.id == meal.recipeId,
+                                    orElse: () => Recipe(
+                                      id: meal.recipeId,
+                                      name: meal.recipeName,
+                                      author: 'Gerex',
+                                      category: meal.mealType,
+                                      description: '',
+                                      calories: meal.calories,
+                                      protein: meal.protein,
+                                      carbs: meal.carbs,
+                                      fat: meal.fat,
+                                      ingredients: const [],
+                                      steps: const [],
+                                    ),
+                                  );
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: GestureDetector(
+                                      onTap: () => context.push('/meal-details', extra: recipe),
+                                      child: GlassContainer(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                        child: Row(
+                                          children: [
+                                            CircleAvatar(
+                                              backgroundColor: typeColor.withValues(alpha: 0.1),
+                                              child: FaIcon(iconData as FaIconData, color: typeColor, size: 16),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    meal.recipeName,
+                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    '${meal.calories.toInt()} kcal • P: ${meal.protein.toInt()}g • C: ${meal.carbs.toInt()}g',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Icon(
+                                              Icons.arrow_forward_ios_rounded,
+                                              size: 12,
+                                              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              const SizedBox(height: 8),
+                            ],
+                          );
+                        }),
+
+                        const SizedBox(height: 24),
+
+                        // Bottom daily progress nutrient targets
+                        Text(
+                          'Daily Macro Nutrient Tracker',
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 12),
+                        GlassContainer(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              _buildNutrientProgressBar(theme, 'Calories', totalCalories, 2500, 'kcal', Colors.orangeAccent),
+                              const SizedBox(height: 12),
+                              _buildNutrientProgressBar(theme, 'Protein', totalProtein, 150, 'g', Colors.greenAccent),
+                              const SizedBox(height: 12),
+                              _buildNutrientProgressBar(theme, 'Carbs', totalCarbs, 300, 'g', Colors.blueAccent),
+                              const SizedBox(height: 12),
+                              _buildNutrientProgressBar(theme, 'Fats', totalFat, 80, 'g', Colors.pinkAccent),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 100),
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNutrientProgressBar(ThemeData theme, String label, double current, double target, String unit, Color progressColor) {
+    final double fraction = (target > 0 ? (current / target) : 0.0).clamp(0.0, 1.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(
+              '${current.toInt()} / ${target.toInt()} $unit',
+              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: fraction,
+            minHeight: 8,
+            backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDaySelectorBar(ThemeData theme) {
+    // Generate week array surrounding selected date
+    final weekStart = _selectedDate.subtract(Duration(days: _selectedDate.weekday - 1));
+    final days = List.generate(7, (idx) => weekStart.add(Duration(days: idx)));
+    final weekdayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    return Container(
+      height: 70,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(7, (index) {
+          final day = days[index];
+          final isSelected = day.day == _selectedDate.day &&
+              day.month == _selectedDate.month &&
+              day.year == _selectedDate.year;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedDate = day;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: isSelected ? GerexGradients.primaryCTA : null,
+                    color: isSelected ? null : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected
+                        ? null
+                        : Border.all(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                          ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        weekdayNames[index],
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected
+                              ? Colors.white
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        day.day.toString(),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}

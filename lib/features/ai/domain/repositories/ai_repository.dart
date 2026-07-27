@@ -2,6 +2,8 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';
 
 abstract class AIRepository {
+  bool get lastCallWasOffline;
+
   Future<Result<String, Failure>> generateWorkoutPlan({
     required String goal,
     required String equipment,
@@ -11,6 +13,7 @@ abstract class AIRepository {
   Future<Result<String, Failure>> getCoachResponse({
     required String prompt,
     required List<Map<String, String>> chatHistory,
+    bool forceEscalate = false,
   });
 
   Future<Result<String, Failure>> getDailyInsight({
