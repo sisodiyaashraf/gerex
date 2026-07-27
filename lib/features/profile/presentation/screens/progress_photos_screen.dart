@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../providers/progress_photos_provider.dart';
 import '../../domain/entities/progress_photo.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
 
@@ -272,44 +272,36 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = Provider.of<ProgressPhotosProvider>(context);
-    final cols = context.isTablet ? 3 : 2;
 
-    return Scaffold(
-      body: LiquidBackground(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 120.0,
-              floating: false,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  'Progress Photos',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                centerTitle: true,
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.camera_alt_rounded),
-                  onPressed: () => context.push('/guided-capture'),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.compare_arrows_rounded),
-                  onPressed: () => context.push('/progress-compare'),
-                ),
-                IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.sliders, size: 16),
-                  onPressed: () => _showSettingsDialog(context, provider),
-                ),
-              ],
-            ),
+    return GerexScaffold(
+      appBar: AppBar(
+        title: Text(
+          'Progress Photos',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.camera_alt_rounded, color: AppColors.accentEmeraldLight),
+            onPressed: () => context.push('/guided-capture'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.compare_arrows_rounded, color: AppColors.accentEmeraldLight),
+            onPressed: () => context.push('/progress-compare'),
+          ),
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.sliders, size: 16, color: AppColors.textDarkHeading),
+            onPressed: () => _showSettingsDialog(context, provider),
+          ),
+        ],
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               sliver: SliverList(
@@ -404,7 +396,7 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 sliver: SliverGrid(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cols,
+                    crossAxisCount: context.isTablet ? 3 : 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     childAspectRatio: 0.75,
@@ -558,11 +550,10 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
             ),
           ],
         ),
-      ),
       floatingActionButton: provider.isUploading
           ? FloatingActionButton(
               onPressed: null,
-              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              backgroundColor: AppColors.cardDarkGlass,
               child: const CircularProgressIndicator(),
             )
           : Container(

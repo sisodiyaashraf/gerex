@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/utils/relative_time.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
+import 'package:gerex/core/theme/app_theme.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -26,23 +27,28 @@ class NotificationScreen extends StatelessWidget {
           n.timestamp.day == now.day);
     }).toList();
 
-    return Scaffold(
+    return GerexScaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(
+          'Notifications',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           if (provider.unreadCount > 0)
             TextButton(
               onPressed: () => provider.markAllAsRead(),
-              child: const Text('Mark all read'),
+              child: const Text('Mark all read', style: TextStyle(color: AppColors.accentEmeraldLight)),
             ),
         ],
       ),
-      body: LiquidBackground(
-        child: provider.notifications.isEmpty
-            ? _buildEmptyState(theme)
-            : ListView(
+      body: provider.notifications.isEmpty
+          ? _buildEmptyState(theme)
+          : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
                 children: [
                   if (todayNotifications.isNotEmpty) ...[
@@ -58,7 +64,6 @@ class NotificationScreen extends StatelessWidget {
                   ],
                 ],
               ),
-      ),
     );
   }
 

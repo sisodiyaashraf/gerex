@@ -6,7 +6,9 @@ import '../providers/progress_photos_provider.dart';
 import '../../domain/entities/progress_photo.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
+import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
+import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
 class ProgressComparisonScreen extends StatefulWidget {
@@ -44,16 +46,21 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
 
     final isCompareEnabled = _startMonth != null && _startYear != null && _endMonth != null && _endYear != null;
 
-    return Scaffold(
+    return GerexScaffold(
       appBar: AppBar(
-        title: const Text('Compare Progress'),
+        title: Text(
+          'Compare Progress',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: LiquidBackground(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
@@ -178,7 +185,6 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -187,55 +193,57 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
     final startPhotos = photoProvider.photos.where((p) => p.createdAt.month == _startMonth && p.createdAt.year == _startYear).toList();
     final endPhotos = photoProvider.photos.where((p) => p.createdAt.month == _endMonth && p.createdAt.year == _endYear).toList();
 
-    return Scaffold(
+    return GerexScaffold(
       appBar: AppBar(
-        title: const Text('Comparison Analysis'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => setState(() => _isComparing = false),
+        title: Text(
+          'Compare Progress',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_rounded),
+            icon: const Icon(Icons.tune_rounded, color: AppColors.accentEmeraldLight),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Progress report summary image shared successfully!')),
-              );
+              setState(() {
+                _startMonth = null;
+                _startYear = null;
+                _endMonth = null;
+                _endYear = null;
+                _isComparing = false;
+              });
             },
           ),
         ],
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: LiquidBackground(
-        child: Column(
-          children: [
-            // Segmented glass tab switcher
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GlassContainer(
-                padding: const EdgeInsets.all(4),
-                borderRadius: 24,
-                child: Row(
-                  children: [
-                    Expanded(child: _buildTabButton('Photo')),
-                    Expanded(child: _buildTabButton('Statistic')),
-                  ],
-                ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: GlassContainer(
+              padding: const EdgeInsets.all(4),
+              borderRadius: 24,
+              child: Row(
+                children: [
+                  Expanded(child: _buildTabButton('Photo')),
+                  Expanded(child: _buildTabButton('Statistic')),
+                ],
               ),
             ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                child: _activeTab == 'Photo'
-                    ? _buildPhotoView(theme, startPhotos, endPhotos)
-                    : _buildStatisticView(theme, metricsProvider),
-              ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+              child: _activeTab == 'Photo'
+                  ? _buildPhotoView(theme, startPhotos, endPhotos)
+                  : _buildStatisticView(theme, metricsProvider),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -399,18 +407,19 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Weight Progression Trend', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Weight Progression Trend',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDarkHeading),
+              ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 150,
-                width: double.infinity,
-                child: CustomPaint(
-                  painter: _WeightComparisonPainter(
-                    theme: theme,
-                    startAvg: startAvg,
-                    endAvg: endAvg,
-                  ),
-                ),
+              GerexLineChart(
+                data: [
+                  GerexLineChartPoint(label: 'Baseline', value: startAvg),
+                  GerexLineChartPoint(label: 'Midpoint', value: (startAvg + endAvg) / 2),
+                  GerexLineChartPoint(label: 'Target', value: endAvg),
+                ],
+                unit: 'kg',
+                height: 180,
               ),
             ],
           ),
@@ -418,37 +427,28 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
         const SizedBox(height: 24),
 
         // Weight metric before/after bar
-        Text('Tracked Body Weight', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          'Tracked Body Weight',
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.textDarkHeading),
+        ),
         const SizedBox(height: 12),
         GlassContainer(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildProgressMetricBar(theme, 'Baseline Weight', startAvg, 'kg', Colors.blueAccent),
+              _buildProgressMetricBar(theme, 'Baseline Weight', startAvg, 'kg', AppColors.accentEmeraldLight),
               const SizedBox(height: 16),
-              _buildProgressMetricBar(theme, 'Comparison Weight', endAvg, 'kg', Colors.greenAccent),
+              _buildProgressMetricBar(theme, 'Comparison Weight', endAvg, 'kg', AppColors.badgeTealText),
             ],
           ),
         ),
 
         const SizedBox(height: 40),
 
-        // Sticky gradient return to home button
-        Container(
-          decoration: BoxDecoration(
-            gradient: GerexGradients.primaryCTA,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            onPressed: () => context.go('/'),
-            child: const Text('Back to Home Dashboard', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          ),
+        GerexButton(
+          text: 'Back to Home Dashboard',
+          onPressed: () => context.go('/'),
         ),
       ],
     );

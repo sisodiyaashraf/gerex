@@ -5,6 +5,7 @@ import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
+import 'package:gerex/core/theme/app_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -32,7 +33,7 @@ class LoginScreen extends StatelessWidget {
                     standardPhone: 80.0,
                     largePhone: 96.0,
                   ),
-                  color: theme.colorScheme.primary,
+                  color: AppColors.accentEmeraldLight,
                 ),
                 SizedBox(height: context.h(2)),
                 Text(

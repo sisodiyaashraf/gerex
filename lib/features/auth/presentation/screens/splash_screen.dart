@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../../core/presentation/widgets/gerex_scaffold.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
+    return const GerexScaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -14,12 +15,12 @@ class SplashScreen extends StatelessWidget {
             Icon(
               Icons.fitness_center_rounded,
               size: 72,
-              color: theme.colorScheme.primary,
+              color: AppColors.accentEmeraldLight,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.primary,
+                AppColors.accentEmeraldLight,
               ),
             ),
           ],
@@ -28,3 +29,4 @@ class SplashScreen extends StatelessWidget {
     );
   }
 }
+

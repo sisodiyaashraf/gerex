@@ -10,7 +10,10 @@ import '../../../metrics/presentation/providers/metrics_provider.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
+import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
+import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
+import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -52,10 +55,10 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
   }
 
   Color _getBmiColor(double bmi, ThemeData theme) {
-    if (bmi < 18.5) return Colors.blueAccent;
-    if (bmi < 25.0) return theme.colorScheme.primary;
-    if (bmi < 30.0) return Colors.orangeAccent;
-    return Colors.redAccent;
+    if (bmi < 18.5) return AppColors.accentEmeraldLight;
+    if (bmi < 25.0) return AppColors.accentEmeraldLight;
+    if (bmi < 30.0) return const Color(0xFFF59E0B);
+    return AppColors.destructiveRed;
   }
 
   @override
@@ -67,22 +70,22 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
     final notifications = Provider.of<NotificationProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
 
-    // Personalized greeting names
     final displayName = auth.user?.userMetadata?['full_name'] ??
         auth.user?.userMetadata?['name'] ??
         auth.user?.email?.split('@').first ??
         'Aesthetic Athlete';
 
-    // BMI computation
+    final photoUrl = auth.user?.userMetadata?['avatar_url'] ??
+        auth.user?.userMetadata?['picture'];
+
     final double latestWeight = metricsProvider.weightLogs.isNotEmpty
         ? metricsProvider.weightLogs.last.value
-        : 72.0; // Default fallback
+        : 72.0;
     final double userHeight = activity.userHeight;
     final double bmiValue = _calculateBmi(latestWeight, userHeight);
     final String bmiStatus = _getBmiStatus(bmiValue);
     final Color bmiColor = _getBmiColor(bmiValue, theme);
 
-    // Check if user completed workout today
     final now = DateTime.now();
     final bool completedToday = workoutProvider.sessions.any((s) {
       final compDate = s.completedAt ?? s.startedAt;
@@ -96,153 +99,133 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
       return '$mins min';
     }
 
-    return Scaffold(
-      body: LiquidBackground(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            final ai = context.read<AIProvider>();
-            await workoutProvider.fetchWorkouts();
-            await workoutProvider.fetchSessions();
-            await metricsProvider.fetchWeightLogs();
-            await ai.loadDailyInsight(workoutProvider.sessions, forceRefresh: true);
-          },
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              // Custom AppBar with avatar and notification bell
-              SliverAppBar(
-                floating: true,
-                title: const Text(
-                  'Gerex Dashboard',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+    return GerexScaffold(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final ai = context.read<AIProvider>();
+          await workoutProvider.fetchWorkouts();
+          await workoutProvider.fetchSessions();
+          await metricsProvider.fetchWeightLogs();
+          await ai.loadDailyInsight(workoutProvider.sessions, forceRefresh: true);
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              title: Text(
+                'Gerex Dashboard',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDarkHeading,
                 ),
-                backgroundColor: Colors.transparent,
-                scrolledUnderElevation: 0,
-                elevation: 0,
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Center(
-                    child: Consumer<AuthProvider>(
-                      builder: (context, auth, _) {
-                        final photoUrl = auth.user?.userMetadata?['avatar_url'] ??
-                            auth.user?.userMetadata?['picture'];
-                        final initials = displayName.isNotEmpty
-                            ? displayName.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
-                            : 'G';
-
-                        return GestureDetector(
-                          onTap: () => context.push('/profile'),
-                          child: CircleAvatar(
-                            radius: 16,
-                            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            child: photoUrl == null
-                                ? Text(
-                                    initials,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.primary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                actions: [
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const FaIcon(FontAwesomeIcons.solidBell, size: 18),
-                        onPressed: () => context.push('/notifications'),
-                      ),
-                      if (notifications.unreadCount > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.redAccent,
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              '${notifications.unreadCount}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                ],
               ),
+              backgroundColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 16.0),
+                child: Center(
+                  child: GerexAvatar(
+                    imageUrl: photoUrl,
+                    initials: displayName.isNotEmpty ? displayName[0] : 'G',
+                    size: 36,
+                    hasNotification: notifications.unreadCount > 0,
+                    onTap: () => context.push('/profile'),
+                  ),
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.solidBell, size: 18, color: AppColors.textDarkHeading),
+                  onPressed: () => context.push('/notifications'),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
 
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // Live Session Alert Banner if active
-                    if (workoutProvider.isSessionActive) ...[
-                      GlassContainer(
-                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
-                        child: ListTile(
-                          leading: FaIcon(
-                            FontAwesomeIcons.dumbbell,
-                            color: theme.colorScheme.primary,
-                          ),
-                          title: Text(
-                            'Workout in Progress',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Active Session: ${workoutProvider.activeSessionName}',
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            color: theme.colorScheme.primary,
-                            size: 16,
-                          ),
-                          onTap: () {
-                            context.push('/session');
-                          },
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (workoutProvider.isSessionActive) ...[
+                    GlassContainer(
+                      color: AppColors.cardDarkGlass.withValues(alpha: 0.9),
+                      child: ListTile(
+                        leading: const FaIcon(
+                          FontAwesomeIcons.dumbbell,
+                          color: AppColors.accentEmeraldLight,
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // 1. Personalized Greeting
-                    Text(
-                      'Welcome back,',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    Text(
-                      displayName,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        title: const Text(
+                          'Workout in Progress',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.accentEmeraldLight,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Active Session: ${workoutProvider.activeSessionName}',
+                          style: const TextStyle(
+                            color: AppColors.textDarkMuted,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: AppColors.accentEmeraldLight,
+                          size: 16,
+                        ),
+                        onTap: () {
+                          context.push('/session');
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
+                  ],
+
+                  // Signature Hero Mint Card Overview
+                  HeroMintCard(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Welcome back, $displayName',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textLightBody.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.badgeDarkNavy,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                completedToday ? 'Target Done' : 'Daily Goal',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.accentEmeraldLight,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        BigStatNumber(
+                          number: '${workoutProvider.sessions.length}',
+                          label: 'Total Completed Workouts',
+                          unit: 'SESSIONS',
+                          isDarkCard: false,
+                        ),
+                      ],
+                    ),
+                  ),
 
                     // 2. BMI Summary Glass Card
                     GlassContainer(
@@ -957,7 +940,6 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
             ],
           ),
         ),
-      ),
     );
   }
 

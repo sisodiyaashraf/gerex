@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ai_provider.dart';
 import 'offline_download_screen.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/validation/validators.dart';
 
@@ -48,23 +48,29 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
     final theme = Theme.of(context);
     final provider = Provider.of<AIProvider>(context);
 
-    return Scaffold(
+    return GerexScaffold(
       appBar: AppBar(
-        title: const Text('Coach Gerex (AI)'),
+        title: Text(
+          'AI Performance Coach',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined),
-            onPressed: () => provider.clearChat(),
+            icon: const Icon(Icons.download_rounded, color: AppColors.accentEmeraldLight),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OfflineDownloadScreen()),
+              );
+            },
           ),
         ],
       ),
-      body: LiquidBackground(
-        child: Column(
-          children: [
-            // Chat history log bubbles
-            Expanded(
-              child: Column(
-                children: [
+      body: Column(
+        children: [
                   if (!provider.isModelDownloaded)
                     GestureDetector(
                       onTap: () {
@@ -122,9 +128,6 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                             },
                           ),
                   ),
-                ],
-              ),
-            ),
 
             // Loading spinner
             if (provider.isChatLoading)
@@ -242,7 +245,6 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 

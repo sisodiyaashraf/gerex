@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/sleep_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/widgets/slide_to_confirm_button.dart';
+import 'package:gerex/core/theme/app_theme.dart';
 
 class AddAlarmScreen extends StatefulWidget {
   const AddAlarmScreen({super.key});
@@ -17,7 +18,7 @@ class AddAlarmScreen extends StatefulWidget {
 class _AddAlarmScreenState extends State<AddAlarmScreen> {
   TimeOfDay _bedtime = const TimeOfDay(hour: 22, minute: 30);
   TimeOfDay _wakeTime = const TimeOfDay(hour: 6, minute: 30);
-  final List<int> _repeatDays = [1, 2, 3, 4, 5]; // Default weekdays
+  final List<int> _repeatDays = [1, 2, 3, 4, 5];
   bool _vibrate = true;
 
   Future<void> _selectBedtime(BuildContext context) async {
@@ -70,32 +71,25 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       _formatTime(_wakeTime),
     );
 
-    return Scaffold(
-      body: LiquidBackground(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 100.0,
-              floating: false,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  'Add Bedtime Alarm',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                centerTitle: true,
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
+    return GerexScaffold(
+      appBar: AppBar(
+        title: Text(
+          'Add Bedtime Alarm',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                   // Projected sleep info banner
                   GlassContainer(
                     padding: const EdgeInsets.all(16),
@@ -254,7 +248,6 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
+import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
 class SelectPlanScreen extends StatefulWidget {
@@ -28,47 +29,34 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                  decoration: const BoxDecoration(
+                    color: AppColors.chipGreenBg,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.payments_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: AppColors.accentEmeraldLight,
                     size: 36,
                   ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
                   'Coming Soon!',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDarkHeading),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Premium subscription plans are currently under development. Real payment integration (App Store In-App Purchases, Stripe, or RevenueCat) will be wired up in a future update.',
+                const Text(
+                  'Premium subscription plans are currently under development. Real payment integration will be wired up in a future update.',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: AppColors.textDarkMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: GerexGradients.primaryCTA,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Got it', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
+                GerexButton(
+                  text: 'Got it',
+                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
@@ -81,14 +69,23 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     const double monthlyPrice = 9.99;
-    const double annualPrice = 89.99; // 25% discount on monthly total: (9.99 * 12) * 0.75 = ~89.99
+    const double annualPrice = 89.99;
 
-    return Scaffold(
-      body: LiquidBackground(
-        child: CustomScrollView(
+    return GerexScaffold(
+      appBar: AppBar(
+        title: Text(
+          'Choose Your Plan',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: CustomScrollView(
           slivers: [
             // Dark Gradient Hero Header
             SliverAppBar(
@@ -111,7 +108,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                   children: [
                     Container(
                       decoration: const BoxDecoration(
-                        gradient: GerexGradients.darkBaseBackground,
+                        gradient: GerexGradients.scaffoldBackground,
                       ),
                     ),
                     Positioned(
@@ -125,16 +122,16 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
-                              color: Colors.white,
+                              color: AppColors.textDarkHeading,
                               letterSpacing: -0.5,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          const Text(
                             'Unlock your ultimate athletic aesthetic',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.7),
+                              color: AppColors.textDarkMuted,
                             ),
                           ),
                         ],
@@ -164,14 +161,14 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: !_isAnnual ? theme.colorScheme.primary : Colors.transparent,
+                                color: !_isAnnual ? AppColors.accentEmeraldLight : Colors.transparent,
                               ),
                               child: Text(
                                 'Monthly',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: !_isAnnual ? Colors.white : (isDark ? Colors.white60 : Colors.black54),
+                                  color: !_isAnnual ? Colors.white : AppColors.textDarkMuted,
                                 ),
                               ),
                             ),
@@ -183,7 +180,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: _isAnnual ? theme.colorScheme.primary : Colors.transparent,
+                                color: _isAnnual ? AppColors.accentEmeraldLight : Colors.transparent,
                               ),
                               child: Row(
                                 children: [
@@ -192,22 +189,22 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
-                                      color: _isAnnual ? Colors.white : (isDark ? Colors.white60 : Colors.black54),
+                                      color: _isAnnual ? Colors.white : AppColors.textDarkMuted,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: _isAnnual ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.primary.withValues(alpha: 0.15),
+                                      color: AppColors.badgeDarkNavy,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Text(
+                                    child: const Text(
                                       'Save 25%',
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w900,
-                                        color: _isAnnual ? Colors.white : theme.colorScheme.primary,
+                                        color: AppColors.accentEmeraldLight,
                                       ),
                                     ),
                                   ),
@@ -298,7 +295,6 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 

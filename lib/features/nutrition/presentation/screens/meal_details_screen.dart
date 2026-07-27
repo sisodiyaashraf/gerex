@@ -55,7 +55,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                     centerTitle: true,
                     background: Container(
                       decoration: const BoxDecoration(
-                        gradient: GerexGradients.darkBaseBackground,
+                        gradient: GerexGradients.scaffoldBackground,
                       ),
                       child: Center(
                         child: Opacity(

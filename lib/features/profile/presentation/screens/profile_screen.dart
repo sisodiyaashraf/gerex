@@ -8,7 +8,11 @@ import '../../../metrics/presentation/providers/metrics_provider.dart';
 import '../providers/profile_provider.dart';
 import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
+import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
+import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
+import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
+import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import '../../../../core/presentation/providers/theme_provider.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
@@ -65,7 +69,7 @@ class ProfileScreen extends StatelessWidget {
     double? currentWeight;
     String trendText = 'Stable';
     dynamic trendIcon = FontAwesomeIcons.minus;
-    Color trendColor = theme.colorScheme.onSurface.withValues(alpha: 0.5);
+    Color trendColor = AppColors.textDarkMuted;
 
     if (weightLogs.isNotEmpty) {
       currentWeight = weightLogs.last.value;
@@ -77,11 +81,11 @@ class ProfileScreen extends StatelessWidget {
         if (diff > 0.01) {
           trendText = '+${diff.toStringAsFixed(1)} kg';
           trendIcon = FontAwesomeIcons.arrowUp;
-          trendColor = Colors.redAccent;
+          trendColor = AppColors.destructiveRed;
         } else if (diff < -0.01) {
           trendText = '${diff.toStringAsFixed(1)} kg';
           trendIcon = FontAwesomeIcons.arrowDown;
-          trendColor = Colors.greenAccent;
+          trendColor = AppColors.accentEmeraldLight;
         }
       }
     }
@@ -100,9 +104,15 @@ class ProfileScreen extends StatelessWidget {
     String formatVolume(double kgs) {
       if (displayUnit == 'lb') {
         final lbs = kgs * 2.20462;
-        return '${(lbs / 1000).toStringAsFixed(1)}k lbs';
+        if (lbs >= 1000) {
+          return '${(lbs / 1000).toStringAsFixed(1)}k lb';
+        }
+        return '${lbs.toInt()} lb';
       }
-      return '${(kgs / 1000).toStringAsFixed(1)}k kg';
+      if (kgs >= 1000) {
+        return '${(kgs / 1000).toStringAsFixed(1)}k kg';
+      }
+      return '${kgs.toInt()} kg';
     }
 
     void showLogoutConfirmation() {
@@ -122,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
                     width: 40,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                      color: AppColors.textDarkMuted,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -132,14 +142,15 @@ class ProfileScreen extends StatelessWidget {
                   'Confirm Sign Out',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textDarkHeading,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   'Are you sure you want to sign out? Your local data will be saved but offline sync will be suspended.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  style: TextStyle(
+                    color: AppColors.textDarkMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -147,34 +158,24 @@ class ProfileScreen extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                      child: GerexButton(
+                        text: 'Cancel',
+                        style: GerexButtonStyle.whitePill,
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                      child: GerexButton(
+                        text: 'Sign Out',
+                        style: GerexButtonStyle.destructive,
                         onPressed: () async {
-                          Navigator.pop(context); // close modal sheet
+                          Navigator.pop(context);
                           await authProvider.signOut();
                           if (context.mounted) {
                             context.go('/login');
                           }
                         },
-                        child: const Text('Sign Out'),
                       ),
                     ),
                   ],
@@ -186,144 +187,201 @@ class ProfileScreen extends StatelessWidget {
       );
     }
 
-    return Scaffold(
-      body: LiquidBackground(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Collapse-safe Sliver App Bar
-            SliverAppBar(
-              expandedHeight: 180.0,
-              floating: false,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  'Profile Settings',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
+    return GerexScaffold(
+      appBar: AppBar(
+        title: Text(
+          'Profile & Settings',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Signature Hero Mint Card Profile Summary
+                HeroMintCard(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          GerexAvatar(
+                            imageUrl: photoUrl,
+                            initials: initials,
+                            size: 60,
+                            hasNotification: false,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayName,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textLightHeading,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  email,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textLightBody,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      BigStatNumber(
+                        number: formatWeight(currentWeight),
+                        label: 'Current Weight • Trend: $trendText',
+                        isDarkCard: false,
+                      ),
+                    ],
                   ),
                 ),
-                centerTitle: true,
-                background: Stack(
-                  fit: StackFit.expand,
+                const SizedBox(height: 16),
+
+                // Stats Dashboard Row
+                Row(
                   children: [
-                    // Base visual gradient
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: GerexGradients.darkBaseBackground,
+                    Expanded(
+                      child: GlassContainer(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                        child: Column(
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '$workoutsCount',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontFamily: 'Outfit',
+                                  fontWeight: FontWeight.w900,
+                                  color: theme.colorScheme.primary,
+                                  fontSize: context.sp(28),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Workouts',
+                                style: TextStyle(fontSize: context.sp(12)),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    // Light overlay for styling
-                    Container(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GlassContainer(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                        child: Column(
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '$streak d',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontFamily: 'Outfit',
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.orangeAccent,
+                                  fontSize: context.sp(28),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Streak',
+                                style: TextStyle(fontSize: context.sp(12)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GlassContainer(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                        child: Column(
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                formatVolume(totalVolume),
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontFamily: 'Outfit',
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF818CF8),
+                                  fontSize: context.sp(28),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Volume',
+                                style: TextStyle(fontSize: context.sp(12)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            // Profile Content body
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // User Details Header Glass Card
-                  GlassContainer(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
+                const SizedBox(height: 16),                // Body Weight Metrics Card
+                GestureDetector(
+                  onTap: () => context.push('/analytics'),
+                  child: GlassContainer(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Avatar Photo
-                        CircleAvatar(
-                          radius: 46,
-                          backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                          child: photoUrl == null
-                              ? Text(
-                                  initials,
-                                  style: TextStyle(
-                                    color: theme.colorScheme.primary,
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          displayName,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          email,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
+                            const FaIcon(FontAwesomeIcons.scaleUnbalanced, color: AppColors.accentEmeraldLight, size: 20),
+                            const SizedBox(width: 12),
                             Column(
-                              children: [
-                                Text(
-                                  '${activity.userHeight.toInt()} cm',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                ),
-                                Text(
-                                  'Height',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(width: 1, height: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
-                            Column(
-                              children: [
-                                Text(
-                                  formatWeight(currentWeight),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                ),
-                                Text(
-                                  'Weight',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(width: 1, height: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
-                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  '24 yrs',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  'Weight Tracker Analytics',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
                                 ),
                                 Text(
-                                  'Age',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                                  ),
+                                  'Height: ${activity.userHeight.toInt()} cm • Weight: ${formatWeight(currentWeight)}',
+                                  style: const TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
                                 ),
                               ],
                             ),
                           ],
                         ),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.accentEmeraldLight),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                ),    const SizedBox(height: 16),
 
                   // Stats Dashboard Row
                   Row(
@@ -778,13 +836,11 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 48),
                 ]),
               ),
             ),
           ],
         ),
-      ),
     );
   }
 

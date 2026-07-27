@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/sleep_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
 class SleepScheduleScreen extends StatefulWidget {
@@ -15,42 +15,34 @@ class SleepScheduleScreen extends StatefulWidget {
 }
 
 class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
-  int _selectedDayIndex = DateTime.now().weekday; // 1 (Mon) to 7 (Sun)
+  int _selectedDayIndex = DateTime.now().weekday;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final sleepProvider = Provider.of<SleepProvider>(context);
 
-    // Get alarms active for the selected weekday
     final activeAlarmsForDay = sleepProvider.alarms.where((a) => a.repeatDays.contains(_selectedDayIndex)).toList();
 
-    return Scaffold(
-      body: LiquidBackground(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 100.0,
-              floating: false,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  'Sleep Schedule',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                centerTitle: true,
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
+    return GerexScaffold(
+      appBar: AppBar(
+        title: Text(
+          'Sleep Schedule',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                   // Ideal Hours card
                   GlassContainer(
                     padding: const EdgeInsets.all(16),
@@ -279,7 +271,6 @@ class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }

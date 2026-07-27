@@ -3,9 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
-import '../../domain/entities/meal_entities.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
+import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
+import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
+import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
+import 'package:gerex/core/presentation/widgets/segmented_pill_nav.dart';
+import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
 
 class MealPlannerScreen extends StatefulWidget {
@@ -16,7 +20,8 @@ class MealPlannerScreen extends StatefulWidget {
 }
 
 class _MealPlannerScreenState extends State<MealPlannerScreen> {
-  String _selectedFilterType = 'Breakfast';
+  int _selectedFilterIdx = 0;
+  final List<String> _categories = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
   void _openFoodBrowser(BuildContext context, String category, MealProvider provider) {
     final filtered = provider.recipes.where((r) => r.category == category).toList();
@@ -34,7 +39,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 width: 40,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
+                  color: AppColors.textDarkMuted,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -42,7 +47,10 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
             const SizedBox(height: 20),
             Text(
               'Browse $category Recipes',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDarkHeading,
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -66,21 +74,29 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                               children: [
                                 Text(
                                   rec.name,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: AppColors.textDarkHeading,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   '${rec.calories.toInt()} kcal • P: ${rec.protein.toInt()}g • C: ${rec.carbs.toInt()}g',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 11,
-                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                    color: AppColors.textDarkMuted,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           ElevatedButton(
-                            style: ElevatedButton.styleFrom(visualDensity: VisualDensity.compact),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accentEmeraldLight,
+                              foregroundColor: Colors.white,
+                              visualDensity: VisualDensity.compact,
+                            ),
                             onPressed: () {
                               Navigator.pop(ctx);
                               context.push('/meal-details', extra: rec);
@@ -105,87 +121,117 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
     final theme = Theme.of(context);
     final mealProvider = Provider.of<MealProvider>(context);
 
-    // Filter meals for today
+    final selectedCategory = _categories[_selectedFilterIdx];
+
     final today = DateTime.now();
     final todayMeals = mealProvider.mealPlan.where((m) =>
         m.date.day == today.day &&
         m.date.month == today.month &&
         m.date.year == today.year &&
-        m.mealType == _selectedFilterType).toList();
+        m.mealType == selectedCategory).toList();
 
-    return Scaffold(
-      body: LiquidBackground(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 120.0,
-              floating: false,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.calendar_month_rounded),
-                  onPressed: () => context.push('/meal-schedule'),
+    final List<GerexLineChartPoint> calorieTrendPoints = const [
+      GerexLineChartPoint(label: 'Mon', value: 1850),
+      GerexLineChartPoint(label: 'Tue', value: 2100),
+      GerexLineChartPoint(label: 'Wed', value: 1750),
+      GerexLineChartPoint(label: 'Thu', value: 1980),
+      GerexLineChartPoint(label: 'Fri', value: 2200),
+      GerexLineChartPoint(label: 'Sat', value: 1900),
+      GerexLineChartPoint(label: 'Sun', value: 1820),
+    ];
+
+    return GerexScaffold(
+      appBar: AppBar(
+        title: Text(
+          'Meal Planner',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDarkHeading,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month_rounded, color: AppColors.textDarkHeading),
+            onPressed: () => context.push('/meal-schedule'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.search_rounded, color: AppColors.textDarkHeading),
+            onPressed: () => context.push('/meal-browse'),
+          ),
+        ],
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Signature Hero Mint Header Card
+                HeroMintCard(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Daily Calorie Target',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textLightBody.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.badgeDarkNavy,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'Target: 2,200 kcal',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.accentEmeraldLight,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const BigStatNumber(
+                        number: '1,850',
+                        label: 'Calories Consumed Today',
+                        unit: 'KCAL',
+                        isDarkCard: false,
+                      ),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.search_rounded),
-                  onPressed: () => context.push('/meal-browse'),
-                ),
-              ],
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  'Meal Planner',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
+
+                Text(
+                  'Nutrient Trends (Past 7 Days)',
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textDarkHeading,
                   ),
                 ),
-                centerTitle: true,
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Analytics section title
-                  Text(
-                    'Nutrient Trends (Past 7 Days)',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-                  // Weekly Calorie Trend Chart
-                  GlassContainer(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: 150,
-                          width: double.infinity,
-                          child: mealProvider.mealPlan.isEmpty
-                              ? const Center(child: Text('No nutrition logs registered.'))
-                              : CustomPaint(
-                                  painter: _NutrientChartPainter(
-                                    theme: theme,
-                                    plans: mealProvider.mealPlan,
-                                  ),
-                                ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildLegendItem(theme, Colors.orangeAccent, 'Calories'),
-                            _buildLegendItem(theme, Colors.greenAccent, 'Protein'),
-                            _buildLegendItem(theme, Colors.blueAccent, 'Carbs'),
-                          ],
-                        ),
-                      ],
-                    ),
+                GlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  child: GerexLineChart(
+                    data: calorieTrendPoints,
+                    unit: 'kcal',
+                    height: 180,
                   ),
-                  const SizedBox(height: 24),
+                ),
+                const SizedBox(height: 24),
 
                   // Daily meals schedule selection
                   Row(
@@ -193,34 +239,26 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                     children: [
                       const Text(
                         'Today\'s Meals List',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
                       ),
-                      DropdownButton<String>(
-                        value: _selectedFilterType,
-                        underline: const SizedBox.shrink(),
-                        items: const [
-                          DropdownMenuItem(value: 'Breakfast', child: Text('Breakfast')),
-                          DropdownMenuItem(value: 'Lunch', child: Text('Lunch')),
-                          DropdownMenuItem(value: 'Dinner', child: Text('Dinner')),
-                          DropdownMenuItem(value: 'Snack', child: Text('Snacks')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _selectedFilterType = val);
-                          }
+                      SegmentedPillNav(
+                        options: _categories,
+                        selectedIndex: _selectedFilterIdx,
+                        onSelected: (idx) {
+                          setState(() => _selectedFilterIdx = idx);
                         },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
                   if (todayMeals.isEmpty) ...[
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Text(
-                          'No meals logged for $_selectedFilterType.',
-                          style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13),
+                          'No meals logged for $selectedCategory.',
+                          style: const TextStyle(color: AppColors.textDarkMuted, fontSize: 13),
                         ),
                       ),
                     ),
@@ -295,20 +333,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildLegendItem(ThemeData theme, Color color, String label) {
-    return Row(
-      children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-        ),
-      ],
     );
   }
 
@@ -360,159 +384,4 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
   }
 }
 
-class _NutrientChartPainter extends CustomPainter {
-  final ThemeData theme;
-  final List<MealPlanEntry> plans;
 
-  _NutrientChartPainter({required this.theme, required this.plans});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const double paddingLeft = 32.0;
-    const double paddingRight = 16.0;
-    const double paddingTop = 16.0;
-    const double paddingBottom = 20.0;
-
-    final double width = size.width - paddingLeft - paddingRight;
-    final double height = size.height - paddingTop - paddingBottom;
-
-    if (plans.isEmpty) return;
-
-    // Group logs by weekday date
-    final dailyTotals = <String, double>{};
-    final dailyProtein = <String, double>{};
-    final dailyCarbs = <String, double>{};
-    final now = DateTime.now();
-
-    final List<DateTime> last7Days = List.generate(7, (idx) => now.subtract(Duration(days: 6 - idx)));
-
-    for (final day in last7Days) {
-      final key = '${day.year}-${day.month}-${day.day}';
-      dailyTotals[key] = 0.0;
-      dailyProtein[key] = 0.0;
-      dailyCarbs[key] = 0.0;
-
-      final matched = plans.where((m) => m.date.day == day.day && m.date.month == day.month && m.date.year == day.year);
-      for (final m in matched) {
-        dailyTotals[key] = dailyTotals[key]! + m.calories;
-        dailyProtein[key] = dailyProtein[key]! + m.protein;
-        dailyCarbs[key] = dailyCarbs[key]! + m.carbs;
-      }
-    }
-
-    final values = dailyTotals.values.toList();
-    double maxCal = 1500.0;
-    for (final v in values) {
-      if (v > maxCal) maxCal = v;
-    }
-    double minCal = 0.0;
-
-    final double valRange = maxCal - minCal;
-
-    final paintGrid = Paint()
-      ..color = theme.colorScheme.outline.withValues(alpha: 0.1)
-      ..strokeWidth = 1.0;
-
-    final textStyle = TextStyle(
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-      fontSize: 9,
-    );
-
-    // Draw horizontal grid lines
-    for (int i = 0; i <= 2; i++) {
-      final y = paddingTop + height * (i / 2.0);
-      canvas.drawLine(
-        Offset(paddingLeft, y),
-        Offset(size.width - paddingRight, y),
-        paintGrid,
-      );
-
-      final val = maxCal - valRange * (i / 2.0);
-      final textSpan = TextSpan(text: '${val.toStringAsFixed(0)} kcal', style: textStyle);
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-      )..layout();
-
-      textPainter.paint(
-        canvas,
-        Offset(paddingLeft - textPainter.width - 6, y - textPainter.height / 2),
-      );
-    }
-
-    final pointsCal = <Offset>[];
-    final pointsProtein = <Offset>[];
-    final pointsCarbs = <Offset>[];
-
-    for (int i = 0; i < last7Days.length; i++) {
-      final key = '${last7Days[i].year}-${last7Days[i].month}-${last7Days[i].day}';
-      final x = paddingLeft + width * (i / 6.0);
-
-      // Calories plot
-      final double normCal = (dailyTotals[key]! - minCal) / valRange;
-      final yCal = paddingTop + height * (1.0 - normCal.clamp(0.0, 1.0));
-      pointsCal.add(Offset(x, yCal));
-
-      // Protein plot (scaled x10 to visually fit on same chart)
-      final double normProt = ((dailyProtein[key]! * 10) - minCal) / valRange;
-      final yProt = paddingTop + height * (1.0 - normProt.clamp(0.0, 1.0));
-      pointsProtein.add(Offset(x, yProt));
-
-      // Carbs plot (scaled x5 to fit on same chart)
-      final double normCarbs = ((dailyCarbs[key]! * 5) - minCal) / valRange;
-      final yCarb = paddingTop + height * (1.0 - normCarbs.clamp(0.0, 1.0));
-      pointsCarbs.add(Offset(x, yCarb));
-    }
-
-    // Helper to draw a curve path line
-    void drawCurve(List<Offset> pts, Color color) {
-      final paintLine = Paint()
-        ..color = color
-        ..strokeWidth = 2.5
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-
-      final path = Path()..moveTo(pts.first.dx, pts.first.dy);
-      for (int i = 1; i < pts.length; i++) {
-        path.lineTo(pts[i].dx, pts[i].dy);
-      }
-      canvas.drawPath(path, paintLine);
-
-      // Draw point dots
-      final dotPaint = Paint()..color = color;
-      final strokePaint = Paint()
-        ..color = theme.colorScheme.surface
-        ..strokeWidth = 1.5
-        ..style = PaintingStyle.stroke;
-
-      for (final p in pts) {
-        canvas.drawCircle(p, 4.0, dotPaint);
-        canvas.drawCircle(p, 4.0, strokePaint);
-      }
-    }
-
-    drawCurve(pointsCal, Colors.orangeAccent);
-    drawCurve(pointsProtein, Colors.greenAccent);
-    drawCurve(pointsCarbs, Colors.blueAccent);
-
-    // Weekdays names
-    final weekdayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    for (int i = 0; i < last7Days.length; i++) {
-      final x = paddingLeft + width * (i / 6.0);
-      final name = weekdayNames[(last7Days[i].weekday - 1) % 7];
-      final textSpan = TextSpan(text: name, style: textStyle.copyWith(fontWeight: FontWeight.bold));
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-      )..layout();
-
-      textPainter.paint(
-        canvas,
-        Offset(x - textPainter.width / 2, size.height - paddingBottom + 6),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

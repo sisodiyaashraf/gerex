@@ -23,6 +23,7 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  int _selectedTabIdx = 0;
 
   final List<String> _muscleGroups = [
     'All',
@@ -62,7 +63,6 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
 
   void _showFilterBottomSheet(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
@@ -79,6 +79,7 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                 'Filter by Target Muscle Group',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: AppColors.textDarkHeading,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -92,23 +93,21 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                     builder: (context, provider, _) {
                       final isSelected = provider.selectedMuscleGroup == group;
                       return ChoiceChip(
-                        label: Text(group),
+                        label: Text(
+                          group,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : AppColors.textDarkBody,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
                         selected: isSelected,
+                        selectedColor: AppColors.accentEmeraldDeep,
                         onSelected: (selected) {
                           if (selected) {
                             provider.updateMuscleGroup(group);
                             Navigator.pop(context);
                           }
                         },
-                        selectedColor: theme.colorScheme.primary,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isDark ? Colors.white70 : Colors.black87),
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
                       );
                     },
                   );
