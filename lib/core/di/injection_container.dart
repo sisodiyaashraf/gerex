@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -40,9 +41,17 @@ Future<void> init() async {
   sl.registerLazySingleton<SharedPreferences>(() => sharedPrefs);
 
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
-  sl.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn(
+  sl.registerLazySingleton<GoogleSignIn>(() {
+    if (kIsWeb) {
+      return GoogleSignIn(
+        clientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
+      );
+    } else {
+      return GoogleSignIn(
         serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
-      ));
+      );
+    }
+  });
 
   // Core
   sl.registerLazySingleton<NetworkInfo>(() => const NetworkInfoImpl());

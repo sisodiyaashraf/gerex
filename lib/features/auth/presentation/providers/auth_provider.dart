@@ -14,6 +14,8 @@ class AuthProvider extends ChangeNotifier {
   String? _errorMessage;
   bool _isInitialized = false;
   bool _onboardingCompleted = false;
+  bool _onboardingLoaded = false;
+  bool _authLoaded = false;
   late final StreamSubscription<supabase.AuthState> _authSubscription;
 
   AuthProvider(this._authRepository) {
@@ -21,9 +23,16 @@ class AuthProvider extends ChangeNotifier {
     _loadOnboardingStatus();
     _authSubscription = _authRepository.onAuthStateChanged.listen((data) {
       _user = data.session?.user;
+      _authLoaded = true;
+      _checkInitialization();
+    });
+  }
+
+  void _checkInitialization() {
+    if (_authLoaded && _onboardingLoaded) {
       _isInitialized = true;
       notifyListeners();
-    });
+    }
   }
 
   Future<void> _loadOnboardingStatus() async {
@@ -31,9 +40,11 @@ class AuthProvider extends ChangeNotifier {
       const storage = FlutterSecureStorage();
       final val = await storage.read(key: 'onboarding_completed');
       _onboardingCompleted = val == 'true';
-      notifyListeners();
     } catch (_) {
       _onboardingCompleted = false;
+    } finally {
+      _onboardingLoaded = true;
+      _checkInitialization();
     }
   }
 

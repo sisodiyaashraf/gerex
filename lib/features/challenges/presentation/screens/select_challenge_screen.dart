@@ -23,7 +23,6 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  int _selectedTabIdx = 0;
 
   final List<String> _muscleGroups = [
     'All',

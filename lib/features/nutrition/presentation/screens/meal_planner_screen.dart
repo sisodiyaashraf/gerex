@@ -130,7 +130,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         m.date.year == today.year &&
         m.mealType == selectedCategory).toList();
 
-    final List<GerexLineChartPoint> calorieTrendPoints = const [
+    const List<GerexLineChartPoint> calorieTrendPoints = [
       GerexLineChartPoint(label: 'Mon', value: 1850),
       GerexLineChartPoint(label: 'Tue', value: 2100),
       GerexLineChartPoint(label: 'Wed', value: 1750),
@@ -223,8 +223,8 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                GlassContainer(
-                  padding: const EdgeInsets.all(16),
+                const GlassContainer(
+                  padding: EdgeInsets.all(16),
                   child: GerexLineChart(
                     data: calorieTrendPoints,
                     unit: 'kcal',
@@ -241,12 +241,15 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                         'Today\'s Meals List',
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
                       ),
-                      SegmentedPillNav(
-                        options: _categories,
-                        selectedIndex: _selectedFilterIdx,
-                        onSelected: (idx) {
-                          setState(() => _selectedFilterIdx = idx);
-                        },
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SegmentedPillNav(
+                          options: _categories,
+                          selectedIndex: _selectedFilterIdx,
+                          onSelected: (idx) {
+                            setState(() => _selectedFilterIdx = idx);
+                          },
+                        ),
                       ),
                     ],
                   ),

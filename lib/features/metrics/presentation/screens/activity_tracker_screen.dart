@@ -26,7 +26,7 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
     final theme = Theme.of(context);
     final activity = Provider.of<ActivityProvider>(context);
 
-    final List<GerexLineChartPoint> weeklyPoints = const [
+    const List<GerexLineChartPoint> weeklyPoints = [
       GerexLineChartPoint(label: 'Mon', value: 450),
       GerexLineChartPoint(label: 'Tue', value: 620),
       GerexLineChartPoint(label: 'Wed', value: 380),
@@ -36,7 +36,7 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
       GerexLineChartPoint(label: 'Sun', value: 410),
     ];
 
-    final List<GerexLineChartPoint> monthlyPoints = const [
+    const List<GerexLineChartPoint> monthlyPoints = [
       GerexLineChartPoint(label: 'W1', value: 3200),
       GerexLineChartPoint(label: 'W2', value: 4100),
       GerexLineChartPoint(label: 'W3', value: 3800),
@@ -291,9 +291,9 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
             ),
             const SizedBox(height: 12),
             if (activity.logs.isEmpty)
-              GlassContainer(
-                padding: const EdgeInsets.all(24),
-                child: const Text(
+              const GlassContainer(
+                padding: EdgeInsets.all(24),
+                child: Text(
                   'No activities logged today. Tap "+" above to log water or steps.',
                   style: TextStyle(
                     color: AppColors.textDarkMuted,

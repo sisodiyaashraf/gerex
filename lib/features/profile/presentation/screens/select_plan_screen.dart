@@ -111,13 +111,13 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                         gradient: GerexGradients.scaffoldBackground,
                       ),
                     ),
-                    Positioned(
+                    const Positioned(
                       left: 24,
                       bottom: 24,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Gerex Premium',
                             style: TextStyle(
                               fontSize: 24,
@@ -126,8 +126,8 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                               letterSpacing: -0.5,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Text(
+                          SizedBox(height: 4),
+                          Text(
                             'Unlock your ultimate athletic aesthetic',
                             style: TextStyle(
                               fontSize: 14,

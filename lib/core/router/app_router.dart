@@ -62,7 +62,7 @@ class AppRouter {
       }
 
       if (!isAuthenticated) {
-        if (isLoggingIn || isOnboarding) return null;
+        if (isLoggingIn) return null;
         return '/login';
       }
 

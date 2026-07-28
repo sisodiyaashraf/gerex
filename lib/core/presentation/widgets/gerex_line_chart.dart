@@ -77,8 +77,6 @@ class _GerexLineChartState extends State<GerexLineChart> {
       );
     }
 
-    final activePoint = widget.data[_activeIdx.clamp(0, widget.data.length - 1)];
-
     return SizedBox(
       height: widget.height,
       child: Column(
@@ -150,11 +148,6 @@ class _GerexWavePainter extends CustomPainter {
     final gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.07)
       ..strokeWidth = 1.0;
-
-    final labelStyle = GoogleFonts.inter(
-      fontSize: 10,
-      color: AppColors.textDarkMuted,
-    );
 
     for (int i = 0; i <= 2; i++) {
       final y = paddingTop + height * (i / 2.0);
@@ -300,8 +293,8 @@ class _GerexWavePainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       )..layout();
 
-      final pillPaddingH = 10.0;
-      final pillPaddingV = 5.0;
+      const pillPaddingH = 10.0;
+      const pillPaddingV = 5.0;
       final pillWidth = textPainter.width + pillPaddingH * 2;
       final pillHeight = textPainter.height + pillPaddingV * 2;
 

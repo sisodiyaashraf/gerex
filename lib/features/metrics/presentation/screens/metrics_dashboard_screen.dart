@@ -9,7 +9,6 @@ import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
-import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -63,14 +62,6 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
     final daysInMonth = lastDayOfMonth.day;
     final startWeekday = firstDayOfMonth.weekday;
 
-    final List<GerexLineChartPoint> weightChartPoints = metricsProvider.weightLogs.map((log) {
-      final dt = log.loggedAt;
-      return GerexLineChartPoint(
-        label: '${dt.month}/${dt.day}',
-        value: log.value,
-      );
-    }).toList();
-
     return GerexScaffold(
       body: RefreshIndicator(
         onRefresh: () async {
@@ -120,12 +111,17 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textLightBody.withValues(alpha: 0.7),
+                                color: AppColors.textLightBody.withValues(
+                                  alpha: 0.7,
+                                ),
                                 letterSpacing: 0.5,
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.badgeDarkNavy,
                                 borderRadius: BorderRadius.circular(12),
@@ -156,13 +152,13 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   Consumer<AIProvider>(
                     builder: (context, ai, _) {
                       if (ai.isSummaryLoading) {
-                        return GlassContainer(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.symmetric(
+                        return const GlassContainer(
+                          margin: EdgeInsets.only(bottom: 16),
+                          padding: EdgeInsets.symmetric(
                             vertical: 24,
                             horizontal: 16,
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
                               SizedBox(
                                 width: 20,
@@ -175,7 +171,9 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               SizedBox(width: 16),
                               Text(
                                 'Analyzing your logs recap...',
-                                style: TextStyle(color: AppColors.textDarkMuted),
+                                style: TextStyle(
+                                  color: AppColors.textDarkMuted,
+                                ),
                               ),
                             ],
                           ),
@@ -296,10 +294,10 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 7,
-                            mainAxisSpacing: 6,
-                            crossAxisSpacing: 6,
-                          ),
+                                crossAxisCount: 7,
+                                mainAxisSpacing: 6,
+                                crossAxisSpacing: 6,
+                              ),
                           itemCount: daysInMonth + startWeekday - 1,
                           itemBuilder: (context, index) {
                             if (index < startWeekday - 1) {
@@ -315,7 +313,9 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: hasWorkout
-                                    ? AppColors.accentEmeraldLight.withValues(alpha: 0.25)
+                                    ? AppColors.accentEmeraldLight.withValues(
+                                        alpha: 0.25,
+                                      )
                                     : Colors.transparent,
                                 border: Border.all(
                                   color: hasWorkout
@@ -328,8 +328,12 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                                 child: Text(
                                   '$day',
                                   style: TextStyle(
-                                    fontWeight: hasWorkout ? FontWeight.bold : FontWeight.normal,
-                                    color: hasWorkout ? AppColors.accentEmeraldLight : AppColors.textDarkHeading,
+                                    fontWeight: hasWorkout
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: hasWorkout
+                                        ? AppColors.accentEmeraldLight
+                                        : AppColors.textDarkHeading,
                                   ),
                                 ),
                               ),
@@ -341,101 +345,115 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   ),
                   // 4. Sleep Tracker Card
                   GlassContainer(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                           CircleAvatar(
-                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
-                            child: FaIcon(
-                              FontAwesomeIcons.bed,
-                              color: theme.colorScheme.primary,
-                              size: 16,
-                            ),
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.15,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Sleep Tracker',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
+                          child: FaIcon(
+                            FontAwesomeIcons.bed,
+                            color: theme.colorScheme.primary,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Sleep Tracker',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Monitor sleep schedules & recovery goals',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                                    fontSize: 12,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Monitor sleep schedules & recovery goals',
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
                                   ),
+                                  fontSize: 12,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                            onPressed: () => context.push('/sleep-tracker'),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
                           ),
-                        ],
-                      ),
+                          onPressed: () => context.push('/sleep-tracker'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
 
-                    // 5. Meal Planner Card
-                    GlassContainer(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.orangeAccent.withValues(alpha: 0.15),
-                            child: const FaIcon(
-                              FontAwesomeIcons.utensils,
-                              color: Colors.orangeAccent,
-                              size: 16,
-                            ),
+                  // 5. Meal Planner Card
+                  GlassContainer(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.orangeAccent.withValues(
+                            alpha: 0.15,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Meal Planner',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
+                          child: const FaIcon(
+                            FontAwesomeIcons.utensils,
+                            color: Colors.orangeAccent,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Meal Planner',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Plan high-protein sports nutrition diets',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                                    fontSize: 12,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Plan high-protein sports nutrition diets',
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
                                   ),
+                                  fontSize: 12,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                            onPressed: () => context.push('/meal-planner'),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
                           ),
-                        ],
-                      ),
+                          onPressed: () => context.push('/meal-planner'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                  ]),
-                ),
+                  ),
+                  const SizedBox(height: 24),
+                ]),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
     );
   }
 
@@ -510,5 +528,3 @@ class _CalendarDayHeader extends StatelessWidget {
     );
   }
 }
-
-

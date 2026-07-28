@@ -551,10 +551,10 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
           ],
         ),
       floatingActionButton: provider.isUploading
-          ? FloatingActionButton(
+          ? const FloatingActionButton(
               onPressed: null,
               backgroundColor: AppColors.cardDarkGlass,
-              child: const CircularProgressIndicator(),
+              child: CircularProgressIndicator(),
             )
           : Container(
               decoration: BoxDecoration(

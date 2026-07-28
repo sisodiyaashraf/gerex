@@ -61,7 +61,6 @@ class GerexButton extends StatelessWidget {
         break;
 
       case GerexButtonStyle.emeraldGradient:
-      default:
         decoration = BoxDecoration(
           gradient: GerexGradients.primaryCTA,
           borderRadius: BorderRadius.circular(30),
