@@ -235,11 +235,13 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
 
                   // Daily meals schedule selection
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Today\'s Meals List',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
+                      const Flexible(
+                        child: Text(
+                          'Today\'s Meals List',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(

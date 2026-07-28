@@ -191,14 +191,18 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Welcome back, $displayName',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textLightBody.withValues(alpha: 0.7),
+                            Flexible(
+                              child: Text(
+                                'Welcome back, $displayName',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textLightBody.withValues(alpha: 0.7),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
@@ -615,14 +619,14 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       },
                     ),
 
-                    // Quick Actions Row
+                    // Quick Actions Rows
                     Row(
                       children: [
                         Expanded(
+                          flex: 2,
                           child: InkWell(
                             onTap: () {
-                              workoutProvider.startEmptyWorkoutSession();
-                              context.push('/session');
+                              context.push('/quick-workout');
                             },
                             borderRadius: BorderRadius.circular(16),
                             child: Container(
@@ -650,22 +654,26 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
+                          flex: 1,
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
                             icon: FaIcon(FontAwesomeIcons.circlePlus, color: theme.colorScheme.primary, size: 14),
-                            label: const Text('New Template'),
+                            label: const Text('New'),
                             onPressed: () {
                               context.push('/builder');
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        // Workout Tracker navigation button
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
                         Expanded(
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
@@ -678,9 +686,28 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                               ),
                             ),
                             icon: const FaIcon(FontAwesomeIcons.chartLine, size: 14),
-                            label: const Text('Tracker'),
+                            label: const Text('Workout Tracker'),
                             onPressed: () {
                               context.push('/workout-tracker');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                              foregroundColor: theme.colorScheme.primary,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 14),
+                            label: const Text('Exercise DB'),
+                            onPressed: () {
+                              context.push('/exercise-library');
                             },
                           ),
                         ),
@@ -908,15 +935,17 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                             return Padding(
                                               padding: const EdgeInsets.only(bottom: 6),
                                               child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.spaceBetween,
                                                 children: [
-                                                  Text(
-                                                    setLog.exercise?.name ?? 'Exercise',
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.w600,
+                                                  Expanded(
+                                                    child: Text(
+                                                      setLog.exercise?.name ?? 'Exercise',
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
                                                     ),
                                                   ),
+                                                  const SizedBox(width: 8),
                                                   Text(
                                                     'Set ${setLog.setNumber}: ${setLog.weight} kg x ${setLog.reps}',
                                                   ),

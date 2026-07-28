@@ -160,10 +160,14 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      typeName,
-                                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                    Flexible(
+                                      child: Text(
+                                        typeName,
+                                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
+                                    const SizedBox(width: 8),
                                     Text(
                                       '${list.length} logged • ${totalGroupCals.toInt()} kcal',
                                       style: TextStyle(

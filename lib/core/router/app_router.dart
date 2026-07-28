@@ -29,11 +29,16 @@ import '../../features/nutrition/presentation/screens/meal_planner_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_details_screen.dart';
 import '../../features/nutrition/domain/entities/meal_entities.dart';
 import '../../features/exercise/presentation/screens/exercise_detail_screen.dart';
+import '../../features/exercise/presentation/screens/exercise_browse_screen.dart';
 import '../../features/exercise/domain/entities/exercise.dart';
 import '../../features/nutrition/presentation/screens/meal_schedule_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_browse_screen.dart';
 import '../../features/profile/presentation/screens/guided_photo_capture_screen.dart';
 import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
+import '../../features/profile/presentation/screens/custom_notification_screen.dart';
+import '../../features/workout/presentation/screens/quick_workout_screen.dart';
+import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
+import '../../features/exercise/presentation/screens/create_exercise_screen.dart';
 import '../di/injection_container.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../presentation/widgets/glass_container.dart';
@@ -81,10 +86,7 @@ class AppRouter {
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/',
         builder: (context, state) => const _MainNavigationShell(),
@@ -107,7 +109,28 @@ class AppRouter {
       ),
       GoRoute(
         path: '/pose-feedback',
-        builder: (context, state) => const PoseFeedbackScreen(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PoseFeedbackScreen(
+            targetExercise: extra?['targetExercise'] as String?,
+            customPattern: extra?['customPattern'] as Map<String, dynamic>?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/quick-workout',
+        builder: (context, state) => const QuickWorkoutScreen(),
+      ),
+      GoRoute(
+        path: '/add-exercise',
+        builder: (context, state) {
+          final ids = (state.extra as List<String>?) ?? const [];
+          return AddExerciseScreen(initiallySelectedIds: ids);
+        },
+      ),
+      GoRoute(
+        path: '/create-exercise',
+        builder: (context, state) => const CreateExerciseScreen(),
       ),
       GoRoute(
         path: '/profile',
@@ -119,9 +142,8 @@ class AppRouter {
       ),
       GoRoute(
         path: '/workout-details',
-        builder: (context, state) => WorkoutDetailsScreen(
-          workout: state.extra as Workout,
-        ),
+        builder: (context, state) =>
+            WorkoutDetailsScreen(workout: state.extra as Workout),
       ),
       GoRoute(
         path: '/activity-tracker',
@@ -130,6 +152,10 @@ class AppRouter {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationScreen(),
+      ),
+      GoRoute(
+        path: '/custom-notification',
+        builder: (context, state) => const CustomNotificationScreen(),
       ),
       GoRoute(
         path: '/progress-photos',
@@ -153,9 +179,12 @@ class AppRouter {
       ),
       GoRoute(
         path: '/meal-details',
-        builder: (context, state) => MealDetailsScreen(
-          recipe: state.extra as Recipe,
-        ),
+        builder: (context, state) =>
+            MealDetailsScreen(recipe: state.extra as Recipe),
+      ),
+      GoRoute(
+        path: '/exercise-library',
+        builder: (context, state) => const ExerciseBrowseScreen(),
       ),
       GoRoute(
         path: '/exercise-detail',
@@ -185,9 +214,8 @@ class AppRouter {
       ),
       GoRoute(
         path: '/challenge-detail',
-        builder: (context, state) => ChallengeDetailScreen(
-          challenge: state.extra as Challenge,
-        ),
+        builder: (context, state) =>
+            ChallengeDetailScreen(challenge: state.extra as Challenge),
       ),
       GoRoute(
         path: '/select-plan',
@@ -223,26 +251,36 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: IndexedStack(
-              index: _currentIndex,
-              children: _tabs,
-            ),
+            child: IndexedStack(index: _currentIndex, children: _tabs),
           ),
-          
+
           Positioned(
             left: 24,
             right: 24,
             bottom: 12 + MediaQuery.of(context).padding.bottom,
             child: GlassContainer(
-              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(
+                vertical: 8.0,
+                horizontal: 16.0,
+              ),
               borderRadius: 28,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0, FontAwesomeIcons.dumbbell, 'Workouts', theme),
+                  _buildNavItem(
+                    0,
+                    FontAwesomeIcons.dumbbell,
+                    'Workouts',
+                    theme,
+                  ),
                   _buildNavItem(1, FontAwesomeIcons.compass, 'Explore', theme),
                   _buildNavItem(2, FontAwesomeIcons.bowlFood, 'Meals', theme),
-                  _buildNavItem(3, FontAwesomeIcons.chartSimple, 'Analytics', theme),
+                  _buildNavItem(
+                    3,
+                    FontAwesomeIcons.chartSimple,
+                    'Analytics',
+                    theme,
+                  ),
                 ],
               ),
             ),
@@ -274,7 +312,9 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             FaIcon(
               icon,
               size: isActive ? 18.0 : 16.0,
-              color: isActive ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              color: isActive
+                  ? Colors.white
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             if (isActive) ...[
               const SizedBox(width: 8),

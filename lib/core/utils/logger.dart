@@ -14,6 +14,13 @@ class SecureLogger {
     }
   }
 
+  /// Safely logs info details to debug print.
+  static void logInfo(String message) {
+    if (kDebugMode) {
+      print('[INFO] $message');
+    }
+  }
+
   /// Sanitizes generic exception/error details to return a safe, UI-friendly message.
   static String sanitizeException(dynamic error) {
     final str = error.toString().toLowerCase();

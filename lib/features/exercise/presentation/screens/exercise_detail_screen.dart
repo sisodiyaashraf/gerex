@@ -310,48 +310,92 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               bottom: 16 + MediaQuery.of(context).padding.bottom,
               left: 16,
               right: 16,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: GerexGradients.primaryCTA,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Live AI Detector optional toggle
+                  if (!widget.isPicker)
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.accentEmeraldLight),
+                        foregroundColor: AppColors.accentEmeraldLight,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        backgroundColor: Colors.black.withValues(alpha: 0.4),
+                      ),
+                      icon: const Icon(Icons.videocam_rounded, size: 18),
+                      label: const Text(
+                        'Live AI Detector',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        // Map exercise name/category to classifier key
+                        final name = widget.exercise.name.toLowerCase();
+                        String? targetKey;
+                        if (name.contains('squat')) {
+                          targetKey = 'squat';
+                        } else if (name.contains('push') || name.contains('pushup')) {
+                          targetKey = 'push_up';
+                        } else if (name.contains('jumping') || name.contains('jack')) {
+                          targetKey = 'jumping_jack';
+                        } else if (name.contains('plank')) {
+                          targetKey = 'plank';
+                        } else if (widget.exercise.posePattern != null) {
+                          targetKey = 'custom';
+                        }
+
+                        context.push('/pose-feedback', extra: {
+                          'targetExercise': targetKey,
+                          'customPattern': widget.exercise.posePattern,
+                        });
+                      },
                     ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  if (!widget.isPicker) const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: GerexGradients.primaryCTA,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      onPressed: () {
+                        if (widget.isPicker) {
+                          Navigator.pop(context, _selectedReps);
+                        } else {
+                          // Save to active live workout session
+                          if (workoutProvider.isSessionActive) {
+                            workoutProvider.addExerciseToSession(widget.exercise);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Added ${widget.exercise.name} with $_selectedReps reps to active workout session!')),
+                            );
+                            context.pop();
+                          } else {
+                            // Quick-log workout
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('No active workout session. Open the Workout tab or Workout Builder to save exercises!')),
+                            );
+                          }
+                        }
+                      },
+                      child: Text(
+                        widget.isPicker ? 'Confirm Custom Reps' : 'Save to Active Workout',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
                   ),
-                  onPressed: () {
-                    if (widget.isPicker) {
-                      Navigator.pop(context, _selectedReps);
-                    } else {
-                      // Save to active live workout session
-                      if (workoutProvider.isSessionActive) {
-                        workoutProvider.addExerciseToSession(widget.exercise);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Added ${widget.exercise.name} with $_selectedReps reps to active workout session!')),
-                        );
-                        context.pop();
-                      } else {
-                        // Quick-log workout
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No active workout session. Open the Workout tab or Workout Builder to save exercises!')),
-                        );
-                      }
-                    }
-                  },
-                  child: Text(
-                    widget.isPicker ? 'Confirm Custom Reps' : 'Save to Active Workout',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
+                ],
               ),
             ),
           ],

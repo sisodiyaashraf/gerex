@@ -14,6 +14,8 @@ import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/providers/notification_provider.dart';
+import 'package:gerex/core/notifications/content_packs.dart';
 import '../../../../core/presentation/providers/theme_provider.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
@@ -356,27 +358,27 @@ class ProfileScreen extends StatelessWidget {
                   child: GlassContainer(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const FaIcon(FontAwesomeIcons.scaleUnbalanced, color: AppColors.accentEmeraldLight, size: 20),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Weight Tracker Analytics',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
-                                ),
-                                Text(
-                                  'Height: ${activity.userHeight.toInt()} cm • Weight: ${formatWeight(currentWeight)}',
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
-                                ),
-                              ],
-                            ),
-                          ],
+                        const FaIcon(FontAwesomeIcons.scaleUnbalanced, color: AppColors.accentEmeraldLight, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Weight Tracker Analytics',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Height: ${activity.userHeight.toInt()} cm • Weight: ${formatWeight(currentWeight)}',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.accentEmeraldLight),
                       ],
                     ),
@@ -479,46 +481,45 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Body Weight Metrics Card
                   GestureDetector(
-                    onTap: () => context.push('/analytics'), // redirect to metrics dashboard tab
+                    onTap: () => context.push('/analytics'),
                     child: GlassContainer(
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              FaIcon(
-                                FontAwesomeIcons.weightScale,
-                                color: theme.colorScheme.primary,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Body Weight Metric',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
+                          FaIcon(
+                            FontAwesomeIcons.weightScale,
+                            color: theme.colorScheme.primary,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Body Weight Metric',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Latest Weight: ${formatWeight(currentWeight)}',
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                      fontSize: 12,
-                                    ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Latest Weight: ${formatWeight(currentWeight)}',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    fontSize: 12,
                                   ),
-                                ],
-                              ),
-                            ],
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
                           if (weightLogs.length >= 2)
                             Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 FaIcon(trendIcon, color: trendColor, size: 14.0),
                                 const SizedBox(width: 6),
@@ -708,10 +709,28 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Push Notifications',
                     trailing: Switch.adaptive(
                       value: profileProvider.notificationsEnabled,
-                      onChanged: (bool value) {
-                        profileProvider.toggleNotifications(value);
+                      onChanged: (bool value) async {
+                        if (!value) { await profileProvider.toggleNotifications(false); return; }
+                        final notificationProvider = context.read<NotificationProvider>();
+                        final explain = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(title: const Text('Stay on track with Gerex?'), content: const Text('We use reminders for your planned meals, workouts, sleep and progress. You control the categories and can turn them off anytime.'), actions: [TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Not now')), FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Continue'))]));
+                        if (explain == true) {
+                          final granted = await notificationProvider.requestSystemPermission();
+                          if (granted) await profileProvider.toggleNotifications(true);
+                        }
                       },
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Consumer<NotificationProvider>(builder: (context, notifications, _) => _buildSettingsRow(
+                    icon: FontAwesomeIcons.language,
+                    title: 'Notification Content',
+                    trailing: DropdownButton<String>(value: notifications.service.contentPack.id, underline: const SizedBox.shrink(), items: NotificationContentPacks.all.map((pack) => DropdownMenuItem(value: pack.id, child: Text(pack.label))).toList(), onChanged: notifications.setContentPack),
+                  )),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.penToSquare,
+                    title: 'Custom Notification',
+                    trailing: IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => context.push('/custom-notification')),
                   ),
                   const SizedBox(height: 8),
 
@@ -856,25 +875,24 @@ class ProfileScreen extends StatelessWidget {
       child: GlassContainer(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                FaIcon(
-                  icon,
-                  size: 16.0,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+            FaIcon(
+              icon,
+              size: 16.0,
+              color: Colors.grey.shade400,
             ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
             trailing,
           ],
         ),

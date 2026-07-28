@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
+import '../notifications/notification_models.dart';
+import '../notifications/notification_service.dart';
 
 class UserNotification {
   final String id;
@@ -34,14 +37,18 @@ class UserNotification {
 
 class NotificationProvider extends ChangeNotifier {
   final SharedPreferences _prefs;
+  late final NotificationService service;
 
   NotificationProvider(this._prefs) {
+    service = NotificationService(_prefs);
     _loadNotifications();
   }
 
   List<UserNotification> _notifications = [];
+  List<CustomNotificationTemplate> _templates = [];
 
   List<UserNotification> get notifications => _notifications;
+  List<CustomNotificationTemplate> get templates => List.unmodifiable(_templates);
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
   void _loadNotifications() {
@@ -53,6 +60,9 @@ class NotificationProvider extends ChangeNotifier {
     }
     // Sort descending by timestamp
     _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _templates = (_prefs.getStringList('custom_notification_templates') ?? [])
+        .map((value) { try { return CustomNotificationTemplate.deserialize(value); } catch (_) { return null; } })
+        .whereType<CustomNotificationTemplate>().toList();
     notifyListeners();
   }
 
@@ -75,6 +85,32 @@ class NotificationProvider extends ChangeNotifier {
     _notifications.insert(0, notif);
     if (_notifications.length > 50) _notifications.removeLast();
     await _saveNotifications();
+    notifyListeners();
+  }
+
+  Future<void> initialize(GoRouter router) => service.initialize(router);
+  Future<bool> requestSystemPermission() => service.requestPermission();
+  Future<void> scheduleNotification(NotificationPayload payload) => service.scheduleNotification(payload);
+  Future<void> cancelNotification(String id) => service.cancelNotification(id);
+  void setActionHandler(Future<void> Function(String actionId) handler) => service.setActionHandler(handler);
+  Future<void> setContentPack(String? id) async { await service.setContentPack(id); notifyListeners(); }
+  Future<void> scheduleHydrationIfBehind({required int intakeMl, required int targetMl}) => service.scheduleHydrationIfBehind(intakeMl: intakeMl, targetMl: targetMl);
+  Future<void> scheduleStreakRisk({required bool loggedWorkoutToday}) => service.scheduleStreakRisk(loggedWorkoutToday: loggedWorkoutToday);
+  Future<void> scheduleMealReminder({required String entryId, required String mealName, required String mealType, required DateTime day}) => service.scheduleMealReminder(entryId: entryId, mealName: mealName, mealType: mealType, day: day);
+  Future<void> scheduleWorkoutReminder({required String workoutId, required String workoutName, required DateTime startsAt}) => service.scheduleWorkoutReminder(workoutId: workoutId, workoutName: workoutName, startsAt: startsAt);
+  Future<void> showCustomNotification(NotificationPayload payload) async {
+    await sendNotification(payload.title, payload.body);
+    await service.showNow(payload);
+  }
+  Future<void> saveTemplate(CustomNotificationTemplate template) async {
+    _templates.removeWhere((item) => item.id == template.id);
+    _templates.add(template);
+    await _prefs.setStringList('custom_notification_templates', _templates.map((item) => item.serialize()).toList());
+    notifyListeners();
+  }
+  Future<void> deleteTemplate(String id) async {
+    _templates.removeWhere((item) => item.id == id);
+    await _prefs.setStringList('custom_notification_templates', _templates.map((item) => item.serialize()).toList());
     notifyListeners();
   }
 

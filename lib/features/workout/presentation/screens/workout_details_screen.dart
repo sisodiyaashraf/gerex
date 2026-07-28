@@ -138,12 +138,15 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
                         const Divider(height: 24),
                         // Difficulty & Schedule Button Rows
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Difficulty Level',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            const Expanded(
+                              child: Text(
+                                'Difficulty Level',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                               decoration: BoxDecoration(
@@ -165,13 +168,17 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
                         InkWell(
                           onTap: () => _selectSchedule(context),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Schedule Workout',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                              const Expanded(
+                                child: Text(
+                                  'Schedule Workout',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     _scheduledDateTime == null

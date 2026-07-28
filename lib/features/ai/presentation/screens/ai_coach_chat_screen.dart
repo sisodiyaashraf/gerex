@@ -48,6 +48,9 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
     final theme = Theme.of(context);
     final provider = Provider.of<AIProvider>(context);
 
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardOpen = keyboardHeight > 0;
+
     return GerexScaffold(
       appBar: AppBar(
         title: Text(
@@ -69,65 +72,67 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-                  if (!provider.isModelDownloaded)
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const OfflineDownloadScreen()),
-                        );
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
-                        ),
-                        child: Row(
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            if (!provider.isModelDownloaded)
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const OfflineDownloadScreen()),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.download_for_offline_outlined, color: theme.colorScheme.primary, size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.download_for_offline_outlined, color: theme.colorScheme.primary, size: 22),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Gerex Offline AI Available',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Setup local Gemma LLM (1.2 GB) for free offline chat.',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                    ),
-                                  ),
-                                ],
+                            const Text(
+                              'Gerex Offline AI Available',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Setup local Gemma LLM (1.2 GB) for free offline chat.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
-                            Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary, size: 20),
                           ],
                         ),
                       ),
-                    ),
-                  Expanded(
-                    child: provider.chatMessages.isEmpty
-                        ? _buildEmptyState(theme)
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                            itemCount: provider.chatMessages.length,
-                            itemBuilder: (context, index) {
-                              final message = provider.chatMessages[index];
-                              return _buildChatBubble(theme, message);
-                            },
-                          ),
+                      Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary, size: 20),
+                    ],
                   ),
+                ),
+              ),
+            Expanded(
+              child: provider.chatMessages.isEmpty
+                  ? _buildEmptyState(theme)
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      itemCount: provider.chatMessages.length,
+                      itemBuilder: (context, index) {
+                        final message = provider.chatMessages[index];
+                        return _buildChatBubble(theme, message);
+                      },
+                    ),
+            ),
 
             // Loading spinner
             if (provider.isChatLoading)
@@ -160,8 +165,8 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                 ),
               ),
 
-            // Quick Prompts list
-            if (provider.chatMessages.isEmpty)
+            // Quick Prompts — hide when keyboard is open to save space
+            if (provider.chatMessages.isEmpty && !isKeyboardOpen)
               SizedBox(
                 height: 48,
                 child: ListView.builder(
@@ -183,11 +188,17 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                   },
                 ),
               ),
-            const SizedBox(height: 12),
 
-            // Floating Input controls panel
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            // Floating Input controls panel — lifts with keyboard
+            AnimatedPadding(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              padding: EdgeInsets.fromLTRB(
+                16,
+                8,
+                16,
+                isKeyboardOpen ? keyboardHeight + 8 : 24,
+              ),
               child: GlassContainer(
                 padding: const EdgeInsets.all(8),
                 borderRadius: 24,
@@ -245,6 +256,7 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
             ),
           ],
         ),
+      ),
     );
   }
 

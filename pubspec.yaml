@@ -25,6 +25,10 @@ dependencies:
   shared_preferences: ^2.2.3
   flutter_svg: ^2.3.0
   image_picker: ^1.2.3
+  cached_network_image: ^3.3.1
+  flutter_local_notifications: ^22.2.0
+  timezone: ^0.11.1
+  flutter_timezone: ^5.0.1
 
 dev_dependencies:
   flutter_test:
@@ -44,3 +48,4 @@ flutter:
     - assets/images/app icon/
     - assets/svg icons/
     - assets/exercise/
+    - assets/data/exercises.json

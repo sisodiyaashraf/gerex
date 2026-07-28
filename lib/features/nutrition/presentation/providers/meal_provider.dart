@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/meal_entities.dart';
 import 'package:gerex/core/utils/logger.dart';
+import 'package:gerex/core/di/injection_container.dart' as di;
+import 'package:gerex/core/providers/notification_provider.dart';
 
 class MealProvider extends ChangeNotifier {
   final SharedPreferences _prefs;
@@ -239,6 +241,9 @@ class MealProvider extends ChangeNotifier {
     );
     _mealPlan.add(newEntry);
     _saveMealPlan();
+    if (newEntry.notificationEnabled) {
+      di.sl<NotificationProvider>().scheduleMealReminder(entryId: newEntry.id, mealName: newEntry.recipeName, mealType: newEntry.mealType, day: newEntry.date);
+    }
     notifyListeners();
   }
 
@@ -253,6 +258,12 @@ class MealProvider extends ChangeNotifier {
     if (idx != -1) {
       _mealPlan[idx].notificationEnabled = enabled;
       _saveMealPlan();
+      if (enabled) {
+        final entry = _mealPlan[idx];
+        di.sl<NotificationProvider>().scheduleMealReminder(entryId: entry.id, mealName: entry.recipeName, mealType: entry.mealType, day: entry.date);
+      } else {
+        di.sl<NotificationProvider>().cancelNotification('meal-$id');
+      }
       notifyListeners();
     }
   }

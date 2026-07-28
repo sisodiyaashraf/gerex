@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/sleep_entities.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/utils/logger.dart';
+import 'package:gerex/core/notifications/notification_models.dart';
 
 class SleepProvider extends ChangeNotifier {
   final SharedPreferences _prefs;
@@ -161,6 +162,7 @@ class SleepProvider extends ChangeNotifier {
 
     _alarms.add(newAlarm);
     await _saveAlarms();
+    await _scheduleAlarm(newAlarm);
     notifyListeners();
     return null;
   }
@@ -178,6 +180,11 @@ class SleepProvider extends ChangeNotifier {
         vibrate: old.vibrate,
       );
       await _saveAlarms();
+      if (enabled) {
+        await _scheduleAlarm(_alarms[idx]);
+      } else {
+        await _notifications.cancelNotification('sleep-bedtime-$id');
+      }
       notifyListeners();
     }
   }
@@ -185,7 +192,20 @@ class SleepProvider extends ChangeNotifier {
   Future<void> deleteAlarm(String id) async {
     _alarms.removeWhere((a) => a.id == id);
     await _saveAlarms();
+    await _notifications.cancelNotification('sleep-bedtime-$id');
+    await _notifications.cancelNotification('sleep-wake-$id');
     notifyListeners();
+  }
+
+  Future<void> _scheduleAlarm(SleepAlarm alarm) async {
+    for (final weekday in alarm.repeatDays) {
+      for (final item in [('bedtime', alarm.bedtimeHour, 'Bedtime reminder', NotificationCategory.sleep), ('wake', alarm.wakeHour, 'Wake up alarm', NotificationCategory.sleep)]) {
+        final parts = item.$2.split(':').map(int.parse).toList();
+        var date = DateTime.now();
+        while (date.weekday != weekday || !DateTime(date.year, date.month, date.day, parts[0], parts[1]).isAfter(DateTime.now())) { date = date.add(const Duration(days: 1)); }
+        await _notifications.scheduleNotification(NotificationPayload(id: 'sleep-${item.$1}-${alarm.id}-$weekday', title: item.$3, body: item.$1 == 'bedtime' ? 'Time to wind down for recovery.' : 'Rise and shine — your Gerex day is ready.', category: item.$4, deepLink: '/sleep-tracker', scheduledTime: DateTime(date.year, date.month, date.day, parts[0], parts[1]), repeatRule: NotificationRepeatRule.weekly));
+      }
+    }
   }
 
   Future<void> addSleepLog(DateTime date, double hours, double quality) async {

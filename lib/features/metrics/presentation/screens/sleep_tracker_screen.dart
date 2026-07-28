@@ -130,10 +130,14 @@ class SleepTrackerScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Average Sleep Duration',
-                            style: TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
+                          const Flexible(
+                            child: Text(
+                              'Average Sleep Duration',
+                              style: TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
                             '${averageSleep.toStringAsFixed(1)} hrs/day',
                             style: const TextStyle(

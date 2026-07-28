@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:gerex/core/presentation/widgets/gerex_animated_list_tile.dart';
+import 'package:gerex/core/presentation/widgets/gerex_staggered_list_view.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -297,6 +299,27 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
     );
   }
 
+  IconData _getExerciseIcon(Exercise ex) {
+    final cat = ex.category.toLowerCase();
+    if (cat.contains('stretch') || cat.contains('flexibility')) {
+      return Icons.accessibility_new_rounded;
+    }
+    if (cat.contains('cardio') || cat.contains('aerobic')) {
+      return Icons.favorite_rounded;
+    }
+    if (cat.contains('powerlifting') || cat.contains('strength')) {
+      return Icons.fitness_center_rounded;
+    }
+    return Icons.check_circle_outline_rounded;
+  }
+
+  double _getExerciseProgress(Exercise ex) {
+    final lvl = ex.level.toLowerCase();
+    if (lvl == 'beginner') return 0.35;
+    if (lvl == 'intermediate') return 0.70;
+    return 1.0;
+  }
+
   Widget _buildExerciseList(
     BuildContext context,
     List<Exercise> list,
@@ -329,43 +352,148 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-      itemCount: list.length,
-      itemBuilder: (context, index) {
-        final exercise = list[index];
-        return GlassContainer(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: ExerciseImageWidget(
-              imagePath: exercise.effectiveImagePath,
-              removeBackground: exercise.removeBackground,
-              size: 40.0,
-            ),
-            title: Text(
-              exercise.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            subtitle: Text(
-              '${exercise.muscleGroup} • ${exercise.equipment}',
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            trailing: Icon(
-              Icons.chevron_right_rounded,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-            ),
-            onTap: () {
-              context.push(
-                '/exercise-detail',
-                extra: {'exercise': exercise, 'isPicker': false},
-              );
-            },
+    return GerexStaggeredListView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      estimatedItemHeight: 96.0,
+      children: list.map((exercise) {
+        return GerexAnimatedListTile(
+          title: exercise.name,
+          subtitle: '${exercise.muscleGroup} • ${exercise.equipment}',
+          leadingIcon: _getExerciseIcon(exercise),
+          progress: _getExerciseProgress(exercise),
+          leadingWidget: ExerciseImageWidget(
+            imagePath: exercise.imageUrl,
+            size: 44.0,
           ),
+          actions: [
+            GerexListTileAction(
+              icon: Icons.bookmark_rounded,
+              color: AppColors.accentEmeraldDeep,
+              label: 'Save',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Saved ${exercise.name} to bookmarks!'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+            GerexListTileAction(
+              icon: Icons.delete_outline_rounded,
+              color: AppColors.destructiveRed,
+              label: 'Remove',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Removed ${exercise.name} from bookmarks!'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+          ],
+          expandedContent: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Instructions Guide',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: AppColors.accentEmeraldLight,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.chipTealBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      exercise.level.toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.accentEmeraldLight,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (exercise.instructions.isEmpty)
+                const Text(
+                  'No instructions registered for this exercise.',
+                  style: TextStyle(fontSize: 11, color: AppColors.textDarkMuted),
+                )
+              else
+                ...exercise.instructions.asMap().entries.map((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${entry.key + 1}. ',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.accentEmeraldLight,
+                            fontSize: 11,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            entry.value,
+                            style: TextStyle(
+                              fontSize: 11,
+                              height: 1.4,
+                              color: theme.brightness == Brightness.dark
+                                  ? AppColors.textDarkBody
+                                  : AppColors.textLightBody,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentEmeraldDeep,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                icon: const Icon(Icons.info_outline_rounded, size: 14),
+                label: const Text('View Full Guide & Log Reps', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  context.push(
+                    '/exercise-detail',
+                    extra: {
+                      'exercise': exercise,
+                      'isPicker': false,
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+          onTap: () {
+            context.push(
+              '/exercise-detail',
+              extra: {'exercise': exercise, 'isPicker': false},
+            );
+          },
         );
-      },
+      }).toList(),
     );
   }
 

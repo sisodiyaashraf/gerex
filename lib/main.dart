@@ -37,6 +37,10 @@ void main() async {
 
   // Initialize DI service locator
   await di.init();
+  await di.sl<NotificationProvider>().initialize(AppRouter.router);
+  di.sl<NotificationProvider>().setActionHandler((actionId) async {
+    if (actionId == 'log_water') await di.sl<ActivityProvider>().addWater(250);
+  });
 
   runApp(
     MultiProvider(

@@ -23,7 +23,10 @@ class AIProvider extends ChangeNotifier {
       final prefs = di.sl<SharedPreferences>();
       _isOfflineOnly = prefs.getBool('offline_only_ai_assistant') ?? false;
       _isModelDownloaded = prefs.getBool('offline_gemma_model_downloaded') ?? false;
-    } catch (_) {}
+      SecureLogger.logInfo('AIProvider: Loaded offline_only_ai_assistant: $_isOfflineOnly');
+    } catch (e) {
+      SecureLogger.logError('AIProvider: Failed to load offline state', e.toString());
+    }
   }
 
   Future<void> setOfflineOnly(bool value) async {
@@ -32,7 +35,10 @@ class AIProvider extends ChangeNotifier {
     try {
       final prefs = di.sl<SharedPreferences>();
       await prefs.setBool('offline_only_ai_assistant', value);
-    } catch (_) {}
+      SecureLogger.logInfo('AIProvider: Saved offline_only_ai_assistant: $value');
+    } catch (e) {
+      SecureLogger.logError('AIProvider: Failed to save offline_only_ai_assistant', e.toString());
+    }
   }
 
   Future<void> setOfflineModelDownloaded(bool value) async {

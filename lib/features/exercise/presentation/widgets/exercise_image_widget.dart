@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ExerciseImageWidget extends StatefulWidget {
   final String? imagePath;
@@ -180,14 +181,42 @@ class _ExerciseImageWidgetState extends State<ExerciseImageWidget> {
     }
 
     // Default image rendering
-    return SizedBox(
+    return Container(
       width: widget.size,
       height: widget.size,
+      decoration: BoxDecoration(
+        color: Colors.white, // Blends perfectly with the white background of exercise illustrations
+        borderRadius: BorderRadius.circular(widget.size * 0.2),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(widget.size * 0.2),
-        child: path.startsWith('assets/')
-            ? Image.asset(path, fit: BoxFit.contain)
-            : Image.file(File(path), fit: BoxFit.contain),
+        child: path.startsWith('http')
+            ? CachedNetworkImage(
+                imageUrl: path,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: Color(0xFF178C6D),
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => const Icon(
+                  Icons.fitness_center_rounded,
+                  color: Color(0xFF178C6D),
+                  size: 24,
+                ),
+              )
+            : path.startsWith('assets/')
+                ? Image.asset(path, fit: BoxFit.cover)
+                : Image.file(File(path), fit: BoxFit.cover),
       ),
     );
   }

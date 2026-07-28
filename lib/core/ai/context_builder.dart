@@ -19,13 +19,14 @@ class ContextBuilder {
 
       // 1. Static features summary
       const featuresSummary = 
-          'Gerex Capabilities Guide:\n'
+          'Gerex Capabilities Guide & Scope Constraints:\n'
           '- Workout Tracker: log sets/reps/weights, live duration, rest timers.\n'
           '- Exercises library: browse muscle group categories.\n'
           '- Meal Planner: track calorie intake (breakfast/lunch/dinner).\n'
           '- Sleep Tracker: sleep alarms & recovery quality percentages.\n'
           '- Progress Gallery: front/side/back photo comparisons.\n'
-          '- Challenges: join workouts & cardio/strength challenges.\n';
+          '- Challenges: join workouts & cardio/strength challenges.\n'
+          'CRITICAL SCOPE RULE: You are ONLY allowed to answer questions regarding workouts, exercises, meal planning, nutrition, sleep logs, activity/hydration stats, BMI, progress photos, or app navigation. If the user\'s query falls outside these fitness-focused domains, you MUST state that you are the Gerex AI Coach and refuse to answer the out-of-scope question, redirecting the user back to fitness/nutrition/sleep domains.\n';
 
       // 2. User current state snapshot
       final streak = metricsProvider.currentStreak;

@@ -104,21 +104,26 @@ class LiveSessionScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.timer_outlined,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Rest Timer: ${provider.restTimeRemaining}s / ${provider.restTimerTotal}s',
-                        style: TextStyle(
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
                           color: theme.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Rest Timer: ${provider.restTimeRemaining}s / ${provider.restTimerTotal}s',
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   TextButton(
                     onPressed: () => provider.skipRestTimer(),
@@ -133,6 +138,7 @@ class LiveSessionScreen extends StatelessWidget {
                 ],
               ),
             ),
+
 
           // Workout Player List
           Expanded(

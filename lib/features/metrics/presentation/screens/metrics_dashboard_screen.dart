@@ -262,11 +262,14 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${_getMonthName(now.month)} ${now.year} - Consistency',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textDarkHeading,
+                            Flexible(
+                              child: Text(
+                                '${_getMonthName(now.month)} ${now.year} - Consistency',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDarkHeading,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const FaIcon(
@@ -343,6 +346,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
                   // 4. Sleep Tracker Card
                   GlassContainer(
                     padding: const EdgeInsets.all(16.0),
@@ -466,6 +470,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
   ) {
     final theme = Theme.of(context);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         FaIcon(icon, color: color, size: 30.0),
         const SizedBox(width: 12),

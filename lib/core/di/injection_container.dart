@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../services/exercise_service.dart';
 import '../../features/exercise/data/repositories/exercise_repository_impl.dart';
 import '../../features/exercise/domain/repositories/exercise_repository.dart';
 import '../../features/exercise/presentation/providers/exercise_provider.dart';
@@ -63,10 +64,11 @@ Future<void> init() async {
   sl.registerLazySingleton<AuthProvider>(() => AuthProvider(sl()));
 
   // Features - Exercise
+  sl.registerLazySingleton<ExerciseService>(() => ExerciseService());
   sl.registerLazySingleton<ExerciseRepository>(
     () => ExerciseRepositoryImpl(sl()),
   );
-  sl.registerLazySingleton<ExerciseProvider>(() => ExerciseProvider(sl()));
+  sl.registerLazySingleton<ExerciseProvider>(() => ExerciseProvider(sl<ExerciseService>()));
 
   // Features - Workout
   sl.registerLazySingleton<WorkoutRepository>(

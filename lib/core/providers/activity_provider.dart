@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../di/injection_container.dart' as di;
+import 'notification_provider.dart';
 
 class ActivityLog {
   final String id;
@@ -119,6 +121,7 @@ class ActivityProvider extends ChangeNotifier {
     );
     if (_logs.length > 50) _logs.removeLast();
     await _saveState();
+    await di.sl<NotificationProvider>().scheduleHydrationIfBehind(intakeMl: _waterIntake, targetMl: _waterTarget);
     notifyListeners();
   }
 

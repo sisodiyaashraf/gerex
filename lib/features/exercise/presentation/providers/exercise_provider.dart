@@ -1,64 +1,148 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../domain/entities/exercise.dart';
-import '../../domain/repositories/exercise_repository.dart';
+import '../../../../services/exercise_service.dart';
 import '../../../../core/utils/logger.dart';
 
 class ExerciseProvider extends ChangeNotifier {
-  final ExerciseRepository _exerciseRepository;
+  final ExerciseService _exerciseService;
 
-  ExerciseProvider(this._exerciseRepository);
+  ExerciseProvider(this._exerciseService);
 
   List<Exercise> _exercises = [];
+  List<Exercise> _filteredExercises = [];
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Filter States
+  String? _selectedMuscle;
+  String? _selectedEquipment;
+  String? _selectedCategory;
+  String? _selectedLevel;
   String _searchQuery = '';
-  String _selectedMuscleGroup = 'All';
 
-  List<Exercise> get exercises => _exercises;
+  // Getters
+  List<Exercise> get exercises => _filteredExercises.isEmpty && _searchQuery.isEmpty && _selectedMuscle == null && _selectedEquipment == null && _selectedCategory == null && _selectedLevel == null
+      ? _exercises
+      : _filteredExercises;
+  
+  List<Exercise> get allRawExercises => _exercises;
+  List<Exercise> get filteredExercises => _filteredExercises;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get error => _errorMessage;
+
+  // Active filter state getters
+  String? get selectedMuscle => _selectedMuscle;
+  String? get selectedEquipment => _selectedEquipment;
+  String? get selectedCategory => _selectedCategory;
+  String? get selectedLevel => _selectedLevel;
   String get searchQuery => _searchQuery;
-  String get selectedMuscleGroup => _selectedMuscleGroup;
 
-  Timer? _searchDebounce;
+  // Backwards compatibility getter (used by some old screens)
+  String get selectedMuscleGroup => _selectedMuscle ?? 'All';
 
-  Future<void> fetchExercises() async {
+  Future<void> loadExercises() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
-    final result = await _exerciseRepository.getExercises(
-      query: _searchQuery,
-      muscleGroup: _selectedMuscleGroup,
-    );
+    try {
+      final loaded = await _exerciseService.loadExercises();
+      _exercises = loaded;
+      _applyFilters();
+    } catch (e) {
+      SecureLogger.logError('loadExercises failed', e.toString());
+      _errorMessage = SecureLogger.sanitizeException(e.toString());
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
-    result.fold(
-      onSuccess: (data) {
-        _exercises = data;
-        _isLoading = false;
-      },
-      onFailure: (failure) {
-        SecureLogger.logError('fetchExercises failed', failure.message);
-        _errorMessage = SecureLogger.sanitizeException(failure.message);
-        _isLoading = false;
-      },
-    );
+  void filterByMuscle(String? muscle) {
+    _selectedMuscle = (muscle == 'All' || muscle == '') ? null : muscle;
+    _applyFilters();
+  }
+
+  void filterByEquipment(String? equipment) {
+    _selectedEquipment = (equipment == 'All' || equipment == '') ? null : equipment;
+    _applyFilters();
+  }
+
+  void filterByCategory(String? category) {
+    _selectedCategory = (category == 'All' || category == '') ? null : category;
+    _applyFilters();
+  }
+
+  void filterByLevel(String? level) {
+    _selectedLevel = (level == 'All' || level == '') ? null : level;
+    _applyFilters();
+  }
+
+  void search(String query) {
+    _searchQuery = query;
+    _applyFilters();
+  }
+
+  void clearFilters() {
+    _selectedMuscle = null;
+    _selectedEquipment = null;
+    _selectedCategory = null;
+    _selectedLevel = null;
+    _searchQuery = '';
+    _filteredExercises = List.from(_exercises);
     notifyListeners();
   }
 
+  void _applyFilters() {
+    List<Exercise> results = List.from(_exercises);
+
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      results = results.where((e) => e.name.toLowerCase().contains(query)).toList();
+    }
+
+    if (_selectedMuscle != null && _selectedMuscle != 'All') {
+      final muscle = _selectedMuscle!.toLowerCase();
+      results = results.where((e) =>
+          e.primaryMuscles.any((m) => m.toLowerCase() == muscle) ||
+          e.secondaryMuscles.any((m) => m.toLowerCase() == muscle)).toList();
+    }
+
+    if (_selectedEquipment != null && _selectedEquipment != 'All') {
+      final eq = _selectedEquipment!.toLowerCase();
+      results = results.where((e) => e.equipment.toLowerCase() == eq).toList();
+    }
+
+    if (_selectedCategory != null && _selectedCategory != 'All') {
+      final cat = _selectedCategory!.toLowerCase();
+      results = results.where((e) => e.category.toLowerCase() == cat).toList();
+    }
+
+    if (_selectedLevel != null && _selectedLevel != 'All') {
+      final lvl = _selectedLevel!.toLowerCase();
+      results = results.where((e) => e.level.toLowerCase() == lvl).toList();
+    }
+
+    _filteredExercises = results;
+    notifyListeners();
+  }
+
+  // --- Backwards Compatibility Wrappers ---
+
+  Future<void> fetchExercises() async {
+    if (_exercises.isEmpty) {
+      await loadExercises();
+    }
+  }
+
   void updateSearchQuery(String query) {
-    _searchQuery = query;
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
-      fetchExercises();
-    });
+    search(query);
   }
 
   void updateMuscleGroup(String muscleGroup) {
-    _selectedMuscleGroup = muscleGroup;
-    fetchExercises();
+    filterByMuscle(muscleGroup);
   }
 
   Future<bool> addCustomExercise({
@@ -72,32 +156,31 @@ class ExerciseProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final exercise = Exercise(
-      id: '',
-      name: name,
-      muscleGroup: muscleGroup,
-      equipment: equipment,
-      instructions: instructions,
-      imagePath: imagePath,
-      removeBackground: removeBackground,
-    );
+    try {
+      final custom = Exercise(
+        id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+        name: name,
+        primaryMuscles: [muscleGroup.toLowerCase()],
+        secondaryMuscles: [],
+        equipment: equipment.toLowerCase(),
+        category: 'strength',
+        level: 'beginner',
+        instructions: instructions,
+        images: imagePath != null ? [imagePath] : [],
+      );
 
-    final result = await _exerciseRepository.createCustomExercise(exercise);
-
-    return result.fold(
-      onSuccess: (newExercise) {
-        _exercises.insert(0, newExercise);
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      },
-      onFailure: (failure) {
-        SecureLogger.logError('addCustomExercise failed', failure.message);
-        _errorMessage = SecureLogger.sanitizeException(failure.message);
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      },
-    );
+      // Add custom exercise locally in memory
+      _exercises.insert(0, custom);
+      _applyFilters();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      SecureLogger.logError('addCustomExercise failed', e.toString());
+      _errorMessage = SecureLogger.sanitizeException(e.toString());
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

@@ -3,6 +3,7 @@ import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/ai/context_builder.dart';
+import '../../../../core/utils/logger.dart';
 import 'offline_ai_service.dart';
 import 'gemini_ai_service.dart';
 
@@ -74,8 +75,17 @@ class AIRouter {
     required List<Map<String, String>> chatHistory,
     required bool forceEscalate,
   }) async {
+    // Topic-Scope Guardrail Check
+    if (!_isQueryInScope(prompt)) {
+      return Success(AIRoutingResult(
+        text: "I'm Gerex's fitness coach, so I can help with workouts, meals, sleep, and your progress — for other questions you'll want a general assistant.",
+        isOffline: true,
+      ));
+    }
+
     final prefs = di.sl<SharedPreferences>();
     final isOfflineOnly = prefs.getBool('offline_only_ai_assistant') ?? false;
+    SecureLogger.logInfo('AIRouter: Read offline_only_ai_assistant: $isOfflineOnly');
 
     // 1. If user explicitly requests cloud escalation
     if (forceEscalate) {
@@ -195,5 +205,64 @@ class AIRouter {
         onFailure: (cloudFail) => FailureResult(cloudFail),
       );
     }
+  }
+
+  bool _isQueryInScope(String query) {
+    final q = query.toLowerCase().trim();
+
+    // 1. Explicitly out-of-scope markers (coding, unrelated trivia, politics, etc.)
+    final outOfScopeIndicators = [
+      'python', 'javascript', 'html', 'css', 'java', 'programming', 'code', 'coding',
+      'c++', 'c#', 'rust', 'swift', 'kotlin', 'sql', 'weather', 'news', 'president',
+      'movie', 'song', 'music', 'crypto', 'bitcoin', 'stock market', 'finance', 'history',
+      'science', 'math', 'geography', 'capital of', 'joke', 'write a function', 'write a script',
+      'unrelated', 'politics', 'election', 'who is the prime minister', 'prime minister',
+      'who is the president', 'first president', 'war', 'current events'
+    ];
+
+    for (final kw in outOfScopeIndicators) {
+      if (q.contains(kw)) {
+        return false;
+      }
+    }
+
+    // 2. Explicitly in-scope markers (workouts, exercise, meal, nutrition, sleep, progress, app usage)
+    final inScopeIndicators = [
+      // Greetings & Identity
+      'hi', 'hello', 'hey', 'who are you', 'help', 'gerex', 'ai coach', 'personal trainer',
+      
+      // Exercise & Workouts
+      'workout', 'exercise', 'bench press', 'squat', 'pushup', 'pullup', 'dumbbell', 
+      'barbell', 'gym', 'reps', 'sets', 'rest', 'chest', 'back', 'shoulders', 'biceps', 
+      'triceps', 'legs', 'abs', 'cardio', 'training', 'routine', 'program', 'schedule', 
+      'deadlift', 'muscle', 'lift', 'strength', 'fitness', 'crunches', 'warm up',
+      
+      // Meals & Nutrition
+      'meal', 'recipe', 'food', 'breakfast', 'lunch', 'dinner', 'calorie', 'macro', 
+      'protein', 'carb', 'fat', 'nutrition', 'diet', 'eat', 'chicken', 'avocado', 
+      'salmon', 'weight gain', 'weight loss', 'cut', 'bulk', 'cooking', 'kcal', 'nutrient',
+      
+      // Sleep
+      'sleep', 'alarm', 'bedtime', 'wake', 'night', 'recovery',
+      
+      // Progress & Activity
+      'progress', 'streak', 'steps', 'water', 'hydration', 'drink', 'photo', 'gallery', 
+      'picture', 'active', 'log', 'track', 'join', 'find', 'history', 'badge',
+      
+      // BMI & Metrics
+      'bmi', 'weight', 'height', 'body fat', 'metrics', 'muscle mass', 'kg', 'lbs',
+      
+      // App Navigation & Usage
+      'app', 'navigat', 'feature', 'screen', 'how do i', 'how to use', 'tabs', 'tab'
+    ];
+
+    for (final kw in inScopeIndicators) {
+      if (q.contains(kw)) {
+        return true;
+      }
+    }
+
+    // Default to out-of-scope if no indicator matches
+    return false;
   }
 }

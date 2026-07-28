@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/utils/logger.dart';
 import 'ai_service.dart';
 
 class OfflineAIService implements AIService {
@@ -56,6 +57,7 @@ class OfflineAIService implements AIService {
     // We parse the context injected in the prompt, extract the parameters, 
     // and route via our high-performance local keyword parser to respond instantly.
     try {
+      SecureLogger.logInfo('OfflineAIService: generateResponse incoming prompt: $prompt');
       final responseText = _parseAndRespondLocally(prompt);
       
       if (responseText == null) {
@@ -73,7 +75,13 @@ class OfflineAIService implements AIService {
 
   /// High-performance offline NLP matching engine that reads the context and returns appropriate answers.
   String? _parseAndRespondLocally(String fullPrompt) {
-    final query = fullPrompt.toLowerCase();
+    // Isolate the user query from the prepended context
+    String userQuery = fullPrompt;
+    final promptIndex = fullPrompt.indexOf('Prompt:');
+    if (promptIndex != -1) {
+      userQuery = fullPrompt.substring(promptIndex + 'Prompt:'.length).trim();
+    }
+    final query = userQuery.toLowerCase();
 
     // Context parser helpers
     String extractValue(String key) {
