@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/workout_provider.dart';
 import '../../domain/entities/workout_entities.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
-import 'package:gerex/core/di/injection_container.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/providers/notification_provider.dart';
 
 class WorkoutTrackerScreen extends StatefulWidget {
   const WorkoutTrackerScreen({super.key});
@@ -34,27 +33,79 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
     'Rest Day'
   ];
 
-  bool _reminderEnabled = true;
+  List<int> _pendingNotificationIds = [];
 
   @override
   void initState() {
     super.initState();
-    _loadReminderPreference();
-  }
-
-  void _loadReminderPreference() async {
-    final prefs = sl<SharedPreferences>();
-    setState(() {
-      _reminderEnabled = prefs.getBool('workout_reminder_enabled') ?? true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPendingReminders();
     });
   }
 
-  void _toggleReminder(bool value) async {
-    final prefs = sl<SharedPreferences>();
-    await prefs.setBool('workout_reminder_enabled', value);
+  void _loadPendingReminders() async {
+    if (!mounted) return;
+    final ids = await context.read<NotificationProvider>().getPendingNotificationIds();
+    if (!mounted) return;
     setState(() {
-      _reminderEnabled = value;
+      _pendingNotificationIds = ids;
     });
+  }
+
+  int _notificationId(String workoutId) {
+    return 'workout-$workoutId'.hashCode & 0x7fffffff;
+  }
+
+  void _toggleWorkoutReminder(Workout workout, bool value) async {
+    final provider = context.read<NotificationProvider>();
+    final workoutId = workout.id;
+    if (value) {
+      final date = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime.now(),
+        lastDate: DateTime.now().add(const Duration(days: 30)),
+      );
+      if (date != null && mounted) {
+        final time = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
+        if (time != null && mounted) {
+          final startsAt = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            time.hour,
+            time.minute,
+          );
+          final firstExercise = workout.exercises.isNotEmpty
+              ? workout.exercises.first.exercise
+              : null;
+          await provider.scheduleWorkoutReminder(
+            workoutId: workoutId,
+            workoutName: workout.name,
+            startsAt: startsAt,
+            exercisesCount: workout.exercises.length,
+            imageUrl: firstExercise?.imageUrl,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Scheduled ${workout.name} successfully!')),
+            );
+          }
+          _loadPendingReminders();
+        }
+      }
+    } else {
+      await provider.cancelNotification('workout-$workoutId');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cancelled reminder for ${workout.name}')),
+        );
+      }
+      _loadPendingReminders();
+    }
   }
 
   @override
@@ -303,9 +354,9 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                           ),
                         ),
                         Switch(
-                          value: _reminderEnabled,
+                          value: _pendingNotificationIds.contains(_notificationId(workout.id)),
                           activeThumbColor: theme.colorScheme.primary,
-                          onChanged: _toggleReminder,
+                          onChanged: (val) => _toggleWorkoutReminder(workout, val),
                         ),
                       ],
                     ),

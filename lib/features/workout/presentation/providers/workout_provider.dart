@@ -23,6 +23,7 @@ class WorkoutProvider extends ChangeNotifier {
   DateTime? _sessionStartedAt;
   int _sessionDurationSeconds = 0;
   Timer? _sessionTimer;
+  bool _aiTrackingEnabled = false;
 
   // Live Sets Logging: Exercise ID -> List of LoggedSets
   final Map<String, List<LoggedSet>> _liveSets = {};
@@ -45,10 +46,16 @@ class WorkoutProvider extends ChangeNotifier {
   int get sessionDurationSeconds => _sessionDurationSeconds;
   List<Exercise> get liveExercises => _liveExercisesOrder;
   Map<String, List<LoggedSet>> get liveSets => _liveSets;
+  bool get aiTrackingEnabled => _aiTrackingEnabled;
 
   int get restTimeRemaining => _restTimeRemaining;
   int get restTimerTotal => _restTimerTotal;
   bool get isRestActive => _isRestActive;
+
+  void setAiTrackingEnabled(bool value) {
+    _aiTrackingEnabled = value;
+    notifyListeners();
+  }
 
   // ----------------------------------------------------
   // Templates & Sessions Data Fetching
@@ -133,13 +140,14 @@ class WorkoutProvider extends ChangeNotifier {
   // Live Workout Session Controller
   // ----------------------------------------------------
 
-  void startWorkoutSession(Workout template) {
+  void startWorkoutSession(Workout template, {bool enableAiTracking = false}) {
     if (isSessionActive) return; // session already running
 
     _activeTemplate = template;
     _activeSessionName = template.name;
     _sessionStartedAt = DateTime.now();
     _sessionDurationSeconds = 0;
+    _aiTrackingEnabled = enableAiTracking;
 
     _liveSets.clear();
     _liveExercisesOrder.clear();

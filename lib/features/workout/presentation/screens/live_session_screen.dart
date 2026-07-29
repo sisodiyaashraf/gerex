@@ -1,23 +1,440 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:camera/camera.dart';
+import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
 import '../../domain/entities/workout_entities.dart';
 import '../providers/workout_provider.dart';
+import '../../../ai/data/services/pose_detector_service.dart';
+import '../../../ai/data/services/form_analyzer.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/widgets/slide_to_confirm_button.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:gerex/core/theme/app_theme.dart';
 
-class LiveSessionScreen extends StatelessWidget {
+class LiveSessionScreen extends StatefulWidget {
   const LiveSessionScreen({super.key});
+
+  @override
+  State<LiveSessionScreen> createState() => _LiveSessionScreenState();
+}
+
+class _LiveSessionScreenState extends State<LiveSessionScreen> {
+  // Camera & AI State
+  CameraController? _cameraController;
+  final PoseDetectorService _poseDetectorService = PoseDetectorService();
+  bool _isCameraInitialized = false;
+  bool _isAnalyzing = false;
+  Timer? _simulationTimer;
+
+  // Selected analyzer target
+  String _selectedExerciseTarget = 'Squat'; // 'Squat', 'Push-Up', 'Jumping Jack', 'Plank'
+  
+  // Real-time stats
+  int _aiRepCount = 0;
+  String _aiPhase = 'up';
+  double _aiMaxFlexion = 180.0;
+  String _aiFeedbackMessage = 'Position body in frame';
+  bool _aiIsGoodForm = true;
+  double _aiProgress = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _poseDetectorService.initialize();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<WorkoutProvider>();
+      if (provider.aiTrackingEnabled) {
+        // Try matching first exercise in workout template to preset targets
+        if (provider.liveExercises.isNotEmpty) {
+          final firstEx = provider.liveExercises.first.name.toLowerCase();
+          if (firstEx.contains('squat')) {
+            _selectedExerciseTarget = 'Squat';
+          } else if (firstEx.contains('push')) {
+            _selectedExerciseTarget = 'Push-Up';
+          } else if (firstEx.contains('jack')) {
+            _selectedExerciseTarget = 'Jumping Jack';
+          } else if (firstEx.contains('plank')) {
+            _selectedExerciseTarget = 'Plank';
+          }
+        }
+        _initializeCamera();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    _poseDetectorService.dispose();
+    _simulationTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        setState(() {
+          _aiFeedbackMessage = 'No cameras found. Simulation active.';
+        });
+        _runSimulation();
+        return;
+      }
+      final frontCam = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        frontCam,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      await _cameraController!.initialize();
+      if (!mounted) return;
+      setState(() {
+        _isCameraInitialized = true;
+        _aiFeedbackMessage = 'AI Form Tracking Active';
+      });
+      _startAnalysisStream();
+    } catch (e) {
+      setState(() {
+        _aiFeedbackMessage = 'Camera failed. Simulation active.';
+      });
+      _runSimulation();
+    }
+  }
+
+  void _runSimulation() {
+    if (_isAnalyzing) return;
+    _isAnalyzing = true;
+    _simulationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted || !_isAnalyzing) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _aiRepCount++;
+        _aiFeedbackMessage = 'Simulated Rep Completed!';
+        _aiIsGoodForm = true;
+        _aiProgress = 1.0;
+      });
+      _onAiRepCompleted();
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          setState(() {
+            _aiProgress = 0.0;
+            _aiFeedbackMessage = 'Prepare for next rep';
+          });
+        }
+      });
+    });
+  }
+
+  void _startAnalysisStream() async {
+    if (_cameraController == null || !_isCameraInitialized) return;
+    bool isProcessing = false;
+    _isAnalyzing = true;
+
+    _cameraController!.startImageStream((CameraImage image) async {
+      if (isProcessing || !mounted || !_isAnalyzing) return;
+      isProcessing = true;
+
+      try {
+        final poses = await _poseDetectorService.processImage(
+          InputImage.fromBytes(
+            bytes: image.planes[0].bytes,
+            metadata: InputImageMetadata(
+              size: Size(image.width.toDouble(), image.height.toDouble()),
+              rotation: InputImageRotation.rotation270deg,
+              format: InputImageFormat.nv21,
+              bytesPerRow: image.planes[0].bytesPerRow,
+            ),
+          ),
+        );
+
+        if (poses.isNotEmpty && mounted) {
+          final pose = poses.first;
+          FormFeedback feedback;
+
+          if (_selectedExerciseTarget == 'Squat') {
+            feedback = FormAnalyzer.analyzeSquat(
+              pose: pose,
+              currentPhase: _aiPhase,
+              maxKneeFlexion: _aiMaxFlexion,
+              onPhaseChanged: (nextPhase) {
+                _aiPhase = nextPhase;
+                if (nextPhase == 'down') {
+                  _aiMaxFlexion = 180.0;
+                }
+              },
+              onRepCompleted: () {
+                setState(() {
+                  _aiRepCount++;
+                });
+                _onAiRepCompleted();
+              },
+            );
+            // Track deepest flexion point
+            final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+            final leftKnee = pose.landmarks[PoseLandmarkType.leftKnee];
+            final leftAnkle = pose.landmarks[PoseLandmarkType.leftAnkle];
+            if (leftHip != null && leftKnee != null && leftAnkle != null) {
+              final angle = FormAnalyzer.calculateAngle(leftHip, leftKnee, leftAnkle);
+              if (angle < _aiMaxFlexion) {
+                _aiMaxFlexion = angle;
+              }
+            }
+          } else if (_selectedExerciseTarget == 'Push-Up') {
+            feedback = FormAnalyzer.analyzePushUp(
+              pose: pose,
+              currentPhase: _aiPhase,
+              maxElbowFlexion: _aiMaxFlexion,
+              onPhaseChanged: (nextPhase) {
+                _aiPhase = nextPhase;
+                if (nextPhase == 'down') {
+                  _aiMaxFlexion = 180.0;
+                }
+              },
+              onRepCompleted: () {
+                setState(() {
+                  _aiRepCount++;
+                });
+                _onAiRepCompleted();
+              },
+            );
+            final leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+            final leftElbow = pose.landmarks[PoseLandmarkType.leftElbow];
+            final leftWrist = pose.landmarks[PoseLandmarkType.leftWrist];
+            if (leftShoulder != null && leftElbow != null && leftWrist != null) {
+              final angle = FormAnalyzer.calculateAngle(leftShoulder, leftElbow, leftWrist);
+              if (angle < _aiMaxFlexion) {
+                _aiMaxFlexion = angle;
+              }
+            }
+          } else if (_selectedExerciseTarget == 'Jumping Jack') {
+            feedback = FormAnalyzer.analyzeJumpingJack(
+              pose: pose,
+              currentPhase: _aiPhase,
+              onPhaseChanged: (nextPhase) => _aiPhase = nextPhase,
+              onRepCompleted: () {
+                setState(() {
+                  _aiRepCount++;
+                });
+                _onAiRepCompleted();
+              },
+            );
+          } else {
+            // Plank
+            feedback = FormAnalyzer.analyzePlank(pose: pose);
+          }
+
+          setState(() {
+            _aiFeedbackMessage = feedback.message;
+            _aiIsGoodForm = feedback.isGoodForm;
+            _aiProgress = feedback.progress;
+          });
+        }
+      } catch (_) {} finally {
+        isProcessing = false;
+      }
+    });
+  }
+
+  void _onAiRepCompleted() {
+    final provider = context.read<WorkoutProvider>();
+    if (provider.liveExercises.isEmpty) return;
+
+    // Find the first exercise matching our target name (or default to current first)
+    final activeEx = provider.liveExercises.firstWhere(
+      (e) => e.name.toLowerCase().contains(_selectedExerciseTarget.toLowerCase().split(' ').first),
+      orElse: () => provider.liveExercises.first,
+    );
+
+    final sets = provider.liveSets[activeEx.id] ?? [];
+    final incompleteIdx = sets.indexWhere((s) => !s.isCompleted);
+    if (incompleteIdx != -1) {
+      final currentSet = sets[incompleteIdx];
+      final targetReps = currentSet.reps;
+      provider.updateSetValues(activeEx.id, incompleteIdx, reps: currentSet.reps + 1);
+      
+      // Auto-complete set if reps completed matches target reps
+      if (currentSet.reps + 1 >= targetReps) {
+        provider.toggleSetComplete(activeEx.id, incompleteIdx);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('AI Tracker: Set ${incompleteIdx + 1} for ${activeEx.name} Completed!'),
+            backgroundColor: AppColors.accentEmeraldLight,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildAiTrackerPanel(BuildContext context, ThemeData theme) {
+    return GlassContainer(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      borderRadius: 20,
+      borderGradient: LinearGradient(
+        colors: [
+          AppColors.accentEmeraldLight.withValues(alpha: 0.25),
+          AppColors.accentEmeraldLight.withValues(alpha: 0.05),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const FaIcon(FontAwesomeIcons.robot, color: AppColors.accentEmeraldLight, size: 14),
+                  const SizedBox(width: 8),
+                  Text(
+                    'AI Tracker: $_selectedExerciseTarget',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDarkHeading),
+                  ),
+                ],
+              ),
+              DropdownButton<String>(
+                value: _selectedExerciseTarget,
+                dropdownColor: AppColors.cardDarkGlass,
+                style: const TextStyle(color: AppColors.accentEmeraldLight, fontSize: 12, fontWeight: FontWeight.bold),
+                underline: const SizedBox(),
+                items: ['Squat', 'Push-Up', 'Jumping Jack', 'Plank'].map((e) {
+                  return DropdownMenuItem(value: e, child: Text(e));
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedExerciseTarget = val;
+                      _aiRepCount = 0;
+                      _aiPhase = 'up';
+                      _aiMaxFlexion = 180.0;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 150,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: _isCameraInitialized && _cameraController != null
+                        ? AspectRatio(
+                            aspectRatio: _cameraController!.value.aspectRatio,
+                            child: CameraPreview(_cameraController!),
+                          )
+                        : Container(
+                            color: Colors.black45,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.videocam_off_rounded, color: Colors.grey[600], size: 36),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _cameraController == null
+                                        ? 'Initializing camera...'
+                                        : 'Using AI Simulation Mode',
+                                    style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: LinearProgressIndicator(
+                      value: _aiProgress,
+                      backgroundColor: Colors.transparent,
+                      color: AppColors.accentEmeraldLight,
+                      minHeight: 4,
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _aiIsGoodForm 
+                            ? AppColors.accentEmeraldLight.withValues(alpha: 0.8) 
+                            : AppColors.destructiveRed.withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _aiIsGoodForm ? 'GOOD FORM' : 'CORRECTION',
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Reps: $_aiRepCount',
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: AppColors.accentEmeraldLight, size: 14),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _aiFeedbackMessage,
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = Provider.of<WorkoutProvider>(context);
 
-    // Format duration to MM:SS or HH:MM:SS
     String formatDuration(int totalSeconds) {
       final hours = totalSeconds ~/ 3600;
       final minutes = (totalSeconds % 3600) ~/ 60;
@@ -95,99 +512,99 @@ class LiveSessionScreen extends StatelessWidget {
       ),
       body: LiquidBackground(
         child: Column(
-        children: [
-          // Rest Timer Panel
-          if (provider.isRestActive)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: theme.colorScheme.primaryContainer,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.timer_outlined,
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Rest Timer: ${provider.restTimeRemaining}s / ${provider.restTimerTotal}s',
-                            style: TextStyle(
-                              color: theme.colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+          children: [
+            if (provider.isRestActive)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: theme.colorScheme.primaryContainer,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            color: theme.colorScheme.onPrimaryContainer,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => provider.skipRestTimer(),
-                    child: Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-
-          // Workout Player List
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: provider.liveExercises.length + 1,
-              itemBuilder: (context, index) {
-                if (index == provider.liveExercises.length) {
-                  // Bottom Actions
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => _showAddExerciseSheet(context, provider),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Exercise'),
-                      ),
-                      const SizedBox(height: 24),
-                      provider.isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : SlideToConfirmButton(
-                              label: 'Slide to Finish Workout',
-                              knobIcon: FontAwesomeIcons.solidCircleCheck,
-                              onConfirm: () async {
-                                final done = await provider.finishWorkoutSession();
-                                if (done && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Workout complete! Saved to logs.'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                  context.pop();
-                                }
-                              },
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Rest Timer: ${provider.restTimeRemaining}s / ${provider.restTimerTotal}s',
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                      const SizedBox(height: 40),
-                    ],
-                  );
-                }
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => provider.skipRestTimer(),
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                final exercise = provider.liveExercises[index];
-                final sets = provider.liveSets[exercise.id] ?? [];
+            // Live AI Tracker Panel
+            if (provider.aiTrackingEnabled)
+              _buildAiTrackerPanel(context, theme),
 
-                return GlassContainer(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: provider.liveExercises.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == provider.liveExercises.length) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => _showAddExerciseSheet(context, provider),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Exercise'),
+                        ),
+                        const SizedBox(height: 24),
+                        provider.isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : SlideToConfirmButton(
+                                label: 'Slide to Finish Workout',
+                                knobIcon: FontAwesomeIcons.solidCircleCheck,
+                                onConfirm: () async {
+                                  final done = await provider.finishWorkoutSession();
+                                  if (done && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Workout complete! Saved to logs.'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                    context.pop();
+                                  }
+                                },
+                              ),
+                        const SizedBox(height: 40),
+                      ],
+                    );
+                  }
+
+                  final exercise = provider.liveExercises[index];
+                  final sets = provider.liveSets[exercise.id] ?? [];
+
+                  return GlassContainer(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
@@ -204,8 +621,7 @@ class LiveSessionScreen extends StatelessWidget {
                             ),
                             IconButton(
                               icon: const Icon(Icons.add_box_outlined),
-                              onPressed: () =>
-                                  provider.addSetToExercise(exercise.id),
+                              onPressed: () => provider.addSetToExercise(exercise.id),
                             ),
                           ],
                         ),
@@ -219,8 +635,6 @@ class LiveSessionScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // Header labels
                         const Row(
                           children: [
                             SizedBox(width: 40, child: Text('Set')),
@@ -237,15 +651,11 @@ class LiveSessionScreen extends StatelessWidget {
                           ],
                         ),
                         const Divider(),
-
-                        // Sets row log items
                         ...sets.asMap().entries.map((entry) {
                           final idx = entry.key;
                           final setLog = entry.value;
                           return _SetLogRow(
-                            key: ValueKey(setLog.id.isEmpty
-                                ? '${exercise.id}_$idx'
-                                : setLog.id),
+                            key: ValueKey(setLog.id.isEmpty ? '${exercise.id}_$idx' : setLog.id),
                             setLog: setLog,
                             onChanged: (reps, weight) {
                               provider.updateSetValues(
@@ -266,14 +676,14 @@ class LiveSessionScreen extends StatelessWidget {
                       ],
                     ),
                   );
-              },
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _confirmCancelSession(BuildContext context, WorkoutProvider provider) {
     showDialog(
@@ -409,7 +819,6 @@ class _SetLogRowState extends State<_SetLogRow> {
             : Colors.transparent,
         child: Row(
           children: [
-            // Delete / Number
             SizedBox(
               width: 40,
               child: isDone
@@ -433,8 +842,6 @@ class _SetLogRowState extends State<_SetLogRow> {
                       ),
                     ),
             ),
-
-            // Weight Input
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -445,8 +852,7 @@ class _SetLogRowState extends State<_SetLogRow> {
                   ),
                   decoration: const InputDecoration(
                     isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     border: OutlineInputBorder(),
                   ),
                   enabled: !isDone,
@@ -458,8 +864,6 @@ class _SetLogRowState extends State<_SetLogRow> {
                 ),
               ),
             ),
-
-            // Reps Input
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -468,8 +872,7 @@ class _SetLogRowState extends State<_SetLogRow> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     border: OutlineInputBorder(),
                   ),
                   enabled: !isDone,
@@ -481,15 +884,11 @@ class _SetLogRowState extends State<_SetLogRow> {
                 ),
               ),
             ),
-
-            // Check button
             SizedBox(
               width: 60,
               child: IconButton(
                 icon: Icon(
-                  isDone
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
+                  isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                   color: isDone ? theme.colorScheme.primary : theme.disabledColor,
                 ),
                 onPressed: widget.onToggleComplete,

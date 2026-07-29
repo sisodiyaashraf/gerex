@@ -22,6 +22,7 @@ class QuickWorkoutScreen extends StatefulWidget {
 class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
   final List<WorkoutExercise> _exercises = [];
   String _selectedPreset = 'None';
+  bool _aiTrackingEnabled = false;
 
   @override
   void initState() {
@@ -155,6 +156,78 @@ class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
                     const SizedBox(width: 8),
                     _buildPresetChip('Cardio', exProvider.exercises),
                   ],
+                ),
+              ),
+
+              // AI Live Form Tracker Card
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: 20,
+                  borderGradient: _aiTrackingEnabled 
+                      ? LinearGradient(
+                          colors: [
+                            AppColors.accentEmeraldLight.withValues(alpha: 0.25),
+                            AppColors.accentEmeraldLight.withValues(alpha: 0.05),
+                          ],
+                        )
+                      : LinearGradient(
+                          colors: [
+                            Colors.white.withValues(alpha: 0.1),
+                            Colors.white.withValues(alpha: 0.02),
+                          ],
+                        ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _aiTrackingEnabled 
+                              ? AppColors.accentEmeraldLight.withValues(alpha: 0.15) 
+                              : Colors.white.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const FaIcon(
+                          FontAwesomeIcons.robot,
+                          color: AppColors.accentEmeraldLight,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AI Live Form Tracker',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textDarkHeading,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Real-time posture checking, reps count & feedback coaching.',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch.adaptive(
+                        value: _aiTrackingEnabled,
+                        activeTrackColor: AppColors.accentEmeraldLight,
+                        onChanged: (val) {
+                          setState(() {
+                            _aiTrackingEnabled = val;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -332,7 +405,7 @@ class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
                     exercises: _exercises,
                     createdAt: DateTime.now(),
                   );
-                  workoutProvider.startWorkoutSession(workout);
+                  workoutProvider.startWorkoutSession(workout, enableAiTracking: _aiTrackingEnabled);
                   context.pushReplacement('/session');
                 },
               ),

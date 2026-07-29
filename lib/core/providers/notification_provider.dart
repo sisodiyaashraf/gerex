@@ -96,8 +96,51 @@ class NotificationProvider extends ChangeNotifier {
   Future<void> setContentPack(String? id) async { await service.setContentPack(id); notifyListeners(); }
   Future<void> scheduleHydrationIfBehind({required int intakeMl, required int targetMl}) => service.scheduleHydrationIfBehind(intakeMl: intakeMl, targetMl: targetMl);
   Future<void> scheduleStreakRisk({required bool loggedWorkoutToday}) => service.scheduleStreakRisk(loggedWorkoutToday: loggedWorkoutToday);
-  Future<void> scheduleMealReminder({required String entryId, required String mealName, required String mealType, required DateTime day}) => service.scheduleMealReminder(entryId: entryId, mealName: mealName, mealType: mealType, day: day);
-  Future<void> scheduleWorkoutReminder({required String workoutId, required String workoutName, required DateTime startsAt}) => service.scheduleWorkoutReminder(workoutId: workoutId, workoutName: workoutName, startsAt: startsAt);
+  Future<void> scheduleMealReminder({
+    required String entryId,
+    required String recipeId,
+    required String mealName,
+    required String mealType,
+    required DateTime day,
+    double? calories,
+  }) => service.scheduleMealReminder(
+    entryId: entryId,
+    recipeId: recipeId,
+    mealName: mealName,
+    mealType: mealType,
+    day: day,
+    calories: calories,
+  );
+  Future<void> scheduleWorkoutReminder({
+    required String workoutId,
+    required String workoutName,
+    required DateTime startsAt,
+    required int exercisesCount,
+    String? imageUrl,
+  }) => service.scheduleWorkoutReminder(
+    workoutId: workoutId,
+    workoutName: workoutName,
+    startsAt: startsAt,
+    exercisesCount: exercisesCount,
+    imageUrl: imageUrl,
+  );
+
+  Future<void> scheduleExerciseReminder({
+    required String exerciseId,
+    required String exerciseName,
+    required DateTime startsAt,
+    String? imageUrl,
+    required int instructionsCount,
+  }) => service.scheduleExerciseReminder(
+    exerciseId: exerciseId,
+    exerciseName: exerciseName,
+    startsAt: startsAt,
+    imageUrl: imageUrl,
+    instructionsCount: instructionsCount,
+  );
+
+  Future<List<int>> getPendingNotificationIds() => service.getPendingNotificationIds();
+
   Future<void> showCustomNotification(NotificationPayload payload) async {
     await sendNotification(payload.title, payload.body);
     await service.showNow(payload);

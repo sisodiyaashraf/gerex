@@ -469,7 +469,7 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Try widening your search or active filters.',
             style: TextStyle(
               color: AppColors.textDarkMuted,

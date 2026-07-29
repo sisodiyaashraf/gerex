@@ -46,9 +46,19 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
           );
         });
         if (context.mounted) {
+          final firstExercise = widget.workout.exercises.isNotEmpty
+              ? widget.workout.exercises.first.exercise
+              : null;
           context.read<NotificationProvider>().sendNotification(
             'Workout Scheduled',
             'Your workout "${widget.workout.name}" is scheduled for ${_scheduledDateTime.toString().substring(0, 16)}.',
+          );
+          context.read<NotificationProvider>().scheduleWorkoutReminder(
+            workoutId: widget.workout.id,
+            workoutName: widget.workout.name,
+            startsAt: _scheduledDateTime!,
+            exercisesCount: widget.workout.exercises.length,
+            imageUrl: firstExercise?.imageUrl,
           );
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

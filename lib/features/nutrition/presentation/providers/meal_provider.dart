@@ -242,7 +242,14 @@ class MealProvider extends ChangeNotifier {
     _mealPlan.add(newEntry);
     _saveMealPlan();
     if (newEntry.notificationEnabled) {
-      di.sl<NotificationProvider>().scheduleMealReminder(entryId: newEntry.id, mealName: newEntry.recipeName, mealType: newEntry.mealType, day: newEntry.date);
+      di.sl<NotificationProvider>().scheduleMealReminder(
+        entryId: newEntry.id,
+        recipeId: newEntry.recipeId,
+        mealName: newEntry.recipeName,
+        mealType: newEntry.mealType,
+        day: newEntry.date,
+        calories: newEntry.calories,
+      );
     }
     notifyListeners();
   }
@@ -260,7 +267,14 @@ class MealProvider extends ChangeNotifier {
       _saveMealPlan();
       if (enabled) {
         final entry = _mealPlan[idx];
-        di.sl<NotificationProvider>().scheduleMealReminder(entryId: entry.id, mealName: entry.recipeName, mealType: entry.mealType, day: entry.date);
+        di.sl<NotificationProvider>().scheduleMealReminder(
+          entryId: entry.id,
+          recipeId: entry.recipeId,
+          mealName: entry.recipeName,
+          mealType: entry.mealType,
+          day: entry.date,
+          calories: entry.calories,
+        );
       } else {
         di.sl<NotificationProvider>().cancelNotification('meal-$id');
       }

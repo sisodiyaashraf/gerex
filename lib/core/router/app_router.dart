@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../features/exercise/presentation/providers/exercise_provider.dart';
+import '../../features/workout/presentation/providers/workout_provider.dart';
+import '../../features/nutrition/presentation/providers/meal_provider.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
@@ -142,8 +146,28 @@ class AppRouter {
       ),
       GoRoute(
         path: '/workout-details',
-        builder: (context, state) =>
-            WorkoutDetailsScreen(workout: state.extra as Workout),
+        builder: (context, state) {
+          Workout? workout;
+          if (state.extra is Workout) {
+            workout = state.extra as Workout;
+          } else {
+            final id = state.uri.queryParameters['id'];
+            if (id != null) {
+              try {
+                final wp = Provider.of<WorkoutProvider>(context, listen: false);
+                workout = wp.workouts.firstWhere((w) => w.id == id);
+              } catch (_) {}
+            }
+          }
+          if (workout != null) {
+            return WorkoutDetailsScreen(workout: workout);
+          }
+          return const Scaffold(
+            body: Center(
+              child: Text('Workout not found'),
+            ),
+          );
+        },
       ),
       GoRoute(
         path: '/activity-tracker',
@@ -179,8 +203,28 @@ class AppRouter {
       ),
       GoRoute(
         path: '/meal-details',
-        builder: (context, state) =>
-            MealDetailsScreen(recipe: state.extra as Recipe),
+        builder: (context, state) {
+          Recipe? recipe;
+          if (state.extra is Recipe) {
+            recipe = state.extra as Recipe;
+          } else {
+            final id = state.uri.queryParameters['id'];
+            if (id != null) {
+              try {
+                final mp = Provider.of<MealProvider>(context, listen: false);
+                recipe = mp.recipes.firstWhere((r) => r.id == id);
+              } catch (_) {}
+            }
+          }
+          if (recipe != null) {
+            return MealDetailsScreen(recipe: recipe);
+          }
+          return const Scaffold(
+            body: Center(
+              child: Text('Recipe not found'),
+            ),
+          );
+        },
       ),
       GoRoute(
         path: '/exercise-library',
@@ -189,10 +233,36 @@ class AppRouter {
       GoRoute(
         path: '/exercise-detail',
         builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
-          return ExerciseDetailScreen(
-            exercise: extra['exercise'] as Exercise,
-            isPicker: extra['isPicker'] as bool? ?? false,
+          Exercise? exercise;
+          bool isPicker = false;
+          if (state.extra is Map<String, dynamic>) {
+            final extra = state.extra as Map<String, dynamic>;
+            exercise = extra['exercise'] as Exercise?;
+            isPicker = extra['isPicker'] as bool? ?? false;
+          } else {
+            final id = state.uri.queryParameters['id'];
+            if (id != null) {
+              try {
+                final ep = Provider.of<ExerciseProvider>(context, listen: false);
+                exercise = ep.allRawExercises.firstWhere((e) => e.id == id);
+              } catch (_) {
+                try {
+                  final ep = Provider.of<ExerciseProvider>(context, listen: false);
+                  exercise = ep.exercises.firstWhere((e) => e.id == id);
+                } catch (_) {}
+              }
+            }
+          }
+          if (exercise != null) {
+            return ExerciseDetailScreen(
+              exercise: exercise,
+              isPicker: isPicker,
+            );
+          }
+          return const Scaffold(
+            body: Center(
+              child: Text('Exercise not found'),
+            ),
           );
         },
       ),

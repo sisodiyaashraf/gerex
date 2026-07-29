@@ -15,6 +15,7 @@ import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
+import 'package:gerex/core/notifications/notification_models.dart';
 import 'package:gerex/core/notifications/content_packs.dart';
 import '../../../../core/presentation/providers/theme_provider.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
@@ -731,6 +732,32 @@ class ProfileScreen extends StatelessWidget {
                     icon: FontAwesomeIcons.penToSquare,
                     title: 'Custom Notification',
                     trailing: IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => context.push('/custom-notification')),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.vial,
+                    title: 'Test Notification (Dev)',
+                    trailing: OutlinedButton(
+                      onPressed: () async {
+                        final provider = context.read<NotificationProvider>();
+                        await provider.showCustomNotification(
+                          NotificationPayload(
+                            id: 'test_immediate',
+                            title: 'Gerex Test Notification',
+                            body: 'Delivery verified successfully! Pipeline is working.',
+                            category: NotificationCategory.general,
+                            scheduledTime: DateTime.now(),
+                            deepLink: '/notifications',
+                          ),
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Immediate test notification fired!')),
+                          );
+                        }
+                      },
+                      child: const Text('Test'),
+                    ),
                   ),
                   const SizedBox(height: 8),
 

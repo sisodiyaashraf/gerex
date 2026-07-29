@@ -183,7 +183,10 @@ class SleepProvider extends ChangeNotifier {
       if (enabled) {
         await _scheduleAlarm(_alarms[idx]);
       } else {
-        await _notifications.cancelNotification('sleep-bedtime-$id');
+        for (int w = 1; w <= 7; w++) {
+          await _notifications.cancelNotification('sleep-bedtime-$id-$w');
+          await _notifications.cancelNotification('sleep-wake-$id-$w');
+        }
       }
       notifyListeners();
     }
@@ -192,18 +195,37 @@ class SleepProvider extends ChangeNotifier {
   Future<void> deleteAlarm(String id) async {
     _alarms.removeWhere((a) => a.id == id);
     await _saveAlarms();
-    await _notifications.cancelNotification('sleep-bedtime-$id');
-    await _notifications.cancelNotification('sleep-wake-$id');
+    for (int w = 1; w <= 7; w++) {
+      await _notifications.cancelNotification('sleep-bedtime-$id-$w');
+      await _notifications.cancelNotification('sleep-wake-$id-$w');
+    }
     notifyListeners();
   }
 
   Future<void> _scheduleAlarm(SleepAlarm alarm) async {
+    final duration = calculateDuration(alarm.bedtimeHour, alarm.wakeHour);
     for (final weekday in alarm.repeatDays) {
       for (final item in [('bedtime', alarm.bedtimeHour, 'Bedtime reminder', NotificationCategory.sleep), ('wake', alarm.wakeHour, 'Wake up alarm', NotificationCategory.sleep)]) {
         final parts = item.$2.split(':').map(int.parse).toList();
         var date = DateTime.now();
         while (date.weekday != weekday || !DateTime(date.year, date.month, date.day, parts[0], parts[1]).isAfter(DateTime.now())) { date = date.add(const Duration(days: 1)); }
-        await _notifications.scheduleNotification(NotificationPayload(id: 'sleep-${item.$1}-${alarm.id}-$weekday', title: item.$3, body: item.$1 == 'bedtime' ? 'Time to wind down for recovery.' : 'Rise and shine — your Gerex day is ready.', category: item.$4, deepLink: '/sleep-tracker', scheduledTime: DateTime(date.year, date.month, date.day, parts[0], parts[1]), repeatRule: NotificationRepeatRule.weekly));
+        
+        final title = item.$1 == 'bedtime' 
+            ? 'Bedtime reminder (Goal: ${duration.toStringAsFixed(1)} hrs)' 
+            : 'Wake up alarm (Slept: ${duration.toStringAsFixed(1)} hrs)';
+        final body = item.$1 == 'bedtime' 
+            ? 'Time to wind down for your scheduled sleep session.' 
+            : 'Rise and shine — your recovery session is complete!';
+            
+        await _notifications.scheduleNotification(NotificationPayload(
+          id: 'sleep-${item.$1}-${alarm.id}-$weekday',
+          title: title,
+          body: body,
+          category: item.$4,
+          deepLink: '/sleep-tracker',
+          scheduledTime: DateTime(date.year, date.month, date.day, parts[0], parts[1]),
+          repeatRule: NotificationRepeatRule.weekly,
+        ));
       }
     }
   }

@@ -8,6 +8,7 @@ import '../../../../features/workout/presentation/providers/workout_provider.dar
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/providers/notification_provider.dart';
 
 class ExerciseDetailScreen extends StatefulWidget {
   final Exercise exercise;
@@ -28,6 +29,47 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   bool _isDescriptionExpanded = false;
   int _selectedReps = 10;
   bool _isVideoInitialized = false;
+
+  void _selectExerciseReminder(BuildContext context) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+    );
+    if (date != null && context.mounted) {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (time != null && context.mounted) {
+        final scheduledTime = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        );
+        final provider = context.read<NotificationProvider>();
+        await provider.scheduleExerciseReminder(
+          exerciseId: widget.exercise.id,
+          exerciseName: widget.exercise.name,
+          startsAt: scheduledTime,
+          imageUrl: widget.exercise.imageUrl,
+          instructionsCount: widget.exercise.instructions.length,
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Reminder scheduled for ${widget.exercise.name} at ${scheduledTime.toString().substring(0, 16)}',
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -80,6 +122,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   pinned: true,
                   backgroundColor: Colors.transparent,
                   elevation: 0,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.alarm_add_rounded),
+                      onPressed: () => _selectExerciseReminder(context),
+                    ),
+                  ],
                   flexibleSpace: FlexibleSpaceBar(
                     title: Text(
                       widget.exercise.name,
