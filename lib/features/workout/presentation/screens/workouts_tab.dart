@@ -9,7 +9,6 @@ import '../../../ai/presentation/providers/ai_provider.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
@@ -757,17 +756,23 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         Expanded(
                           child: AnimatedTappable(
                             onTap: () => context.push('/coach'),
-                            child: const GlassContainer(
+                            child: const PastelGradientCard(
+                              type: PastelCardType.violet,
                               padding: EdgeInsets.symmetric(vertical: 16.0),
                               child: Column(
                                 children: [
-                                  FaIcon(FontAwesomeIcons.solidCommentDots, size: 20),
+                                  FaIcon(
+                                    FontAwesomeIcons.solidCommentDots,
+                                    size: 20,
+                                    color: Color(0xFF14181F),
+                                  ),
                                   SizedBox(height: 8),
                                   Text(
                                     'AI Coach',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
+                                      color: Color(0xFF14181F),
                                     ),
                                   ),
                                 ],
@@ -779,17 +784,23 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         Expanded(
                           child: AnimatedTappable(
                             onTap: () => context.push('/ai-plan'),
-                            child: const GlassContainer(
+                            child: const PastelGradientCard(
+                              type: PastelCardType.mint,
                               padding: EdgeInsets.symmetric(vertical: 16.0),
                               child: Column(
                                 children: [
-                                  FaIcon(FontAwesomeIcons.wandMagicSparkles, size: 20),
+                                  FaIcon(
+                                    FontAwesomeIcons.wandMagicSparkles,
+                                    size: 20,
+                                    color: Color(0xFF14181F),
+                                  ),
                                   SizedBox(height: 8),
                                   Text(
                                     'Plan Gen',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
+                                      color: Color(0xFF14181F),
                                     ),
                                   ),
                                 ],
@@ -801,17 +812,23 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         Expanded(
                           child: AnimatedTappable(
                             onTap: () => context.push('/pose-feedback'),
-                            child: const GlassContainer(
+                            child: const PastelGradientCard(
+                              type: PastelCardType.sky,
                               padding: EdgeInsets.symmetric(vertical: 16.0),
                               child: Column(
                                 children: [
-                                  FaIcon(FontAwesomeIcons.video, size: 20),
+                                  FaIcon(
+                                    FontAwesomeIcons.video,
+                                    size: 20,
+                                    color: Color(0xFF14181F),
+                                  ),
                                   SizedBox(height: 8),
                                   Text(
                                     'Form Check',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
+                                      color: Color(0xFF14181F),
                                     ),
                                   ),
                                 ],
@@ -834,14 +851,14 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     if (workoutProvider.isLoading && workoutProvider.workouts.isEmpty)
                       const Center(child: CircularProgressIndicator())
                     else if (workoutProvider.workouts.isEmpty)
-                      GlassContainer(
+                      PastelGradientCard(
+                        type: PastelCardType.slate,
                         padding: const EdgeInsets.all(24.0),
                         child: Text(
                           'No templates saved. Create one to standardise your routines!',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
+                          style: TextStyle(
+                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                            fontSize: 14,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -857,7 +874,8 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                             onTap: () {
                               context.push('/workout-details', extra: workout);
                             },
-                            child: GlassContainer(
+                            child: PastelGradientCard(
+                              type: PastelCardType.sky,
                               margin: const EdgeInsets.only(bottom: 12),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -874,23 +892,23 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
+                                            color: Color(0xFF14181F),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           '${workout.exercises.length} exercises',
                                           style: TextStyle(
-                                            color: theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.5),
+                                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                             fontSize: 13,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Icon(
+                                  const Icon(
                                     Icons.arrow_forward_ios_rounded,
-                                    color: theme.colorScheme.primary,
+                                    color: Color(0xFF0D807B),
                                     size: 16,
                                   ),
                                 ],
@@ -913,14 +931,14 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     if (workoutProvider.isLoading && workoutProvider.sessions.isEmpty)
                       const Center(child: CircularProgressIndicator())
                     else if (workoutProvider.sessions.isEmpty)
-                      GlassContainer(
+                      PastelGradientCard(
+                        type: PastelCardType.slate,
                         padding: const EdgeInsets.all(24.0),
                         child: Text(
                           'No completed workouts in history yet.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
+                          style: TextStyle(
+                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                            fontSize: 14,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -933,23 +951,26 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         itemBuilder: (context, index) {
                           final session = workoutProvider.sessions[index];
                           final date = session.completedAt ?? session.startedAt;
-                          return GlassContainer(
+                          return PastelGradientCard(
+                            type: PastelCardType.violet,
                             margin: const EdgeInsets.only(bottom: 12),
+                            padding: EdgeInsets.zero,
                             child: Theme(
                               data: theme.copyWith(dividerColor: Colors.transparent),
                               child: ExpansionTile(
-                                iconColor: theme.colorScheme.primary,
-                                collapsedIconColor: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                iconColor: const Color(0xFF14181F),
+                                collapsedIconColor: const Color(0xFF14181F).withValues(alpha: 0.6),
                                 title: Text(
                                   session.name,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF14181F),
+                                  ),
                                 ),
                                 subtitle: Text(
                                   '${date.day}/${date.month}/${date.year} • ${formatDuration(session.durationSeconds)}',
                                   style: TextStyle(
-                                    color: theme.colorScheme.onSurface.withValues(
-                                      alpha: 0.5,
-                                    ),
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                   ),
                                 ),
                                 children: [
@@ -959,7 +980,10 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                       crossAxisAlignment: CrossAxisAlignment.stretch,
                                       children: [
                                         if (session.loggedSets.isEmpty)
-                                          const Text('No logged sets.')
+                                          const Text(
+                                            'No logged sets.',
+                                            style: TextStyle(color: Color(0xFF14181F)),
+                                          )
                                         else
                                           ...session.loggedSets.map((setLog) {
                                             return Padding(
@@ -971,6 +995,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                                       setLog.exercise?.name ?? 'Exercise',
                                                       style: const TextStyle(
                                                         fontWeight: FontWeight.w600,
+                                                        color: Color(0xFF14181F),
                                                       ),
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
@@ -978,6 +1003,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                                   const SizedBox(width: 8),
                                                   Text(
                                                     'Set ${setLog.setNumber}: ${setLog.weight} kg x ${setLog.reps}',
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF14181F),
+                                                    ),
                                                   ),
                                                 ],
                                               ),

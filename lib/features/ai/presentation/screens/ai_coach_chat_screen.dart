@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ai_provider.dart';
 import 'offline_download_screen.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/validation/validators.dart';
@@ -13,10 +13,20 @@ class AICoachChatScreen extends StatefulWidget {
   @override
   State<AICoachChatScreen> createState() => _AICoachChatScreenState();
 }
-
 class _AICoachChatScreenState extends State<AICoachChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 300), _scrollToBottom);
+      }
+    });
+  }
 
   final List<String> _quickPrompts = [
     'How do I fix my squat form?',
@@ -40,6 +50,7 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -140,7 +151,8 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                 alignment: Alignment.centerLeft,
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  child: GlassContainer(
+                  child: PastelGradientCard(
+                    type: PastelCardType.slate,
                     borderRadius: 16,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     child: Row(
@@ -149,13 +161,16 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                         const SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF14181F),
+                          ),
                         ),
                         const SizedBox(width: 12),
-                        Text(
+                        const Text(
                           'Coach is thinking...',
                           style: TextStyle(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: Color(0xFF14181F),
                             fontSize: 13,
                           ),
                         ),
@@ -197,20 +212,37 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                 16,
                 8,
                 16,
-                isKeyboardOpen ? keyboardHeight + 8 : 24,
+                isKeyboardOpen ? 8 : 24,
               ),
-              child: GlassContainer(
-                padding: const EdgeInsets.all(8),
-                borderRadius: 24,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.08),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                ),
+                padding: const EdgeInsets.all(4),
                 child: Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: _messageController,
-                        decoration: const InputDecoration(
+                        focusNode: _focusNode,
+                        maxLines: 4,
+                        minLines: 1,
+                        textInputAction: TextInputAction.send,
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        decoration: InputDecoration(
                           hintText: 'Ask Coach Gerex anything...',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 10,
                           ),
@@ -264,32 +296,37 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: GlassContainer(
+        child: PastelGradientCard(
+          type: PastelCardType.indigo,
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircleAvatar(
                 radius: 40,
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
-                child: Icon(
+                backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.1),
+                child: const Icon(
                   Icons.support_agent_rounded,
                   size: 40,
-                  color: theme.colorScheme.primary,
+                  color: Color(0xFF14181F),
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Meet Coach Gerex',
-                style: theme.textTheme.titleLarge?.copyWith(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0xFF14181F),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Ask any questions about training programs, meal plans, or posture corrections. Your virtual AI assistant is active!',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                style: TextStyle(
+                  color: const Color(0xFF14181F).withValues(alpha: 0.7),
+                  fontSize: 13,
+                  height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -336,17 +373,14 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
         child: Column(
           crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            GlassContainer(
+            PastelGradientCard(
+              type: isUser ? PastelCardType.sky : PastelCardType.violet,
               borderRadius: 16,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              borderGradient: isUser ? GerexGradients.primaryCTA : null,
-              color: isUser
-                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                  : theme.colorScheme.surface.withValues(alpha: 0.1),
               child: Text(
                 text,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
+                style: const TextStyle(
+                  color: Color(0xFF14181F),
                   fontSize: 14,
                   height: 1.4,
                 ),

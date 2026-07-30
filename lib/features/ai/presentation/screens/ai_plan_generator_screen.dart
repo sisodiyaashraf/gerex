@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/ai_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -168,76 +168,88 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Your Custom Program',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDarkHeading,
+              Expanded(
+                child: Text(
+                  'Your Custom Program',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDarkHeading,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Row(
-                children: [
-                  TextButton.icon(
-                    icon: const Icon(
-                      Icons.copy_all_rounded,
-                      color: AppColors.accentEmeraldLight,
-                      size: 16,
-                    ),
-                    label: const Text(
-                      'Copy Plan',
-                      style: TextStyle(
-                        color: AppColors.accentEmeraldLight,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    onPressed: () {
-                      Clipboard.setData(
-                        ClipboardData(
-                          text: provider.generatedWorkoutPlan ?? '',
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton.icon(
+                        icon: const Icon(
+                          Icons.copy_all_rounded,
+                          color: AppColors.accentEmeraldLight,
+                          size: 16,
                         ),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Plan copied to clipboard!'),
-                          backgroundColor: AppColors.accentEmeraldDeep,
+                        label: const Text(
+                          'Copy Plan',
+                          style: TextStyle(
+                            color: AppColors.accentEmeraldLight,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.grey,
-                      size: 16,
-                    ),
-                    label: const Text(
-                      'Reset',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        onPressed: () {
+                          Clipboard.setData(
+                            ClipboardData(
+                              text: provider.generatedWorkoutPlan ?? '',
+                            ),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Plan copied to clipboard!'),
+                              backgroundColor: AppColors.accentEmeraldDeep,
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                    onPressed: () => provider.clearCachedPlan(),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          color: Colors.grey,
+                          size: 16,
+                        ),
+                        label: const Text(
+                          'Reset',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        onPressed: () => provider.clearCachedPlan(),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: GlassContainer(
+            child: PastelGradientCard(
+              type: PastelCardType.indigo,
               padding: const EdgeInsets.all(18.0),
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Text(
                   provider.generatedWorkoutPlan!,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     height: 1.6,
-                    color: AppColors.textDarkBody,
+                    color: Color(0xFF14181F),
                   ),
                 ),
               ),
@@ -404,7 +416,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
       style: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 14,
-        color: AppColors.accentEmeraldLight,
+        color: Color(0xFF0D807B),
         letterSpacing: 0.5,
       ),
     );
@@ -436,94 +448,59 @@ class SelectorCard extends StatelessWidget {
         onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: isSelected
-                ? LinearGradient(
-                    colors: [
-                      AppColors.accentEmeraldLight.withValues(alpha: 0.12),
-                      AppColors.accentEmeraldDeep.withValues(alpha: 0.05),
-                    ],
-                  )
-                : LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.04),
-                      Colors.white.withValues(alpha: 0.01),
+          child: PastelGradientCard(
+            type: isSelected ? PastelCardType.mint : PastelCardType.slate,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            borderRadius: 16,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF14181F).withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: FaIcon(
+                      icon as FaIconData,
+                      color: const Color(0xFF14181F),
+                      size: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF14181F),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                        ),
+                      ),
                     ],
                   ),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.accentEmeraldLight
-                  : Colors.white.withValues(alpha: 0.08),
-              width: isSelected ? 1.5 : 1.0,
+                ),
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFF0D807B),
+                    size: 18,
+                  ),
+              ],
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.accentEmeraldLight.withValues(
-                        alpha: 0.1,
-                      ),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : [],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color:
-                      (isSelected ? AppColors.accentEmeraldLight : Colors.white)
-                          .withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: FaIcon(
-                    icon as FaIconData,
-                    color: isSelected
-                        ? AppColors.accentEmeraldLight
-                        : Colors.white.withValues(alpha: 0.5),
-                    size: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: isSelected
-                            ? AppColors.accentEmeraldLight
-                            : AppColors.textDarkHeading,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textDarkMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isSelected)
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: AppColors.accentEmeraldLight,
-                  size: 18,
-                ),
-            ],
           ),
         ),
       ),

@@ -7,6 +7,7 @@ import '../../data/services/pose_detector_service.dart';
 import '../../data/services/form_analyzer.dart';
 import '../../data/services/exercise_classifier.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
 class PoseFeedbackScreen extends StatefulWidget {
@@ -401,11 +402,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
             Expanded(
               flex: 2,
               child: Container(
-                color: const Color(0xFF12132A),
-                padding: const EdgeInsets.all(20),
-                child: _isSimulationMode
-                    ? _buildSimulationControls(theme)
-                    : _buildLivePanel(theme),
+                color: Colors.black,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: PastelGradientCard(
+                  type: PastelCardType.slate,
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: 20,
+                  child: _isSimulationMode
+                      ? _buildSimulationControls(theme)
+                      : _buildLivePanel(theme),
+                ),
               ),
             ),
           ],
@@ -466,14 +472,14 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.center_focus_strong_rounded, size: 40, color: AppColors.accentEmeraldLight),
+        const Icon(Icons.center_focus_strong_rounded, size: 40, color: Color(0xFF0D807B)),
         const SizedBox(height: 12),
         const Text(
           'Live Detection Active',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: Colors.white,
+            color: Color(0xFF14181F),
           ),
         ),
         const SizedBox(height: 8),
@@ -481,13 +487,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           widget.targetExercise != null
               ? 'Form-check mode: ${_exerciseName(widget.targetExercise!)}. Position yourself fully in frame and begin.'
               : 'Auto-detecting exercise from movement. Stand clearly in frame and perform any supported exercise.',
-          style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.4),
+          style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.6), fontSize: 12, height: 1.4),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
         OutlinedButton.icon(
-          icon: const Icon(Icons.restart_alt_rounded, color: AppColors.accentEmeraldLight),
-          label: const Text('Reset Rep Count', style: TextStyle(color: AppColors.accentEmeraldLight)),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFF0D807B)),
+          ),
+          icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFF0D807B)),
+          label: const Text('Reset Rep Count', style: TextStyle(color: Color(0xFF0D807B), fontWeight: FontWeight.bold)),
           onPressed: () => setState(() {
             _repCount = 0;
             _currentPhase = 'up';
@@ -505,7 +514,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       children: [
         const Text(
           'Simulation Controller',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14181F), fontSize: 15),
         ),
         const SizedBox(height: 16),
         _buildSlider('Knee Angle', _kneeAngle, 70, 180, (val) {
@@ -525,15 +534,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   Widget _buildSlider(String label, double value, double min, double max, ValueChanged<double> onChanged) {
     return Row(
       children: [
-        SizedBox(width: 90, child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12))),
+        SizedBox(width: 90, child: Text(label, style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.7), fontSize: 12))),
         Expanded(
           child: Slider(
             min: min, max: max, value: value,
-            activeColor: AppColors.accentEmeraldLight,
+            activeColor: const Color(0xFF0D807B),
+            inactiveColor: const Color(0xFF14181F).withValues(alpha: 0.15),
             onChanged: onChanged,
           ),
         ),
-        Text('${value.toStringAsFixed(0)}°', style: const TextStyle(color: Colors.white, fontSize: 12)),
+        Text('${value.toStringAsFixed(0)}°', style: const TextStyle(color: Color(0xFF14181F), fontSize: 12)),
       ],
     );
   }
