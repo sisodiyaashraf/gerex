@@ -37,10 +37,14 @@ void main() async {
 
   // Initialize DI service locator
   await di.init();
+  // Initialize notifications
   await di.sl<NotificationProvider>().initialize(AppRouter.router);
   di.sl<NotificationProvider>().setActionHandler((actionId) async {
     if (actionId == 'log_water') await di.sl<ActivityProvider>().addWater(250);
   });
+
+  // Request notifications and exact alarm permissions on startup
+  await di.sl<NotificationProvider>().requestSystemPermission();
 
   runApp(
     MultiProvider(

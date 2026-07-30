@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
 import '../../domain/entities/meal_entities.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -181,7 +182,8 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                               if (list.isEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 16.0),
-                                  child: GlassContainer(
+                                  child: PastelGradientCard(
+                                    type: PastelCardType.slate,
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                     child: Center(
                                       child: Text(
@@ -218,7 +220,10 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                                     padding: const EdgeInsets.only(bottom: 8.0),
                                     child: GestureDetector(
                                       onTap: () => context.push('/meal-details', extra: recipe),
-                                      child: GlassContainer(
+                                      child: PastelGradientCard(
+                                        type: typeName == 'Dinner'
+                                            ? PastelCardType.indigo
+                                            : (typeName == 'Snack' ? PastelCardType.mint : PastelCardType.sunset),
                                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                         child: Row(
                                           children: [
@@ -240,7 +245,7 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                                                     '${meal.calories.toInt()} kcal • P: ${meal.protein.toInt()}g • C: ${meal.carbs.toInt()}g',
                                                     style: TextStyle(
                                                       fontSize: 11,
-                                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                                      color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                                     ),
                                                   ),
                                                 ],

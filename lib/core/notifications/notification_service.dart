@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:go_router/go_router.dart';
@@ -140,6 +141,16 @@ class NotificationService {
     return null;
   }
 
+  static const Map<NotificationCategory, String> _defaultCategoryBanners = {
+    NotificationCategory.workouts: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600',
+    NotificationCategory.meals: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600',
+    NotificationCategory.sleep: 'https://images.unsplash.com/photo-1511295742364-92767fa62d9f?q=80&w=600',
+    NotificationCategory.hydration: 'https://images.unsplash.com/photo-1548839140-29a888455e9e?q=80&w=600',
+    NotificationCategory.progress: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=600',
+    NotificationCategory.aiCoach: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600',
+    NotificationCategory.general: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600',
+  };
+
   Future<void> scheduleNotification(NotificationPayload payload) async {
     try {
       if (!_initialized) {
@@ -160,7 +171,13 @@ class NotificationService {
       }
 
       final id = _id(payload.id ?? '${payload.category.name}:${payload.scheduledTime.toIso8601String()}');
-      final image = payload.imagePath;
+      
+      // Resolve image url with fallback illustration if none is specified or invalid
+      String? image = payload.imagePath;
+      if (image == null || image.isEmpty || !File(image).existsSync()) {
+        final defaultUrl = _defaultCategoryBanners[payload.category] ?? _defaultCategoryBanners[NotificationCategory.general]!;
+        image = await _downloadImageIfNeeded(defaultUrl, 'default_${payload.category.name}.jpg');
+      }
 
       SecureLogger.logInfo('NotificationService: Scheduling notification ID: $id (payload.id: ${payload.id}) "${payload.title}" at ${payload.scheduledTime}');
 
@@ -171,16 +188,27 @@ class NotificationService {
         importance: Importance.high,
         priority: Priority.high,
         icon: '@drawable/ic_stat_gerex',
+        color: const Color(0xFF0D807B), // Brand theme accent color
         category: payload.category == NotificationCategory.workouts ? AndroidNotificationCategory.workout : null,
         groupKey: 'gerex_${payload.category.name}',
         styleInformation: image != null && File(image).existsSync()
-            ? BigPictureStyleInformation(FilePathAndroidBitmap(image), hideExpandedLargeIcon: true)
+            ? BigPictureStyleInformation(
+                FilePathAndroidBitmap(image),
+                hideExpandedLargeIcon: true,
+                contentTitle: payload.title,
+                summaryText: payload.body,
+              )
             : null,
         actions: _androidActions(payload.category),
+        showWhen: true,
       );
 
       final iosDetails = DarwinNotificationDetails(
-        categoryIdentifier: payload.category == NotificationCategory.workouts ? 'workout' : payload.category == NotificationCategory.hydration ? 'hydration' : null,
+        categoryIdentifier: payload.category == NotificationCategory.workouts 
+            ? 'workout' 
+            : payload.category == NotificationCategory.hydration 
+                ? 'hydration' 
+                : null,
         threadIdentifier: payload.category.name,
         attachments: image != null && File(image).existsSync() ? [DarwinNotificationAttachment(image)] : null,
         presentAlert: true,
@@ -188,6 +216,7 @@ class NotificationService {
         presentSound: true,
         presentBanner: true,
         presentList: true,
+        subtitle: payload.body,
       );
 
       final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
@@ -222,31 +251,47 @@ class NotificationService {
 
   Future<void> showNow(NotificationPayload payload) async {
     if (!_initialized) return;
-    final image = payload.imagePath;
+    
+    String? image = payload.imagePath;
+    if (image == null || image.isEmpty || !File(image).existsSync()) {
+      final defaultUrl = _defaultCategoryBanners[payload.category] ?? _defaultCategoryBanners[NotificationCategory.general]!;
+      image = await _downloadImageIfNeeded(defaultUrl, 'default_${payload.category.name}.jpg');
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      _channelId(payload.category),
+      _channelName(payload.category),
+      icon: '@drawable/ic_stat_gerex',
+      importance: Importance.high,
+      priority: Priority.high,
+      color: const Color(0xFF0D807B),
+      styleInformation: image != null && File(image).existsSync()
+          ? BigPictureStyleInformation(
+              FilePathAndroidBitmap(image),
+              hideExpandedLargeIcon: true,
+              contentTitle: payload.title,
+              summaryText: payload.body,
+            )
+          : null,
+      actions: _androidActions(payload.category),
+      showWhen: true,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      presentBanner: true,
+      presentList: true,
+      attachments: image != null && File(image).existsSync() ? [DarwinNotificationAttachment(image)] : null,
+      subtitle: payload.body,
+    );
+
     await _plugin.show(
       id: _id(payload.id ?? DateTime.now().microsecondsSinceEpoch.toString()),
       title: payload.title,
       body: payload.body,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId(payload.category),
-          _channelName(payload.category),
-          icon: '@drawable/ic_stat_gerex',
-          importance: Importance.high,
-          priority: Priority.high,
-          styleInformation: image != null && File(image).existsSync()
-              ? BigPictureStyleInformation(FilePathAndroidBitmap(image), hideExpandedLargeIcon: true)
-              : null,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          presentBanner: true,
-          presentList: true,
-          attachments: image != null && File(image).existsSync() ? [DarwinNotificationAttachment(image)] : null,
-        ),
-      ),
+      notificationDetails: NotificationDetails(android: androidDetails, iOS: iosDetails),
       payload: jsonEncode(payload.toJson()),
     );
   }

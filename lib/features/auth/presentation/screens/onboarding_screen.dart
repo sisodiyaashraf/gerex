@@ -4,7 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/providers/notification_provider.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
@@ -45,8 +46,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     await _storage.write(key: 'onboarding_completed', value: 'true');
     if (mounted) {
-      Provider.of<AuthProvider>(context, listen: false).completeOnboarding();
-      context.go('/login');
+      try {
+        await context.read<NotificationProvider>().requestSystemPermission();
+      } catch (e) {
+        debugPrint('Onboarding: Error requesting notification permission: $e');
+      }
+      if (mounted) {
+        Provider.of<AuthProvider>(context, listen: false).completeOnboarding();
+        context.go('/login');
+      }
     }
   }
 
@@ -144,7 +152,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               SizedBox(height: context.h(4)),
 
                               // Glass card containing description
-                              GlassContainer(
+                              PastelGradientCard(
+                                type: PastelCardType.indigo,
                                 padding: const EdgeInsets.all(24.0),
                                 child: Column(
                                   crossAxisAlignment:

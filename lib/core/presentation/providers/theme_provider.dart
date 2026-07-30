@@ -28,10 +28,18 @@ class ThemeProvider extends ChangeNotifier {
   void toggleTheme(bool isDarkMode) {
     _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
     notifyListeners();
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      prefs.setString('theme_mode', _themeMode.name);
+    } catch (_) {}
   }
 
   void setThemeMode(ThemeMode mode) {
     _themeMode = mode;
     notifyListeners();
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      prefs.setString('theme_mode', mode.name);
+    } catch (_) {}
   }
 }

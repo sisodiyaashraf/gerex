@@ -5,7 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../workout/presentation/providers/workout_provider.dart';
 import '../providers/metrics_provider.dart';
 import '../../../ai/presentation/providers/ai_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
@@ -152,8 +152,9 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   Consumer<AIProvider>(
                     builder: (context, ai, _) {
                       if (ai.isSummaryLoading) {
-                        return const GlassContainer(
-                          margin: EdgeInsets.only(bottom: 16),
+                        return PastelGradientCard(
+                          type: PastelCardType.slate,
+                          margin: const EdgeInsets.only(bottom: 16),
                           padding: EdgeInsets.symmetric(
                             vertical: 24,
                             horizontal: 16,
@@ -172,7 +173,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               Text(
                                 'Analyzing your logs recap...',
                                 style: TextStyle(
-                                  color: AppColors.textDarkMuted,
+                                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -181,7 +182,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                       }
 
                       if (ai.progressSummary != null) {
-                        return GlassContainer(
+                        return PastelGradientCard(
+                          type: PastelCardType.mint,
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -191,7 +193,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                                 children: [
                                   FaIcon(
                                     FontAwesomeIcons.chartSimple,
-                                    color: AppColors.accentEmeraldLight,
+                                    color: Color(0xFF0D807B),
                                     size: 16,
                                   ),
                                   SizedBox(width: 8),
@@ -199,7 +201,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                                     'AI Progress Summary',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.accentEmeraldLight,
+                                      color: Color(0xFF0D807B),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -210,7 +212,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                                 ai.progressSummary!,
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: AppColors.textDarkBody,
+                                  color: Color(0xFF14181F),
                                   height: 1.4,
                                 ),
                               ),
@@ -224,7 +226,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   ),
 
                   // 1. Streaks Dashboard Panel
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.indigo,
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -234,19 +237,19 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                           'Current Streak',
                           '${metricsProvider.currentStreak} Days',
                           FontAwesomeIcons.fire,
-                          AppColors.accentEmeraldLight,
+                          const Color(0xFFEA580C),
                         ),
                         Container(
                           height: 40,
                           width: 1,
-                          color: AppColors.cardDarkGlassAlt,
+                          color: const Color(0xFF14181F).withValues(alpha: 0.1),
                         ),
                         _buildStreakIndicator(
                           context,
                           'Longest Streak',
                           '${metricsProvider.longestStreak} Days',
                           FontAwesomeIcons.trophy,
-                          AppColors.badgeGoldAccent,
+                          const Color(0xFFD97706),
                         ),
                       ],
                     ),
@@ -254,7 +257,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   const SizedBox(height: 16),
 
                   // 2. Consistency Calendar Grid
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.mint,
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -267,14 +271,14 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                                 '${_getMonthName(now.month)} ${now.year} - Consistency',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.textDarkHeading,
+                                  color: const Color(0xFF14181F),
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const FaIcon(
                               FontAwesomeIcons.calendarCheck,
-                              color: AppColors.accentEmeraldLight,
+                              color: Color(0xFF0D807B),
                               size: 18,
                             ),
                           ],
@@ -316,14 +320,14 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: hasWorkout
-                                    ? AppColors.accentEmeraldLight.withValues(
+                                    ? const Color(0xFF0D807B).withValues(
                                         alpha: 0.25,
                                       )
                                     : Colors.transparent,
                                 border: Border.all(
                                   color: hasWorkout
-                                      ? AppColors.accentEmeraldLight
-                                      : Colors.white.withValues(alpha: 0.1),
+                                      ? const Color(0xFF0D807B)
+                                      : const Color(0xFF14181F).withValues(alpha: 0.1),
                                   width: 1,
                                 ),
                               ),
@@ -335,8 +339,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                                         ? FontWeight.bold
                                         : FontWeight.normal,
                                     color: hasWorkout
-                                        ? AppColors.accentEmeraldLight
-                                        : AppColors.textDarkHeading,
+                                        ? const Color(0xFF0D807B)
+                                        : const Color(0xFF14181F),
                                   ),
                                 ),
                               ),
@@ -348,7 +352,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   ),
                   const SizedBox(height: 16),
                   // 4. Sleep Tracker Card
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.violet,
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
@@ -378,8 +383,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               Text(
                                 'Monitor sleep schedules & recovery goals',
                                 style: TextStyle(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.5,
+                                  color: const Color(0xFF14181F).withValues(
+                                    alpha: 0.6,
                                   ),
                                   fontSize: 12,
                                 ),
@@ -401,7 +406,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   const SizedBox(height: 16),
 
                   // 5. Meal Planner Card
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.sunset,
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
@@ -431,8 +437,8 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               Text(
                                 'Plan high-protein sports nutrition diets',
                                 style: TextStyle(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.5,
+                                  color: const Color(0xFF14181F).withValues(
+                                    alpha: 0.6,
                                   ),
                                   fontSize: 12,
                                 ),
@@ -480,13 +486,14 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
             Text(
               title,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: const Color(0xFF14181F).withValues(alpha: 0.6),
               ),
             ),
             Text(
               value,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: const Color(0xFF14181F),
               ),
             ),
           ],
@@ -524,9 +531,9 @@ class _CalendarDayHeader extends StatelessWidget {
       child: Center(
         child: Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
+            color: Color(0xFF14181F),
           ),
         ),
       ),

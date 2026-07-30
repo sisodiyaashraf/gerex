@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
 import 'package:gerex/core/utils/relative_time.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
@@ -111,7 +111,8 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
             Row(
               children: [
                 Expanded(
-                  child: GlassContainer(
+                  child: PastelGradientCard(
+                    type: PastelCardType.sky,
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +122,7 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                           children: [
                             const FaIcon(
                               FontAwesomeIcons.glassWater,
-                              color: AppColors.accentEmeraldLight,
+                              color: Color(0xFF0284C7),
                               size: 18,
                             ),
                             IconButton(
@@ -129,7 +130,7 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                               padding: EdgeInsets.zero,
                               icon: const Icon(
                                 Icons.add_circle_outline_rounded,
-                                color: AppColors.accentEmeraldLight,
+                                color: Color(0xFF0284C7),
                               ),
                               onPressed: () {
                                 activity.addWater(250);
@@ -144,26 +145,26 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'Water Intake',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textDarkHeading,
+                            color: const Color(0xFF14181F),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '${activity.waterIntake} ml / ${activity.waterTarget} ml',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textDarkMuted,
+                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
                           ),
                         ),
                         const SizedBox(height: 8),
                         LinearProgressIndicator(
                           value: (activity.waterIntake / activity.waterTarget).clamp(0.0, 1.0),
-                          backgroundColor: Colors.white.withValues(alpha: 0.1),
-                          color: AppColors.accentEmeraldLight,
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          color: const Color(0xFF0284C7),
                         ),
                       ],
                     ),
@@ -171,7 +172,8 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: GlassContainer(
+                  child: PastelGradientCard(
+                    type: PastelCardType.sunset,
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +183,7 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                           children: [
                             const FaIcon(
                               FontAwesomeIcons.personRunning,
-                              color: AppColors.accentEmeraldLight,
+                              color: Color(0xFFEA580C),
                               size: 18,
                             ),
                             IconButton(
@@ -189,7 +191,7 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                               padding: EdgeInsets.zero,
                               icon: const Icon(
                                 Icons.add_circle_outline_rounded,
-                                color: AppColors.accentEmeraldLight,
+                                color: Color(0xFFEA580C),
                               ),
                               onPressed: () {
                                 activity.addSteps(1000);
@@ -204,26 +206,26 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'Foot Steps',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textDarkHeading,
+                            color: const Color(0xFF14181F),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '${activity.stepsCount} / ${activity.stepsTarget} steps',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textDarkMuted,
+                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
                           ),
                         ),
                         const SizedBox(height: 8),
                         LinearProgressIndicator(
                           value: (activity.stepsCount / activity.stepsTarget).clamp(0.0, 1.0),
-                          backgroundColor: Colors.white.withValues(alpha: 0.1),
-                          color: AppColors.accentEmeraldLight,
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          color: const Color(0xFFEA580C),
                         ),
                       ],
                     ),
@@ -261,7 +263,8 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            GlassContainer(
+            PastelGradientCard(
+              type: PastelCardType.slate,
               padding: const EdgeInsets.all(16),
               child: GerexLineChart(
                 data: chartPoints,
@@ -291,12 +294,13 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
             ),
             const SizedBox(height: 12),
             if (activity.logs.isEmpty)
-              const GlassContainer(
-                padding: EdgeInsets.all(24),
+              PastelGradientCard(
+                type: PastelCardType.slate,
+                padding: const EdgeInsets.all(24),
                 child: Text(
                   'No activities logged today. Tap "+" above to log water or steps.',
                   style: TextStyle(
-                    color: AppColors.textDarkMuted,
+                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
                     fontSize: 13,
                   ),
                   textAlign: TextAlign.center,
@@ -309,18 +313,19 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                 itemCount: activity.logs.length,
                 itemBuilder: (context, index) {
                   final log = activity.logs[index];
-                  return GlassContainer(
+                  return PastelGradientCard(
+                    type: log.type == 'water' ? PastelCardType.sky : PastelCardType.mint,
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
+                          backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
                           child: FaIcon(
                             log.type == 'water' 
                                 ? FontAwesomeIcons.glassWater 
                                 : FontAwesomeIcons.personWalking,
-                            color: AppColors.accentEmeraldLight,
+                            color: const Color(0xFF14181F),
                             size: 14,
                           ),
                         ),
@@ -331,13 +336,13 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                             children: [
                               Text(
                                 log.description,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDarkHeading),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF14181F)),
                               ),
                               Text(
                                 RelativeTimeFormatter.format(log.timestamp),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.textDarkMuted,
+                                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                 ),
                               ),
                             ],

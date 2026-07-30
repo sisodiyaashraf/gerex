@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../providers/progress_photos_provider.dart';
 import '../../domain/entities/progress_photo.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
@@ -294,7 +295,7 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
             onPressed: () => context.push('/progress-compare'),
           ),
           IconButton(
-            icon: const FaIcon(FontAwesomeIcons.sliders, size: 16, color: AppColors.textDarkHeading),
+            icon: FaIcon(FontAwesomeIcons.sliders, size: 16, color: AppColors.textDarkHeading),
             onPressed: () => _showSettingsDialog(context, provider),
           ),
         ],
@@ -307,7 +308,8 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   if (_showReminderBanner && provider.nextReminderDate != null) ...[
-                    GlassContainer(
+                    PastelGradientCard(
+                      type: PastelCardType.indigo,
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
@@ -326,7 +328,7 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
                                   'Scheduled for: ${provider.nextReminderDate!.day}/${provider.nextReminderDate!.month}/${provider.nextReminderDate!.year}',
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],

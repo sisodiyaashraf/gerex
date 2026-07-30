@@ -221,7 +221,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -236,7 +236,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               // Form Fields
               TextFormField(
                 controller: _nameController,
-                style: const TextStyle(color: AppColors.textDarkHeading),
+                style: TextStyle(color: AppColors.textDarkHeading),
                 decoration: const InputDecoration(
                   labelText: 'Exercise Name',
                   hintText: 'e.g. Bulgarian Split Squat',
@@ -247,7 +247,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
               TextFormField(
                 controller: _musclesController,
-                style: const TextStyle(color: AppColors.textDarkHeading),
+                style: TextStyle(color: AppColors.textDarkHeading),
                 decoration: const InputDecoration(
                   labelText: 'Primary Muscles (comma separated)',
                   hintText: 'e.g. Quads, Glutes',
@@ -287,7 +287,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               // Live AI Recording Card
               _buildSectionHeader('Live AI Reference Movement (Optional)'),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Record yourself doing 1 rep to save joint angle limits. This lets the Live AI Tracker auto-detect and count reps.',
                 style: TextStyle(color: AppColors.textDarkMuted, fontSize: 12),
               ),

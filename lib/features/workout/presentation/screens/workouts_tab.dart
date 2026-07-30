@@ -10,6 +10,7 @@ import '../../../metrics/presentation/providers/metrics_provider.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
@@ -137,7 +138,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
               ),
               actions: [
                 IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.solidBell, size: 18, color: AppColors.textDarkHeading),
+                  icon: FaIcon(FontAwesomeIcons.solidBell, size: 18, color: AppColors.textDarkHeading),
                   onPressed: () => context.push('/notifications'),
                 ),
                 const SizedBox(width: 8),
@@ -149,29 +150,30 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   if (workoutProvider.isSessionActive) ...[
-                    GlassContainer(
-                      color: AppColors.cardDarkGlass.withValues(alpha: 0.9),
+                    PastelGradientCard(
+                      type: PastelCardType.rose,
+                      padding: EdgeInsets.zero,
                       child: ListTile(
                         leading: const FaIcon(
                           FontAwesomeIcons.dumbbell,
-                          color: AppColors.accentEmeraldLight,
+                          color: Color(0xFF14181F),
                         ),
                         title: const Text(
                           'Workout in Progress',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.accentEmeraldLight,
+                            color: Color(0xFF14181F),
                           ),
                         ),
                         subtitle: Text(
                           'Active Session: ${workoutProvider.activeSessionName}',
                           style: const TextStyle(
-                            color: AppColors.textDarkMuted,
+                            color: Color(0xFF14181F),
                           ),
                         ),
                         trailing: const Icon(
                           Icons.arrow_forward_ios_rounded,
-                          color: AppColors.accentEmeraldLight,
+                          color: Color(0xFF14181F),
                           size: 16,
                         ),
                         onTap: () {
@@ -232,7 +234,8 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                   ),
 
                     // 2. BMI Summary Glass Card
-                    GlassContainer(
+                    PastelGradientCard(
+                      type: PastelCardType.mint,
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
@@ -247,9 +250,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                   value: (bmiValue / 40.0).clamp(0.0, 1.0),
                                   strokeWidth: 6,
                                   color: bmiColor,
-                                  backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.1),
+                                  backgroundColor: Colors.black.withValues(alpha: 0.05),
                                 ),
-                                Text(
+                                 Text(
                                   bmiValue.toStringAsFixed(1),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -267,7 +270,10 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                               children: [
                                 const Text(
                                   'Body Mass Index (BMI)',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
@@ -281,21 +287,21 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                 const SizedBox(height: 6),
                                 InkWell(
                                   onTap: () => context.push('/activity-tracker'),
-                                  child: Row(
+                                  child: const Row(
                                     children: [
                                       Text(
                                         'View more metrics',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: theme.colorScheme.primary,
+                                          color: Color(0xFF047857),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
+                                      SizedBox(width: 4),
                                       Icon(
                                         Icons.arrow_forward_rounded,
                                         size: 14,
-                                        color: theme.colorScheme.primary,
+                                        color: Color(0xFF047857),
                                       ),
                                     ],
                                   ),
@@ -310,13 +316,14 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     const SizedBox(height: 16),
 
                     // 3. Today's Target glass row
-                    GlassContainer(
+                    PastelGradientCard(
+                      type: PastelCardType.indigo,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
                           Icon(
                             completedToday ? Icons.check_circle : Icons.circle_outlined,
-                            color: completedToday ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                            color: completedToday ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -325,7 +332,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                               children: [
                                 const Text(
                                   'Today\'s Routine Target',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 Text(
                                   completedToday 
@@ -333,7 +342,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                       : 'Complete at least 1 workout session today.',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -355,6 +364,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                           value: '${activity.waterIntake} ml',
                           iconPath: 'assets/svg icons/water-bottle.svg',
                           fallbackIcon: FontAwesomeIcons.glassWater,
+                          type: PastelCardType.sky,
+                          iconColor: const Color(0xFF0284C7),
+                          textColor: AppColors.textLightBody,
                         ),
                         const SizedBox(width: 8),
                         _buildStatCard(
@@ -364,6 +376,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                           value: '${activity.sleepHours} hrs',
                           iconPath: 'assets/svg icons/sleep icon.svg',
                           fallbackIcon: FontAwesomeIcons.bed,
+                          type: PastelCardType.violet,
+                          iconColor: const Color(0xFF6D28D9),
+                          textColor: AppColors.textLightBody,
                         ),
                         const SizedBox(width: 8),
                         _buildStatCard(
@@ -373,7 +388,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                           value: '${activity.calories} kcal',
                           iconPath: '',
                           fallbackIcon: FontAwesomeIcons.fire,
-                          iconColor: Colors.orangeAccent,
+                          type: PastelCardType.sunset,
+                          iconColor: const Color(0xFFD97706),
+                          textColor: AppColors.textLightBody,
                         ),
                       ],
                     ),
@@ -381,7 +398,8 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     const SizedBox(height: 16),
 
                     // 5. Activity Status (heart-rate sparkline placeholder)
-                    GlassContainer(
+                    PastelGradientCard(
+                      type: PastelCardType.rose,
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,18 +409,20 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                             children: [
                               const Text(
                                 'Heart Rate Status',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.redAccent.withValues(alpha: 0.1),
+                                  color: const Color(0xFFFDA4AF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Text(
                                   'UI-Only / Sensor Needed',
                                   style: TextStyle(
-                                    color: Colors.redAccent,
+                                    color: Color(0xFF9F1239),
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -417,14 +437,16 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                 '72',
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF14181F),
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              Text(
+                              const Text(
                                 'BPM',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: Color(0xFF14181F),
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const Spacer(),
@@ -433,7 +455,10 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                 width: 120,
                                 height: 32,
                                 child: CustomPaint(
-                                  painter: _HeartSparklinePainter(theme: theme),
+                                  painter: _HeartSparklinePainter(
+                                    theme: theme,
+                                    color: const Color(0xFFE11D48),
+                                  ),
                                 ),
                               ),
                             ],
@@ -445,17 +470,19 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     const SizedBox(height: 16),
 
                     // 6. Workout Progress Weekly completion summary
-                    GlassContainer(
+                    PastelGradientCard(
+                      type: PastelCardType.slate,
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Workout Consistency Progress',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          const Text(
+                             'Workout Consistency Progress',
+                             style: TextStyle(
+                               fontWeight: FontWeight.bold,
+                               fontSize: 16,
+                             ),
+                           ),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -476,8 +503,8 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                   CircleAvatar(
                                     radius: 12,
                                     backgroundColor: isCompleted
-                                        ? theme.colorScheme.primary
-                                        : theme.colorScheme.surface.withValues(alpha: 0.1),
+                                        ? const Color(0xFF0D807B)
+                                        : Colors.black.withValues(alpha: 0.05),
                                     child: isCompleted
                                         ? const Icon(Icons.check, size: 12, color: Colors.white)
                                         : null,
@@ -485,9 +512,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                   const SizedBox(height: 6),
                                   Text(
                                     weekdays[index],
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 10,
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
@@ -511,7 +538,8 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       const SizedBox(height: 8),
                       ...workoutProvider.sessions.take(2).map((session) {
                         final compDate = session.completedAt ?? session.startedAt;
-                        return GlassContainer(
+                        return PastelGradientCard(
+                          type: PastelCardType.indigo,
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
                           child: Row(
@@ -554,7 +582,8 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     Consumer<AIProvider>(
                       builder: (context, ai, _) {
                         if (ai.isInsightLoading) {
-                          return GlassContainer(
+                          return PastelGradientCard(
+                            type: PastelCardType.mint,
                             margin: const EdgeInsets.only(bottom: 16),
                             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                             child: Row(
@@ -568,7 +597,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                 Text(
                                   'Generating coach insight...',
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -577,25 +606,26 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         }
 
                         if (ai.dailyInsight != null) {
-                          return GlassContainer(
+                          return PastelGradientCard(
+                            type: PastelCardType.mint,
                             margin: const EdgeInsets.only(bottom: 16),
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
+                                const Row(
                                   children: [
                                     FaIcon(
                                       FontAwesomeIcons.wandMagicSparkles,
-                                      color: theme.colorScheme.primary,
+                                      color: Color(0xFF0D807B),
                                       size: 16,
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: 8),
                                     Text(
                                       'Daily Coach Insight',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.primary,
+                                        color: Color(0xFF0D807B),
                                         fontSize: 14,
                                       ),
                                     ),
@@ -606,7 +636,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                                   ai.dailyInsight!,
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.85),
                                     height: 1.4,
                                   ),
                                 ),
@@ -979,12 +1009,15 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
     required String value,
     required String iconPath,
     required dynamic fallbackIcon,
-    Color? iconColor,
+    required PastelCardType type,
+    required Color iconColor,
+    required Color textColor,
   }) {
     return Expanded(
       child: AnimatedTappable(
         onTap: () => context.push('/activity-tracker'),
-        child: GlassContainer(
+        child: PastelGradientCard(
+          type: type,
           padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -995,31 +1028,35 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       width: 20,
                       height: 20,
                       colorFilter: ColorFilter.mode(
-                        iconColor ?? theme.colorScheme.primary,
+                        iconColor,
                         BlendMode.srcIn,
                       ),
                       errorBuilder: (c, e, s) => FaIcon(
                         fallbackIcon as FaIconData,
-                        color: iconColor ?? theme.colorScheme.primary,
+                        color: iconColor,
                         size: 14,
                       ),
                     )
                   : FaIcon(
                       fallbackIcon as FaIconData,
-                      color: iconColor ?? theme.colorScheme.primary,
+                      color: iconColor,
                       size: 16,
                     ),
               const SizedBox(height: 12),
               Text(
                 value,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: 10,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -1032,13 +1069,14 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
 
 class _HeartSparklinePainter extends CustomPainter {
   final ThemeData theme;
+  final Color color;
 
-  _HeartSparklinePainter({required this.theme});
+  _HeartSparklinePainter({required this.theme, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.redAccent
+      ..color = color
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;

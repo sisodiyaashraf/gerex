@@ -68,7 +68,7 @@ class _GerexLineChartState extends State<GerexLineChart> {
     if (widget.data.isEmpty) {
       return SizedBox(
         height: widget.height,
-        child: const Center(
+        child: Center(
           child: Text(
             'No data points available',
             style: TextStyle(color: AppColors.textDarkMuted),
@@ -146,7 +146,7 @@ class _GerexWavePainter extends CustomPainter {
 
     // Draw horizontal grid lines
     final gridPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.07)
+      ..color = const Color(0xFF14181F).withValues(alpha: 0.08)
       ..strokeWidth = 1.0;
 
     for (int i = 0; i <= 2; i++) {
@@ -228,7 +228,7 @@ class _GerexWavePainter extends CustomPainter {
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? AppColors.accentEmeraldLight : AppColors.textDarkMuted,
+            color: isSelected ? const Color(0xFF0D807B) : const Color(0xFF14181F).withValues(alpha: 0.6),
           ),
         ),
         textDirection: TextDirection.ltr,

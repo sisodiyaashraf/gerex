@@ -94,12 +94,12 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDarkHeading, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDarkHeading, size: 20),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textDarkHeading),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textDarkHeading),
             onPressed: () => provider.loadExercises(),
           ),
           const SizedBox(width: 8),
@@ -370,7 +370,7 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
           ),
           const SizedBox(height: 10),
           if (exercise.instructions.isEmpty)
-            const Text(
+            Text(
               'No instructions registered for this exercise.',
               style: TextStyle(fontSize: 11, color: AppColors.textDarkMuted),
             )
@@ -469,7 +469,7 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Try widening your search or active filters.',
             style: TextStyle(
               color: AppColors.textDarkMuted,

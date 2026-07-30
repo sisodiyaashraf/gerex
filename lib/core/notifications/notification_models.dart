@@ -34,26 +34,3 @@ class NotificationPayload {
       };
 }
 
-class CustomNotificationTemplate {
-  const CustomNotificationTemplate({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.category,
-    this.imagePath,
-    this.deepLink = '/notifications',
-  });
-
-  final String id;
-  final String title;
-  final String body;
-  final NotificationCategory category;
-  final String? imagePath;
-  final String deepLink;
-
-  String serialize() => [id, title, body, category.name, imagePath ?? '', deepLink].join(':::');
-  factory CustomNotificationTemplate.deserialize(String value) {
-    final p = value.split(':::');
-    return CustomNotificationTemplate(id: p[0], title: p[1], body: p[2], category: NotificationCategory.values.byName(p[3]), imagePath: p[4].isEmpty ? null : p[4], deepLink: p.length > 5 ? p[5] : '/notifications');
-  }
-}

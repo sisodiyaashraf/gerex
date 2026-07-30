@@ -93,7 +93,7 @@ class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -291,7 +291,7 @@ class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
                                           children: [
                                             Text(
                                               item.exercise?.name ?? 'Exercise',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 14,
                                                 color: AppColors.textDarkHeading,
@@ -462,7 +462,7 @@ class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'No exercises configured',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -471,7 +471,7 @@ class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Select a preset chip above or tap "+ Add Exercise" to compile your quick session routine.',
               style: TextStyle(
                 color: AppColors.textDarkMuted,

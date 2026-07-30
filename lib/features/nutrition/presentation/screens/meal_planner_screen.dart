@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
@@ -74,7 +75,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                               children: [
                                 Text(
                                   rec.name,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                     color: AppColors.textDarkHeading,
@@ -83,7 +84,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   '${rec.calories.toInt()} kcal • P: ${rec.protein.toInt()}g • C: ${rec.carbs.toInt()}g',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
                                     color: AppColors.textDarkMuted,
                                   ),
@@ -153,11 +154,11 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month_rounded, color: AppColors.textDarkHeading),
+            icon: Icon(Icons.calendar_month_rounded, color: AppColors.textDarkHeading),
             onPressed: () => context.push('/meal-schedule'),
           ),
           IconButton(
-            icon: const Icon(Icons.search_rounded, color: AppColors.textDarkHeading),
+            icon: Icon(Icons.search_rounded, color: AppColors.textDarkHeading),
             onPressed: () => context.push('/meal-browse'),
           ),
         ],
@@ -223,8 +224,9 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                const GlassContainer(
-                  padding: EdgeInsets.all(16),
+                PastelGradientCard(
+                  type: PastelCardType.slate,
+                  padding: const EdgeInsets.all(16),
                   child: GerexLineChart(
                     data: calorieTrendPoints,
                     unit: 'kcal',
@@ -236,7 +238,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                   // Daily meals schedule selection
                   Row(
                     children: [
-                      const Flexible(
+                      Flexible(
                         child: Text(
                           'Today\'s Meals List',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
@@ -263,14 +265,15 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Text(
                           'No meals logged for $selectedCategory.',
-                          style: const TextStyle(color: AppColors.textDarkMuted, fontSize: 13),
+                          style: TextStyle(color: AppColors.textDarkMuted, fontSize: 13),
                         ),
                       ),
                     ),
                   ] else
                     ...todayMeals.map((entry) => Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
-                          child: GlassContainer(
+                          child: PastelGradientCard(
+                            type: PastelCardType.sunset,
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             child: Row(
                               children: [
@@ -292,7 +295,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                                         '${entry.calories.toInt()} kcal • P: ${entry.protein.toInt()}g • C: ${entry.carbs.toInt()}g • F: ${entry.fat.toInt()}g',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                          color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                         ),
                                       ),
                                     ],
@@ -366,9 +369,14 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         final color = cat['color'] as Color;
         final count = provider.recipes.where((r) => r.category == name).length;
 
+        PastelCardType containerType = PastelCardType.sunset;
+        if (name == 'Dinner') containerType = PastelCardType.indigo;
+        if (name == 'Snack') containerType = PastelCardType.mint;
+
         return GestureDetector(
           onTap: () => _openFoodBrowser(context, name, provider),
-          child: GlassContainer(
+          child: PastelGradientCard(
+            type: containerType,
             padding: const EdgeInsets.all(12),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -388,5 +396,3 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
     );
   }
 }
-
-

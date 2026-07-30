@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -40,12 +41,12 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Coming Soon!',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDarkHeading),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Premium subscription plans are currently under development. Real payment integration will be wired up in a future update.',
                   style: TextStyle(
                     fontSize: 13,
@@ -111,7 +112,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                         gradient: GerexGradients.scaffoldBackground,
                       ),
                     ),
-                    const Positioned(
+                    Positioned(
                       left: 24,
                       bottom: 24,
                       child: Column(
@@ -240,7 +241,8 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.indigo,
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
@@ -306,10 +308,9 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
     String? savingsLabel,
   }) {
     final theme = Theme.of(context);
-    return GlassContainer(
+    return PastelGradientCard(
+      type: PastelCardType.indigo,
       padding: const EdgeInsets.all(20),
-      borderWidth: 2.0,
-      borderGradient: GerexGradients.primaryCTA, // Highlighting active plan selection
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -349,7 +350,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
             termsText,
             style: TextStyle(
               fontSize: 12,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              color: const Color(0xFF14181F).withValues(alpha: 0.5),
             ),
           ),
         ],

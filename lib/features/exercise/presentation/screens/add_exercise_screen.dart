@@ -98,7 +98,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -131,10 +131,10 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                   borderRadius: 16,
                   child: TextField(
                     controller: _searchController,
-                    style: const TextStyle(color: AppColors.textDarkHeading),
+                    style: TextStyle(color: AppColors.textDarkHeading),
                     decoration: InputDecoration(
                       hintText: 'Search exercises or muscle groups...',
-                      hintStyle: const TextStyle(color: AppColors.textDarkMuted),
+                      hintStyle: TextStyle(color: AppColors.textDarkMuted),
                       prefixIcon: const Icon(Icons.search, color: AppColors.accentEmeraldLight),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -266,7 +266,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                                             children: [
                                               Text(
                                                 ex.name,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 14,
                                                   color: AppColors.textDarkHeading,
@@ -283,7 +283,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                                                     ),
                                                     child: Text(
                                                       ex.muscleGroup,
-                                                      style: const TextStyle(
+                                                      style: TextStyle(
                                                         fontSize: 10,
                                                         color: AppColors.textDarkMuted,
                                                       ),

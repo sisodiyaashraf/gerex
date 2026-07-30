@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/workout_provider.dart';
 import '../../domain/entities/workout_entities.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -146,7 +146,8 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              GlassContainer(
+              PastelGradientCard(
+                type: PastelCardType.slate,
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
@@ -201,7 +202,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                   color: isSelected
                                       ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                      : const Color(0xFF14181F).withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -211,8 +212,8 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                     ),
                     const SizedBox(height: 16),
                     // Tooltip-style callout
-                    GlassContainer(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.05),
+                    PastelGradientCard(
+                      type: PastelCardType.slate,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       child: Row(
                         children: [
@@ -220,7 +221,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                             Icons.check_circle_outline_rounded,
                             color: _completionIntensities[_selectedDayIndex] > 0
                                 ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                : const Color(0xFF14181F).withValues(alpha: 0.3),
                             size: 18,
                           ),
                           const SizedBox(width: 8),
@@ -241,7 +242,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                                       : 'Rest Day / No Activity',
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -264,7 +265,8 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              GlassContainer(
+              PastelGradientCard(
+                type: PastelCardType.indigo,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
@@ -289,7 +291,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                             'Recommended duration: 20 min',
                             style: TextStyle(
                               fontSize: 12,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: const Color(0xFF14181F).withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -322,7 +324,8 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 itemCount: workoutProvider.workouts.take(2).length,
                 itemBuilder: (context, index) {
                   final workout = workoutProvider.workouts[index];
-                  return GlassContainer(
+                  return PastelGradientCard(
+                    type: PastelCardType.sky,
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
@@ -347,7 +350,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                                 '${workout.exercises.length} exercises scheduled',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -364,12 +367,13 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 },
               ),
               if (workoutProvider.workouts.isEmpty)
-                GlassContainer(
+                PastelGradientCard(
+                  type: PastelCardType.slate,
                   padding: const EdgeInsets.all(16),
                   child: Text(
                     'No templates created yet. Set upcoming reminder templates by adding workout routines.',
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: const Color(0xFF14181F).withValues(alpha: 0.6),
                       fontSize: 13,
                     ),
                     textAlign: TextAlign.center,
@@ -394,6 +398,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 duration: '45 mins',
                 icon: FontAwesomeIcons.dumbbell,
                 workoutProvider: workoutProvider,
+                type: PastelCardType.indigo,
               ),
               const SizedBox(height: 12),
               _buildTrainCategoryCard(
@@ -403,6 +408,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 duration: '40 mins',
                 icon: FontAwesomeIcons.personWalking,
                 workoutProvider: workoutProvider,
+                type: PastelCardType.sky,
               ),
               const SizedBox(height: 12),
               _buildTrainCategoryCard(
@@ -412,6 +418,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 duration: '15 mins',
                 icon: FontAwesomeIcons.solidCircleDot,
                 workoutProvider: workoutProvider,
+                type: PastelCardType.mint,
               ),
             ],
           ),
@@ -427,6 +434,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
     required String duration,
     required dynamic icon,
     required WorkoutProvider workoutProvider,
+    required PastelCardType type,
   }) {
     final theme = Theme.of(context);
     return AnimatedTappable(
@@ -443,7 +451,8 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         );
         context.push('/workout-details', extra: match);
       },
-      child: GlassContainer(
+      child: PastelGradientCard(
+        type: type,
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
@@ -477,28 +486,28 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                       FaIcon(
                         FontAwesomeIcons.circlePlay,
                         size: 10,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: const Color(0xFF14181F).withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '$exerciseCount exercises',
                         style: TextStyle(
                           fontSize: 12,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: const Color(0xFF14181F).withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(width: 12),
                       FaIcon(
                         FontAwesomeIcons.clock,
                         size: 10,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: const Color(0xFF14181F).withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         duration,
                         style: TextStyle(
                           fontSize: 12,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: const Color(0xFF14181F).withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -508,7 +517,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              color: const Color(0xFF14181F).withValues(alpha: 0.5),
             ),
           ],
         ),

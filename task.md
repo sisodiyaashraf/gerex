@@ -6,5 +6,5 @@
 - [x] Harden streaks widgets and consistency blocks in `lib/features/metrics/presentation/screens/metrics_dashboard_screen.dart`
 - [x] Harden chat bubbles limits, input floating offsets and empty states in `lib/features/ai/presentation/screens/ai_coach_chat_screen.dart`
 - [x] Fix builder cards constraints and alternatives modal sheet dimensions in `lib/features/workout/presentation/screens/workout_builder_screen.dart`
-- [x] Adjust glass blur rendering parameters in `lib/core/presentation/widgets/glass_container.dart` for optimized frame rates
+- [x] Create PastelGradientCard widget in `lib/core/presentation/widgets/pastel_gradient_card.dart` for optimized frame rates
 - [x] Verify clean compilation and full unit tests stability

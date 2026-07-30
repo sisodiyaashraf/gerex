@@ -39,14 +39,11 @@ import '../../features/nutrition/presentation/screens/meal_schedule_screen.dart'
 import '../../features/nutrition/presentation/screens/meal_browse_screen.dart';
 import '../../features/profile/presentation/screens/guided_photo_capture_screen.dart';
 import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
-import '../../features/profile/presentation/screens/custom_notification_screen.dart';
 import '../../features/workout/presentation/screens/quick_workout_screen.dart';
 import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
 import '../../features/exercise/presentation/screens/create_exercise_screen.dart';
 import '../di/injection_container.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../presentation/widgets/glass_container.dart';
-import '../theme/app_theme.dart';
+import '../presentation/widgets/liquid_glass_nav_bar.dart';
 
 class AppRouter {
   AppRouter._();
@@ -176,10 +173,6 @@ class AppRouter {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationScreen(),
-      ),
-      GoRoute(
-        path: '/custom-notification',
-        builder: (context, state) => const CustomNotificationScreen(),
       ),
       GoRoute(
         path: '/progress-photos',
@@ -314,8 +307,6 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       extendBody: true, // Allows body stack to bleed behind navigation overlay
       body: Stack(
@@ -328,77 +319,22 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             left: 24,
             right: 24,
             bottom: 12 + MediaQuery.of(context).padding.bottom,
-            child: GlassContainer(
-              padding: const EdgeInsets.symmetric(
-                vertical: 8.0,
-                horizontal: 16.0,
-              ),
-              borderRadius: 28,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(
-                    0,
-                    FontAwesomeIcons.dumbbell,
-                    'Workouts',
-                    theme,
-                  ),
-                  _buildNavItem(1, FontAwesomeIcons.compass, 'Explore', theme),
-                  _buildNavItem(2, FontAwesomeIcons.bowlFood, 'Meals', theme),
-                  _buildNavItem(
-                    3,
-                    FontAwesomeIcons.chartSimple,
-                    'Analytics',
-                    theme,
-                  ),
-                ],
-              ),
+            child: LiquidGlassNavBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              items: const [
+                LiquidGlassNavBarItem(icon: Icons.fitness_center_rounded, label: 'Workouts'),
+                LiquidGlassNavBarItem(icon: Icons.explore_rounded, label: 'Explore'),
+                LiquidGlassNavBarItem(icon: Icons.restaurant_menu_rounded, label: 'Meals'),
+                LiquidGlassNavBarItem(icon: Icons.analytics_rounded, label: 'Analytics'),
+              ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(int index, dynamic icon, String label, ThemeData theme) {
-    final isActive = _currentIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: isActive ? GerexGradients.primaryCTA : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FaIcon(
-              icon,
-              size: isActive ? 18.0 : 16.0,
-              color: isActive
-                  ? Colors.white
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-            if (isActive) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

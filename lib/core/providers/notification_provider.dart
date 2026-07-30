@@ -45,10 +45,7 @@ class NotificationProvider extends ChangeNotifier {
   }
 
   List<UserNotification> _notifications = [];
-  List<CustomNotificationTemplate> _templates = [];
-
   List<UserNotification> get notifications => _notifications;
-  List<CustomNotificationTemplate> get templates => List.unmodifiable(_templates);
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
   void _loadNotifications() {
@@ -60,9 +57,6 @@ class NotificationProvider extends ChangeNotifier {
     }
     // Sort descending by timestamp
     _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    _templates = (_prefs.getStringList('custom_notification_templates') ?? [])
-        .map((value) { try { return CustomNotificationTemplate.deserialize(value); } catch (_) { return null; } })
-        .whereType<CustomNotificationTemplate>().toList();
     notifyListeners();
   }
 
@@ -144,17 +138,6 @@ class NotificationProvider extends ChangeNotifier {
   Future<void> showCustomNotification(NotificationPayload payload) async {
     await sendNotification(payload.title, payload.body);
     await service.showNow(payload);
-  }
-  Future<void> saveTemplate(CustomNotificationTemplate template) async {
-    _templates.removeWhere((item) => item.id == template.id);
-    _templates.add(template);
-    await _prefs.setStringList('custom_notification_templates', _templates.map((item) => item.serialize()).toList());
-    notifyListeners();
-  }
-  Future<void> deleteTemplate(String id) async {
-    _templates.removeWhere((item) => item.id == id);
-    await _prefs.setStringList('custom_notification_templates', _templates.map((item) => item.serialize()).toList());
-    notifyListeners();
   }
 
   Future<void> markAsRead(String id) async {

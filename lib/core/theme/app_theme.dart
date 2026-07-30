@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../di/injection_container.dart' as di;
+import '../presentation/providers/theme_provider.dart';
 
 class AppColors {
   AppColors._();
@@ -17,9 +19,41 @@ class AppColors {
   static const Color badgeDarkNavy = Color(0xFF042537);
 
   // Typography & Content Colors
-  static const Color textDarkHeading = Color(0xFFFFFFFF);
-  static const Color textDarkBody = Color(0xFFF1F5F9);
-  static const Color textDarkMuted = Color(0x99F1F5F9);
+  static Color get textDarkHeading {
+    try {
+      final themeProvider = di.sl<ThemeProvider>();
+      final isDark = themeProvider.themeMode == ThemeMode.dark ||
+          (themeProvider.themeMode == ThemeMode.system &&
+              WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+      return isDark ? const Color(0xFFFFFFFF) : const Color(0xFF0B1220);
+    } catch (_) {
+      return const Color(0xFFFFFFFF);
+    }
+  }
+
+  static Color get textDarkBody {
+    try {
+      final themeProvider = di.sl<ThemeProvider>();
+      final isDark = themeProvider.themeMode == ThemeMode.dark ||
+          (themeProvider.themeMode == ThemeMode.system &&
+              WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+      return isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B);
+    } catch (_) {
+      return const Color(0xFFF1F5F9);
+    }
+  }
+
+  static Color get textDarkMuted {
+    try {
+      final themeProvider = di.sl<ThemeProvider>();
+      final isDark = themeProvider.themeMode == ThemeMode.dark ||
+          (themeProvider.themeMode == ThemeMode.system &&
+              WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+      return isDark ? const Color(0x99F1F5F9) : const Color(0x991E293B);
+    } catch (_) {
+      return const Color(0x99F1F5F9);
+    }
+  }
 
   static const Color textLightHeading = Color(0xFF0B1220);
   static const Color textLightBody = Color(0xFF1E293B);
@@ -105,9 +139,9 @@ class AppTheme {
   static const Color darkSurface = AppColors.bgDarkSecondary;
   static const Color darkPrimary = AppColors.accentEmeraldDeep;
   static const Color darkAccent = AppColors.accentEmeraldLight;
-  static const Color darkOnBackground = AppColors.textDarkHeading;
-  static const Color darkOnSurface = AppColors.textDarkBody;
-  static const Color darkMuted = AppColors.textDarkMuted;
+  static Color darkOnBackground = AppColors.textDarkHeading;
+  static Color darkOnSurface = AppColors.textDarkBody;
+  static Color darkMuted = AppColors.textDarkMuted;
 
   static const Color lightBackground = Color(0xFFF8FAFC);
   static const Color lightSurface = Color(0xFFFFFFFF);
@@ -167,7 +201,7 @@ class AppTheme {
   static ThemeData get darkTheme {
     final base = ThemeData.dark(useMaterial3: true);
     return base.copyWith(
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         surface: AppColors.bgDarkSecondary,
         primary: AppColors.accentEmeraldDeep,
         secondary: AppColors.accentEmeraldLight,
@@ -211,4 +245,3 @@ class AppTheme {
     );
   }
 }
-

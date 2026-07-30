@@ -25,7 +25,10 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     final mealProvider = Provider.of<MealProvider>(context);
 
     // Sync favorite state
-    final currentRecipe = mealProvider.recipes.firstWhere((r) => r.id == widget.recipe.id, orElse: () => widget.recipe);
+    final currentRecipe = mealProvider.recipes.firstWhere(
+      (r) => r.id == widget.recipe.id,
+      orElse: () => widget.recipe,
+    );
     final isFavorite = currentRecipe.isFavorite;
 
     return Scaffold(
@@ -72,8 +75,12 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                   actions: [
                     IconButton(
                       icon: FaIcon(
-                        isFavorite ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
-                        color: isFavorite ? Colors.redAccent : theme.colorScheme.onSurface,
+                        isFavorite
+                            ? FontAwesomeIcons.solidHeart
+                            : FontAwesomeIcons.heart,
+                        color: isFavorite
+                            ? Colors.redAccent
+                            : theme.colorScheme.onSurface,
                         size: 20,
                       ),
                       onPressed: () {
@@ -92,17 +99,31 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                         children: [
                           Text(
                             'By ${currentRecipe.author}',
-                            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.15,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               currentRecipe.category,
-                              style: TextStyle(color: theme.colorScheme.primary, fontSize: 11, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
@@ -113,19 +134,48 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildNutrientChip(theme, '${currentRecipe.calories.toInt()} kcal', 'Calories', Colors.orangeAccent),
-                          _buildNutrientChip(theme, '${currentRecipe.protein.toInt()}g', 'Protein', Colors.greenAccent),
-                          _buildNutrientChip(theme, '${currentRecipe.carbs.toInt()}g', 'Carbs', Colors.blueAccent),
-                          _buildNutrientChip(theme, '${currentRecipe.fat.toInt()}g', 'Fats', Colors.pinkAccent),
+                          _buildNutrientChip(
+                            theme,
+                            '${currentRecipe.calories.toInt()} kcal',
+                            'Calories',
+                            Colors.orangeAccent,
+                          ),
+                          _buildNutrientChip(
+                            theme,
+                            '${currentRecipe.protein.toInt()}g',
+                            'Protein',
+                            Colors.greenAccent,
+                          ),
+                          _buildNutrientChip(
+                            theme,
+                            '${currentRecipe.carbs.toInt()}g',
+                            'Carbs',
+                            Colors.blueAccent,
+                          ),
+                          _buildNutrientChip(
+                            theme,
+                            '${currentRecipe.fat.toInt()}g',
+                            'Fats',
+                            Colors.pinkAccent,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
 
                       // Description
-                      const Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      const Text(
+                        'Description',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       GestureDetector(
-                        onTap: () => setState(() => _isDescriptionExpanded = !_isDescriptionExpanded),
+                        onTap: () => setState(
+                          () =>
+                              _isDescriptionExpanded = !_isDescriptionExpanded,
+                        ),
                         child: GlassContainer(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -134,15 +184,21 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                               Text(
                                 currentRecipe.description,
                                 maxLines: _isDescriptionExpanded ? null : 3,
-                                overflow: _isDescriptionExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                                overflow: _isDescriptionExpanded
+                                    ? TextOverflow.visible
+                                    : TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.8,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                _isDescriptionExpanded ? 'Read Less' : 'Read More',
+                                _isDescriptionExpanded
+                                    ? 'Read Less'
+                                    : 'Read More',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,
@@ -156,7 +212,13 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       const SizedBox(height: 24),
 
                       // Ingredients
-                      const Text('Ingredients You Will Need', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      const Text(
+                        'Ingredients You Will Need',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       ListView.builder(
                         shrinkWrap: true,
@@ -167,15 +229,25 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: GlassContainer(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.check_circle_outline_rounded, color: theme.colorScheme.primary, size: 16),
+                                  Icon(
+                                    Icons.check_circle_outline_rounded,
+                                    color: theme.colorScheme.primary,
+                                    size: 16,
+                                  ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
                                       ing,
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -187,7 +259,13 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       const SizedBox(height: 24),
 
                       // Step by Step directions
-                      const Text('Step by Step Instructions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      const Text(
+                        'Step by Step Instructions',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       ListView.builder(
                         shrinkWrap: true,
@@ -205,7 +283,11 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                   backgroundColor: theme.colorScheme.primary,
                                   child: Text(
                                     '${idx + 1}',
-                                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -216,7 +298,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                       step,
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.8),
                                       ),
                                     ),
                                   ),
@@ -263,13 +346,20 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       DateTime.now(),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added ${currentRecipe.name} to today\'s ${currentRecipe.category} meal plan!')),
+                      SnackBar(
+                        content: Text(
+                          'Added ${currentRecipe.name} to today\'s ${currentRecipe.category} meal plan!',
+                        ),
+                      ),
                     );
                     context.pop();
                   },
                   child: Text(
                     'Add to ${currentRecipe.category} Meal',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -280,7 +370,12 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
   }
 
-  Widget _buildNutrientChip(ThemeData theme, String value, String label, Color color) {
+  Widget _buildNutrientChip(
+    ThemeData theme,
+    String value,
+    String label,
+    Color color,
+  ) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -290,12 +385,19 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
             children: [
               Text(
                 value,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: color),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: color,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 label,
-                style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
               ),
             ],
           ),

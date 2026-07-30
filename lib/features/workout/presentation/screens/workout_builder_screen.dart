@@ -48,7 +48,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -63,8 +63,8 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 borderRadius: 16,
                 child: TextFormField(
-                  style: const TextStyle(color: AppColors.textDarkHeading),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: AppColors.textDarkHeading),
+                  decoration: InputDecoration(
                     labelText: 'Template Name',
                     labelStyle: TextStyle(color: AppColors.accentEmeraldLight),
                     hintText: 'e.g. Upper Body Focus',
@@ -83,7 +83,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Exercises List',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                                         Expanded(
                                           child: Text(
                                             item.exercise?.name ?? 'Exercise',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14,
                                               color: AppColors.textDarkHeading,
@@ -354,7 +354,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'No exercises added yet',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -363,7 +363,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Tap "+ Add Exercise" at the top right to select exercises from the library and build your routine split.',
               style: TextStyle(
                 color: AppColors.textDarkMuted,

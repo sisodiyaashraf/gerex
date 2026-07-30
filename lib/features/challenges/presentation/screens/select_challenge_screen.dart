@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gerex/core/presentation/widgets/gerex_animated_list_tile.dart';
 import 'package:gerex/core/presentation/widgets/gerex_staggered_list_view.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
@@ -426,7 +427,7 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
               ),
               const SizedBox(height: 10),
               if (exercise.instructions.isEmpty)
-                const Text(
+                Text(
                   'No instructions registered for this exercise.',
                   style: TextStyle(fontSize: 11, color: AppColors.textDarkMuted),
                 )
@@ -528,7 +529,8 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
               onTap: () {
                 context.push('/challenge-detail', extra: challenge);
               },
-              child: GlassContainer(
+              child: PastelGradientCard(
+                type: PastelCardType.indigo,
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -715,7 +717,8 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
           itemCount: _trophyBadges.length,
           itemBuilder: (context, idx) {
             final badge = _trophyBadges[idx];
-            return GlassContainer(
+            return PastelGradientCard(
+              type: PastelCardType.rose,
               padding: const EdgeInsets.all(8),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

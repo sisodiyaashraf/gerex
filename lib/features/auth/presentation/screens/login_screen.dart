@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
@@ -56,7 +56,8 @@ class LoginScreen extends StatelessWidget {
                 SizedBox(height: context.h(4)),
 
                 // Card interface for Sign In
-                GlassContainer(
+                PastelGradientCard(
+                  type: PastelCardType.indigo,
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

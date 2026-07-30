@@ -111,7 +111,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
             color: AppColors.textDarkHeading,
           ),
@@ -127,7 +127,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
   }
 
   Widget _buildLoadingState(ThemeData theme) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(24.0),
         child: Column(
@@ -234,7 +234,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
                 physics: const BouncingScrollPhysics(),
                 child: Text(
                   provider.generatedWorkoutPlan!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     height: 1.6,
                     color: AppColors.textDarkBody,
@@ -277,7 +277,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Weekly Workout Program',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -287,7 +287,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Configure your fitness parameters to receive a custom training program built on Gemini.',
             style: TextStyle(color: AppColors.textDarkMuted, fontSize: 12),
             textAlign: TextAlign.center,
@@ -509,7 +509,7 @@ class SelectorCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       description,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         color: AppColors.textDarkMuted,
                       ),

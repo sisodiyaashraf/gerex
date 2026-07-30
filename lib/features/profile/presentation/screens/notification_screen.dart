@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/utils/relative_time.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -83,11 +83,16 @@ class NotificationScreen extends StatelessWidget {
     UserNotification notification,
     NotificationProvider provider,
   ) {
-    return GlassContainer(
+    final titleLower = notification.title.toLowerCase();
+    final PastelCardType cardType = titleLower.contains('workout')
+        ? PastelCardType.indigo
+        : (titleLower.contains('streak')
+            ? PastelCardType.sunset
+            : (titleLower.contains('ai') || titleLower.contains('coach') ? PastelCardType.mint : PastelCardType.slate));
+
+    return PastelGradientCard(
+      type: cardType,
       margin: const EdgeInsets.only(bottom: 10),
-      color: notification.isRead
-          ? theme.colorScheme.surface.withValues(alpha: 0.05)
-          : theme.colorScheme.primary.withValues(alpha: 0.08),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +129,7 @@ class NotificationScreen extends StatelessWidget {
                       RelativeTimeFormatter.format(notification.timestamp),
                       style: TextStyle(
                         fontSize: 10,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: const Color(0xFF14181F).withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -134,7 +139,7 @@ class NotificationScreen extends StatelessWidget {
                   notification.description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: const Color(0xFF14181F).withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -143,7 +148,7 @@ class NotificationScreen extends StatelessWidget {
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert_rounded,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              color: const Color(0xFF14181F).withValues(alpha: 0.4),
               size: 18,
             ),
             padding: EdgeInsets.zero,

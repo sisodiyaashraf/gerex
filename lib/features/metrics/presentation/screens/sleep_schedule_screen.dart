@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/sleep_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -44,7 +44,8 @@ class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                   // Ideal Hours card
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.violet,
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
@@ -66,7 +67,7 @@ class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
                                 'Maintain 7.5 - 9.0 hours of daily sleep for optimal athletic muscle recovery.',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -172,7 +173,8 @@ class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
                         color: Colors.transparent,
                         margin: const EdgeInsets.only(bottom: 12),
                         elevation: 0,
-                        child: GlassContainer(
+                        child: PastelGradientCard(
+                          type: PastelCardType.violet,
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/widgets/slide_to_confirm_button.dart';
@@ -185,7 +186,8 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   const SizedBox(height: 16),
 
                   // Total Users Joined Glass Stat Row
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.indigo,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -225,7 +227,8 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  GlassContainer(
+                  PastelGradientCard(
+                    type: PastelCardType.indigo,
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       widget.challenge.description,

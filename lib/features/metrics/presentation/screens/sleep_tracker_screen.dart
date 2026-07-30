@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/sleep_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
@@ -106,17 +107,18 @@ class SleepTrackerScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                GlassContainer(
+                PastelGradientCard(
+                  type: PastelCardType.slate,
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       if (sleepChartPoints.isEmpty)
-                        const SizedBox(
+                        SizedBox(
                           height: 160,
                           child: Center(
                             child: Text(
                               'No sleep data available.',
-                              style: TextStyle(color: AppColors.textDarkMuted),
+                              style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.6)),
                             ),
                           ),
                         )
@@ -130,10 +132,10 @@ class SleepTrackerScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Flexible(
+                          Flexible(
                             child: Text(
                               'Average Sleep Duration',
-                              style: TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
+                              style: TextStyle(fontSize: 12, color: const Color(0xFF14181F).withValues(alpha: 0.6)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -143,7 +145,7 @@ class SleepTrackerScreen extends StatelessWidget {
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: AppColors.accentEmeraldLight,
+                              color: Color(0xFF14181F),
                             ),
                           ),
                         ],
@@ -186,7 +188,8 @@ class SleepTrackerScreen extends StatelessWidget {
                   ] else
                     ...sleepProvider.alarms.map((alarm) => Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
-                          child: GlassContainer(
+                          child: PastelGradientCard(
+                            type: PastelCardType.violet,
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             child: Row(
                               children: [
@@ -208,7 +211,7 @@ class SleepTrackerScreen extends StatelessWidget {
                                         'Bedtime: ${alarm.bedtimeHour} • ${_formatRepeatDays(alarm.repeatDays)}',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                          color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                         ),
                                       ),
                                     ],

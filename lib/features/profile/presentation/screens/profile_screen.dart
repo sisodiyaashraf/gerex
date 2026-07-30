@@ -8,6 +8,7 @@ import '../../../metrics/presentation/providers/metrics_provider.dart';
 import '../providers/profile_provider.dart';
 import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
@@ -150,7 +151,7 @@ class ProfileScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Are you sure you want to sign out? Your local data will be saved but offline sync will be suspended.',
                   style: TextStyle(
                     color: AppColors.textDarkMuted,
@@ -263,7 +264,8 @@ class ProfileScreen extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: GlassContainer(
+                      child: PastelGradientCard(
+                        type: PastelCardType.mint,
                         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                         child: Column(
                           children: [
@@ -293,7 +295,8 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: GlassContainer(
+                      child: PastelGradientCard(
+                        type: PastelCardType.sunset,
                         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                         child: Column(
                           children: [
@@ -323,7 +326,8 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: GlassContainer(
+                      child: PastelGradientCard(
+                        type: PastelCardType.indigo,
                         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                         child: Column(
                           children: [
@@ -356,7 +360,8 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 16),                // Body Weight Metrics Card
                 GestureDetector(
                   onTap: () => context.push('/analytics'),
-                  child: GlassContainer(
+                  child: PastelGradientCard(
+                    type: PastelCardType.rose,
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
@@ -366,14 +371,14 @@ class ProfileScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Weight Tracker Analytics',
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 'Height: ${activity.userHeight.toInt()} cm • Weight: ${formatWeight(currentWeight)}',
-                                style: const TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
+                                style: TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
@@ -390,7 +395,8 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: GlassContainer(
+                        child: PastelGradientCard(
+                          type: PastelCardType.mint,
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                           child: Column(
                             children: [
@@ -420,7 +426,8 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: GlassContainer(
+                        child: PastelGradientCard(
+                          type: PastelCardType.sunset,
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                           child: Column(
                             children: [
@@ -450,7 +457,8 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: GlassContainer(
+                        child: PastelGradientCard(
+                          type: PastelCardType.indigo,
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                           child: Column(
                             children: [
@@ -484,7 +492,8 @@ class ProfileScreen extends StatelessWidget {
 
                   GestureDetector(
                     onTap: () => context.push('/analytics'),
-                    child: GlassContainer(
+                    child: PastelGradientCard(
+                      type: PastelCardType.rose,
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
                         children: [
@@ -727,34 +736,101 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Notification Content',
                     trailing: DropdownButton<String>(value: notifications.service.contentPack.id, underline: const SizedBox.shrink(), items: NotificationContentPacks.all.map((pack) => DropdownMenuItem(value: pack.id, child: Text(pack.label))).toList(), onChanged: notifications.setContentPack),
                   )),
-                  const SizedBox(height: 8),
-                  _buildSettingsRow(
-                    icon: FontAwesomeIcons.penToSquare,
-                    title: 'Custom Notification',
-                    trailing: IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => context.push('/custom-notification')),
-                  ),
+
                   const SizedBox(height: 8),
                   _buildSettingsRow(
                     icon: FontAwesomeIcons.vial,
                     title: 'Test Notification (Dev)',
                     trailing: OutlinedButton(
-                      onPressed: () async {
-                        final provider = context.read<NotificationProvider>();
-                        await provider.showCustomNotification(
-                          NotificationPayload(
-                            id: 'test_immediate',
-                            title: 'Gerex Test Notification',
-                            body: 'Delivery verified successfully! Pipeline is working.',
-                            category: NotificationCategory.general,
-                            scheduledTime: DateTime.now(),
-                            deepLink: '/notifications',
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Theme.of(context).cardColor,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          builder: (context) => ListView(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.all(16),
+                            children: [
+                              Text(
+                                'Select Notification Category',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ...NotificationCategory.values.map((cat) {
+                                IconData icon;
+                                String title;
+                                String body;
+                                String route;
+                                switch (cat) {
+                                  case NotificationCategory.workouts:
+                                    icon = Icons.fitness_center;
+                                    title = 'Chest Workout starts soon';
+                                    body = '11 exercises · 32 min';
+                                    route = '/workout-tracker';
+                                    break;
+                                  case NotificationCategory.meals:
+                                    icon = Icons.restaurant;
+                                    title = 'Time for Honey Pancakes';
+                                    body = 'Breakfast · 230 kcal';
+                                    route = '/meal-planner';
+                                    break;
+                                  case NotificationCategory.sleep:
+                                    icon = Icons.nights_stay;
+                                    title = 'Bedtime Reminder (Goal: 8.0 hrs)';
+                                    body = 'Wind down now to complete your recovery goal.';
+                                    route = '/sleep-tracker';
+                                    break;
+                                  case NotificationCategory.hydration:
+                                    icon = Icons.water_drop;
+                                    title = 'Hydration Nudge';
+                                    body = 'Drink 250ml water to match your target.';
+                                    route = '/activity-tracker';
+                                    break;
+                                  case NotificationCategory.progress:
+                                    icon = Icons.photo_library;
+                                    title = 'Progress Photo Check';
+                                    body = 'Upload a new snap to compare consistency progress.';
+                                    route = '/progress-photos';
+                                    break;
+                                  case NotificationCategory.aiCoach:
+                                    icon = Icons.psychology;
+                                    title = 'New AI Health Insight';
+                                    body = 'Your weekly metrics logs recap is ready.';
+                                    route = '/coach';
+                                    break;
+                                  case NotificationCategory.general:
+                                    icon = Icons.emoji_events;
+                                    title = 'Streak milestone reached!';
+                                    body = 'You are on a 7-day streak! Keep active.';
+                                    route = '/notifications';
+                                    break;
+                                }
+                                return ListTile(
+                                  leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+                                  title: Text(cat.name.toUpperCase()),
+                                  subtitle: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  onTap: () async {
+                                    Navigator.pop(context);
+                                    final provider = context.read<NotificationProvider>();
+                                    await provider.showCustomNotification(
+                                      NotificationPayload(
+                                        id: 'test_${cat.name}',
+                                        title: title,
+                                        body: body,
+                                        category: cat,
+                                        scheduledTime: DateTime.now(),
+                                        deepLink: route,
+                                      ),
+                                    );
+                                  },
+                                );
+                              }),
+                            ],
                           ),
                         );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Immediate test notification fired!')),
-                          );
-                        }
                       },
                       child: const Text('Test'),
                     ),

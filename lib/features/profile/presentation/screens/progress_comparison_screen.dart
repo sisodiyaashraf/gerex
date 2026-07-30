@@ -6,6 +6,7 @@ import '../providers/progress_photos_provider.dart';
 import '../../domain/entities/progress_photo.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
@@ -80,7 +81,8 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
               // Baseline Month Picker
               Text('Baseline Month', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: theme.colorScheme.primary)),
               const SizedBox(height: 8),
-              GlassContainer(
+              PastelGradientCard(
+                type: PastelCardType.sky,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
@@ -118,7 +120,8 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
               // Comparison Target Month Picker
               Text('Comparison Month', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: theme.colorScheme.primary)),
               const SizedBox(height: 8),
-              GlassContainer(
+              PastelGradientCard(
+                type: PastelCardType.sky,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
@@ -223,9 +226,9 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: GlassContainer(
+            child: PastelGradientCard(
+              type: PastelCardType.slate,
               padding: const EdgeInsets.all(4),
-              borderRadius: 24,
               child: Row(
                 children: [
                   Expanded(child: _buildTabButton('Photo')),
@@ -265,7 +268,7 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
           tabName,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            color: isSelected ? Colors.white : const Color(0xFF14181F).withValues(alpha: 0.6),
             fontSize: 13,
           ),
         ),
@@ -280,7 +283,8 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Average progress percentage progress bar
-        GlassContainer(
+        PastelGradientCard(
+          type: PastelCardType.sky,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,10 +292,10 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Average Progress', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Text('Average Progress', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF14181F))),
                   Text(
                     'Great Change',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: theme.colorScheme.primary),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: const Color(0xFF0284C7)),
                   ),
                 ],
               ),
@@ -301,8 +305,8 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
                 child: LinearProgressIndicator(
                   value: 0.72,
                   minHeight: 8,
-                  backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0284C7)),
                 ),
               ),
             ],
@@ -402,14 +406,15 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Custom painting weight comparison graph
-        GlassContainer(
+        PastelGradientCard(
+          type: PastelCardType.sky,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
                 'Weight Progression Trend',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDarkHeading),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF14181F)),
               ),
               const SizedBox(height: 12),
               GerexLineChart(
@@ -432,14 +437,15 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.textDarkHeading),
         ),
         const SizedBox(height: 12),
-        GlassContainer(
+        PastelGradientCard(
+          type: PastelCardType.sunset,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildProgressMetricBar(theme, 'Baseline Weight', startAvg, 'kg', AppColors.accentEmeraldLight),
+              _buildProgressMetricBar(theme, 'Baseline Weight', startAvg, 'kg', const Color(0xFFEA580C)),
               const SizedBox(height: 16),
-              _buildProgressMetricBar(theme, 'Comparison Weight', endAvg, 'kg', AppColors.badgeTealText),
+              _buildProgressMetricBar(theme, 'Comparison Weight', endAvg, 'kg', const Color(0xFFD97706)),
             ],
           ),
         ),
@@ -464,8 +470,8 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            Text('${value.toStringAsFixed(1)} $unit', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF14181F))),
+            Text('${value.toStringAsFixed(1)} $unit', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF14181F))),
           ],
         ),
         const SizedBox(height: 6),
@@ -474,7 +480,7 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
           child: LinearProgressIndicator(
             value: fraction,
             minHeight: 8,
-            backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            backgroundColor: Colors.white.withValues(alpha: 0.15),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -482,5 +488,3 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
     );
   }
 }
-
-

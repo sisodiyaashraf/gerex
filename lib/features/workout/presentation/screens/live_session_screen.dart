@@ -301,7 +301,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'AI Tracker: $_selectedExerciseTarget',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDarkHeading),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDarkHeading),
                   ),
                 ],
               ),
