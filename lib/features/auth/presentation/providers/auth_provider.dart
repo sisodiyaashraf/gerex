@@ -107,6 +107,28 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
+  Future<bool> signInWithDemoUser() async {
+    _setLoading(true);
+    _clearError();
+
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    _user = const supabase.User(
+      id: 'demo-guest-athlete-id',
+      appMetadata: {},
+      userMetadata: {
+        'full_name': 'Gerex Athlete',
+        'avatar_url': null,
+      },
+      aud: 'authenticated',
+      email: 'athlete@gerex.com',
+      createdAt: '',
+    );
+
+    _setLoading(false);
+    return true;
+  }
+
   Future<void> signOut() async {
     _setLoading(true);
     _clearError();

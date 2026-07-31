@@ -183,4 +183,10 @@ class ExerciseProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  void addExerciseEntity(Exercise exercise) {
+    _exercises.insert(0, exercise);
+    _applyFilters();
+    notifyListeners();
+  }
 }

@@ -6,6 +6,7 @@ import 'package:camera/camera.dart';
 import '../providers/progress_photos_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class GuidedPhotoCaptureScreen extends StatefulWidget {
   const GuidedPhotoCaptureScreen({super.key});
@@ -21,6 +22,7 @@ class _GuidedPhotoCaptureScreenState extends State<GuidedPhotoCaptureScreen> {
   bool _isCameraInitialized = false;
   FlashMode _flashMode = FlashMode.off;
   String _selectedPose = 'Front'; // 'Front', 'Back', 'Left', 'Right'
+  bool _isMockMode = false;
 
   final List<String> _poses = ['Front', 'Back', 'Left', 'Right'];
 
@@ -35,9 +37,16 @@ class _GuidedPhotoCaptureScreenState extends State<GuidedPhotoCaptureScreen> {
       _cameras = await availableCameras();
       if (_cameras.isNotEmpty) {
         await _setupCameraController(_cameras[_selectedCameraIndex]);
+      } else {
+        setState(() {
+          _isMockMode = true;
+        });
       }
     } catch (e) {
       debugPrint('Failed to get cameras: $e');
+      setState(() {
+        _isMockMode = true;
+      });
     }
   }
 
@@ -80,6 +89,40 @@ class _GuidedPhotoCaptureScreenState extends State<GuidedPhotoCaptureScreen> {
   }
 
   Future<void> _capturePhoto() async {
+    if (_isMockMode) {
+      try {
+        final tempDir = Directory.systemTemp;
+        final imageFile = File('${tempDir.path}/mock_photo_${_selectedPose.toLowerCase()}.png');
+        if (!await imageFile.exists()) {
+          final dummyBytes = [
+            137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 
+            0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 108, 137, 0, 0, 0, 13, 73, 68, 65, 84, 
+            120, 156, 99, 96, 4, 0, 0, 5, 0, 1, 2, 47, 10, 14, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
+          ];
+          await imageFile.writeAsBytes(dummyBytes);
+        }
+
+        if (mounted) {
+          final provider = context.read<ProgressPhotosProvider>();
+          final err = await provider.addCapturedPhoto(imageFile, _selectedPose);
+
+          if (mounted) {
+            if (err != null) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Successfully simulated and saved $_selectedPose progress photo!')),
+              );
+              context.pop();
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error simulating photo: $e');
+      }
+      return;
+    }
+
     if (_cameraController == null || !_isCameraInitialized) return;
 
     try {
@@ -131,26 +174,62 @@ class _GuidedPhotoCaptureScreenState extends State<GuidedPhotoCaptureScreen> {
       ),
       body: Stack(
         children: [
-          // 1. Camera preview background
           Positioned.fill(
             child: _isCameraInitialized && _cameraController != null
                 ? CameraPreview(_cameraController!)
-                : Container(
-                    color: Colors.black,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(color: theme.colorScheme.primary),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Initializing camera sensor...',
-                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                : (_isMockMode
+                    ? Container(
+                        color: Colors.grey.shade900,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const FaIcon(
+                                FontAwesomeIcons.camera,
+                                color: Colors.white24,
+                                size: 64,
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Camera Simulator Mode',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                                child: Text(
+                                  'No camera hardware detected. Tapping the capture button below will generate a mock progress photo.',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.black,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(color: theme.colorScheme.primary),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Initializing camera sensor...',
+                                style: TextStyle(color: Colors.white70, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )),
           ),
 
           // 2. Translucent human figure outline overlay

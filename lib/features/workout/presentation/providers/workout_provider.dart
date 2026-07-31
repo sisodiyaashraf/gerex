@@ -6,6 +6,7 @@ import 'package:gerex/features/workout/domain/repositories/workout_repository.da
 import 'package:gerex/core/utils/logger.dart';
 import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:gerex/core/providers/notification_provider.dart';
+import 'package:gerex/features/metrics/presentation/providers/metrics_provider.dart';
 
 class WorkoutProvider extends ChangeNotifier {
   final WorkoutRepository _workoutRepository;
@@ -93,6 +94,9 @@ class WorkoutProvider extends ChangeNotifier {
       onSuccess: (data) {
         _sessions = data;
         _isLoading = false;
+        try {
+          di.sl<MetricsProvider>().computeStreaks(data);
+        } catch (_) {}
       },
       onFailure: (failure) {
         SecureLogger.logError('fetchSessions failed', failure.message);
@@ -388,6 +392,9 @@ class WorkoutProvider extends ChangeNotifier {
         _stopSessionState();
         _isLoading = false;
         notifyListeners();
+        try {
+          di.sl<MetricsProvider>().computeStreaks(_sessions);
+        } catch (_) {}
         try {
           di.sl<NotificationProvider>().sendNotification(
             'Workout Completed!',

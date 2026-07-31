@@ -3,7 +3,10 @@
 - [x] Harden `lib/features/auth/presentation/screens/login_screen.dart` text fields and margins for keyboard overlay safety
 - [x] Apply screen scaling & safe area margins to `lib/features/workout/presentation/screens/workouts_tab.dart`
 - [x] Secure stats widgets, body weight cards and preference settings in `lib/features/profile/presentation/screens/profile_screen.dart` against text scaling overflows
-- [x] Harden streaks widgets and consistency blocks in `lib/features/metrics/presentation/screens/metrics_dashboard_screen.dart`
+- [x] Auth & Onboarding: Add `signInWithDemoUser` and Demo button on Login
+- [x] Workout Provider: Inject MetricsProvider to trigger streak updates on session saves/fetches
+- [x] Exercise Provider: Add `addExerciseEntity` and wire it inside Add Exercise screen navigation
+- [x] Camera Scanner: Create mock capture mode on emulator in Guided Photo Capture screen
 - [x] Harden chat bubbles limits, input floating offsets and empty states in `lib/features/ai/presentation/screens/ai_coach_chat_screen.dart`
 - [x] Fix builder cards constraints and alternatives modal sheet dimensions in `lib/features/workout/presentation/screens/workout_builder_screen.dart`
 - [x] Create PastelGradientCard widget in `lib/core/presentation/widgets/pastel_gradient_card.dart` for optimized frame rates

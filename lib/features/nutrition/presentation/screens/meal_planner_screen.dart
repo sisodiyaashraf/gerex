@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
@@ -30,9 +30,15 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => GlassContainer(
-        borderRadius: 24,
-        padding: const EdgeInsets.all(24),
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          gradient: GerexGradients.scaffoldBackground,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         child: Column(
           children: [
             Center(
@@ -40,7 +46,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 width: 40,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: AppColors.textDarkMuted,
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -48,9 +54,10 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
             const SizedBox(height: 20),
             Text(
               'Browse $category Recipes',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textDarkHeading,
+                fontSize: 18,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 16),
@@ -60,11 +67,12 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 itemCount: filtered.length,
                 itemBuilder: (context, idx) {
                   final rec = filtered[idx];
-                  return Card(
-                    color: Colors.transparent,
-                    elevation: 0,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: GlassContainer(
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: PastelGradientCard(
+                      type: category == 'Breakfast'
+                          ? PastelCardType.mint
+                          : (category == 'Lunch' ? PastelCardType.sunset : PastelCardType.indigo),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -75,10 +83,10 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                               children: [
                                 Text(
                                   rec.name,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
-                                    color: AppColors.textDarkHeading,
+                                    color: Color(0xFF14181F),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -86,7 +94,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                                   '${rec.calories.toInt()} kcal • P: ${rec.protein.toInt()}g • C: ${rec.carbs.toInt()}g',
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: AppColors.textDarkMuted,
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -94,7 +102,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accentEmeraldLight,
+                              backgroundColor: const Color(0xFF14181F),
                               foregroundColor: Colors.white,
                               visualDensity: VisualDensity.compact,
                             ),
@@ -236,24 +244,24 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 const SizedBox(height: 24),
 
                   // Daily meals schedule selection
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Flexible(
-                        child: Text(
-                          'Today\'s Meals List',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        'Today\'s Meals List',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.textDarkHeading,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: SegmentedPillNav(
-                          options: _categories,
-                          selectedIndex: _selectedFilterIdx,
-                          onSelected: (idx) {
-                            setState(() => _selectedFilterIdx = idx);
-                          },
-                        ),
+                      const SizedBox(height: 12),
+                      SegmentedPillNav(
+                        options: _categories,
+                        selectedIndex: _selectedFilterIdx,
+                        onSelected: (idx) {
+                          setState(() => _selectedFilterIdx = idx);
+                        },
                       ),
                     ],
                   ),
@@ -272,56 +280,118 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                   ] else
                     ...todayMeals.map((entry) => Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
-                          child: PastelGradientCard(
-                            type: PastelCardType.sunset,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                  child: Icon(Icons.restaurant_menu_rounded, color: theme.colorScheme.primary, size: 18),
+                          child: Dismissible(
+                            key: ValueKey('dismiss_meal_${entry.id}'),
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (direction) {
+                              mealProvider.deleteMealPlanEntry(entry.id);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Removed ${entry.recipeName}'),
+                                  duration: const Duration(seconds: 2),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        entry.recipeName,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '${entry.calories.toInt()} kcal • P: ${entry.protein.toInt()}g • C: ${entry.carbs.toInt()}g • F: ${entry.fat.toInt()}g',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: const Color(0xFF14181F).withValues(alpha: 0.6),
-                                        ),
-                                      ),
-                                    ],
+                              );
+                            },
+                            background: Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFDC2626),
+                                    Color(0xFFEF4444),
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        entry.notificationEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
-                                        color: entry.notificationEnabled ? theme.colorScheme.primary : Colors.grey,
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    'DELETE',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 11,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 20),
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.delete_forever_rounded,
+                                        color: Colors.white,
                                         size: 18,
                                       ),
-                                      onPressed: () {
-                                        mealProvider.toggleMealNotification(entry.id, !entry.notificationEnabled);
-                                      },
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
-                                      onPressed: () {
-                                        mealProvider.deleteMealPlanEntry(entry.id);
-                                      },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            child: PastelGradientCard(
+                              type: PastelCardType.sunset,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
+                                    child: const Icon(Icons.restaurant_menu_rounded, color: Color(0xFF14181F), size: 18),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          entry.recipeName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: Color(0xFF14181F),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${entry.calories.toInt()} kcal • P: ${entry.protein.toInt()}g • C: ${entry.carbs.toInt()}g • F: ${entry.fat.toInt()}g',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      entry.notificationEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                                      color: const Color(0xFF14181F),
+                                      size: 18,
+                                    ),
+                                    onPressed: () {
+                                      mealProvider.toggleMealNotification(entry.id, !entry.notificationEnabled);
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         )),
@@ -366,7 +436,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         final cat = categories[idx];
         final name = cat['name'] as String;
         final icon = cat['icon'] as FaIconData;
-        final color = cat['color'] as Color;
         final count = provider.recipes.where((r) => r.category == name).length;
 
         PastelCardType containerType = PastelCardType.sunset;
@@ -381,12 +450,32 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                FaIcon(icon, color: color, size: 20),
+                FaIcon(
+                  icon,
+                  color: name == 'Dinner'
+                      ? const Color(0xFF3F51B5)
+                      : (name == 'Breakfast'
+                          ? const Color(0xFFB8860B)
+                          : (name == 'Lunch'
+                              ? const Color(0xFFD84315)
+                              : const Color(0xFF2E7D32))),
+                  size: 20,
+                ),
                 const SizedBox(height: 8),
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Color(0xFF14181F),
+                  ),
+                ),
                 Text(
                   '$count options',
-                  style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                  ),
                 ),
               ],
             ),

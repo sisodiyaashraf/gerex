@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/meal_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -47,17 +47,20 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
             // Glass Search Bar
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: GlassContainer(
+              child: PastelGradientCard(
+                type: PastelCardType.slate,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
+                borderRadius: 16,
                 child: Row(
                   children: [
-                    Icon(Icons.search_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                    const Icon(Icons.search_rounded, color: Color(0xFF14181F)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
+                        style: const TextStyle(color: Color(0xFF14181F)),
                         decoration: InputDecoration(
                           hintText: 'Search Recipes (e.g. Avocado)...',
-                          hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                          hintStyle: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.5)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(vertical: 12),
                         ),
@@ -68,11 +71,9 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                         },
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.tune_rounded),
-                      onPressed: () {
-                        // Action triggers filter sheet if custom filters added
-                      },
+                    const IconButton(
+                      icon: Icon(Icons.tune_rounded, color: Color(0xFF14181F)),
+                      onPressed: null,
                     ),
                   ],
                 ),
@@ -153,8 +154,10 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                 return Container(
                                   width: 210,
                                   margin: const EdgeInsets.only(right: 12),
-                                  child: GlassContainer(
+                                  child: PastelGradientCard(
+                                    type: PastelCardType.mint,
                                     padding: const EdgeInsets.all(12),
+                                    borderRadius: 16,
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -165,7 +168,11 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                             Expanded(
                                               child: Text(
                                                 recipe.name,
-                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                  color: Color(0xFF14181F),
+                                                ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -174,11 +181,12 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                             Icon(Icons.star_rounded, color: Colors.amberAccent[400], size: 14),
                                           ],
                                         ),
+                                        const SizedBox(height: 4),
                                         Text(
                                           '${recipe.calories.toInt()} kcal • P: ${recipe.protein.toInt()}g',
                                           style: TextStyle(
                                             fontSize: 10,
-                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                           ),
                                         ),
                                         const Spacer(),
@@ -188,13 +196,13 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                                color: const Color(0xFF0D807B).withValues(alpha: 0.1),
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                               child: Text(
                                                 recipe.category,
-                                                style: TextStyle(
-                                                  color: theme.colorScheme.primary,
+                                                style: const TextStyle(
+                                                  color: Color(0xFF0D807B),
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -239,13 +247,14 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                         else
                           ...filteredRecipes.map((recipe) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12.0),
-                                child: GlassContainer(
+                                child: PastelGradientCard(
+                                  type: PastelCardType.sunset,
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   child: Row(
                                     children: [
                                       CircleAvatar(
-                                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                        child: Icon(Icons.restaurant_menu_rounded, color: theme.colorScheme.primary, size: 16),
+                                        backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
+                                        child: const Icon(Icons.restaurant_menu_rounded, color: Color(0xFF14181F), size: 16),
                                       ),
                                       const SizedBox(width: 16),
                                       Expanded(
@@ -254,14 +263,18 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                           children: [
                                             Text(
                                               recipe.name,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                                color: Color(0xFF14181F),
+                                              ),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
                                               '${recipe.calories.toInt()} kcal • P: ${recipe.protein.toInt()}g • F: ${recipe.fat.toInt()}g',
                                               style: TextStyle(
                                                 fontSize: 11,
-                                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                                color: const Color(0xFF14181F).withValues(alpha: 0.6),
                                               ),
                                             ),
                                           ],

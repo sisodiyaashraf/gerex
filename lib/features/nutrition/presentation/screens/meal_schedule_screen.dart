@@ -138,19 +138,14 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                           final totalGroupCals = list.fold<double>(0.0, (val, item) => val + item.calories);
 
                           dynamic iconData = FontAwesomeIcons.bowlFood;
-                          Color typeColor = Colors.orangeAccent;
                           if (typeName == 'Breakfast') {
                             iconData = FontAwesomeIcons.mugSaucer;
-                            typeColor = Colors.amberAccent;
                           } else if (typeName == 'Lunch') {
                             iconData = FontAwesomeIcons.utensils;
-                            typeColor = Colors.orangeAccent;
                           } else if (typeName == 'Dinner') {
                             iconData = FontAwesomeIcons.bowlFood;
-                            typeColor = Colors.indigoAccent;
                           } else {
                             iconData = FontAwesomeIcons.cookie;
-                            typeColor = Colors.lightGreenAccent;
                           }
 
                           return Column(
@@ -218,45 +213,117 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
 
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 8.0),
-                                    child: GestureDetector(
-                                      onTap: () => context.push('/meal-details', extra: recipe),
-                                      child: PastelGradientCard(
-                                        type: typeName == 'Dinner'
-                                            ? PastelCardType.indigo
-                                            : (typeName == 'Snack' ? PastelCardType.mint : PastelCardType.sunset),
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        child: Row(
-                                          children: [
-                                            CircleAvatar(
-                                              backgroundColor: typeColor.withValues(alpha: 0.1),
-                                              child: FaIcon(iconData as FaIconData, color: typeColor, size: 16),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    meal.recipeName,
-                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    '${meal.calories.toInt()} kcal • P: ${meal.protein.toInt()}g • C: ${meal.carbs.toInt()}g',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      color: const Color(0xFF14181F).withValues(alpha: 0.6),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Icon(
-                                              Icons.arrow_forward_ios_rounded,
-                                              size: 12,
-                                              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                    child: Dismissible(
+                                      key: ValueKey('dismiss_schedule_meal_${meal.id}'),
+                                      direction: DismissDirection.endToStart,
+                                      onDismissed: (direction) {
+                                        mealProvider.deleteMealPlanEntry(meal.id);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Removed ${meal.recipeName}'),
+                                            duration: const Duration(seconds: 2),
+                                          ),
+                                        );
+                                      },
+                                      background: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFFDC2626),
+                                              Color(0xFFEF4444),
+                                            ],
+                                            begin: Alignment.centerLeft,
+                                            end: Alignment.centerRight,
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
                                             ),
                                           ],
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          children: [
+                                            const Text(
+                                              'DELETE',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 11,
+                                                letterSpacing: 1.5,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Container(
+                                              margin: const EdgeInsets.only(right: 20),
+                                              width: 36,
+                                              height: 36,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(alpha: 0.2),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white.withValues(alpha: 0.3),
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.delete_forever_rounded,
+                                                  color: Colors.white,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () => context.push('/meal-details', extra: recipe),
+                                        child: PastelGradientCard(
+                                          type: typeName == 'Dinner'
+                                              ? PastelCardType.indigo
+                                              : (typeName == 'Snack' ? PastelCardType.mint : PastelCardType.sunset),
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          child: Row(
+                                            children: [
+                                              CircleAvatar(
+                                                backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
+                                                child: FaIcon(iconData as FaIconData, color: const Color(0xFF14181F), size: 16),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      meal.recipeName,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 13,
+                                                        color: Color(0xFF14181F),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      '${meal.calories.toInt()} kcal • P: ${meal.protein.toInt()}g • C: ${meal.carbs.toInt()}g',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const Icon(
+                                                Icons.arrow_forward_ios_rounded,
+                                                size: 12,
+                                                color: Color(0xFF14181F),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),

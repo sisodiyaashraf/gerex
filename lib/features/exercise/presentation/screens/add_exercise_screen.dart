@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/exercise_provider.dart';
 import '../../../../models/exercise.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
@@ -106,10 +107,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
             icon: const FaIcon(FontAwesomeIcons.circlePlus, size: 20, color: AppColors.accentEmeraldLight),
             tooltip: 'Create Custom Exercise',
             onPressed: () async {
-              final newEx = await Navigator.pushNamed(context, '/create-exercise');
+              final newEx = await context.push<dynamic>('/create-exercise');
               if (newEx != null && newEx is Exercise) {
-                // Fetch exercises to include new custom exercise
-                exProvider.fetchExercises();
+                exProvider.addExerciseEntity(newEx);
                 setState(() {
                   _selectedExercises.add(newEx);
                 });

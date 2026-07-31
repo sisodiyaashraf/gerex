@@ -732,10 +732,31 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Consumer<NotificationProvider>(builder: (context, notifications, _) => _buildSettingsRow(
-                    icon: FontAwesomeIcons.language,
-                    title: 'Notification Content',
-                    trailing: DropdownButton<String>(value: notifications.service.contentPack.id, underline: const SizedBox.shrink(), items: NotificationContentPacks.all.map((pack) => DropdownMenuItem(value: pack.id, child: Text(pack.label))).toList(), onChanged: notifications.setContentPack),
-                  )),
+                     icon: FontAwesomeIcons.language,
+                     title: 'Notification Content',
+                     trailing: DropdownButton<String>(
+                       value: notifications.service.contentPack.id,
+                       underline: const SizedBox.shrink(),
+                       dropdownColor: theme.cardColor,
+                       style: const TextStyle(
+                         color: Color(0xFF14181F),
+                         fontWeight: FontWeight.bold,
+                         fontSize: 13,
+                       ),
+                       items: NotificationContentPacks.all.map((pack) => DropdownMenuItem(
+                         value: pack.id,
+                         child: Text(
+                           pack.label,
+                           style: TextStyle(
+                             color: theme.brightness == Brightness.dark
+                                 ? Colors.white
+                                 : const Color(0xFF14181F),
+                           ),
+                         ),
+                       )).toList(),
+                       onChanged: notifications.setContentPack,
+                     ),
+                   )),
 
                   const SizedBox(height: 8),
                   _buildSettingsRow(
@@ -838,30 +859,36 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Theme Selection settings item
-                  _buildSettingsRow(
-                    icon: FontAwesomeIcons.circleHalfStroke,
-                    title: 'App Theme',
-                    trailing: DropdownButton<String>(
-                      value: profileProvider.themeMode,
-                      underline: const SizedBox.shrink(),
-                      items: const [
-                        DropdownMenuItem(value: 'system', child: Text('System')),
-                        DropdownMenuItem(value: 'light', child: Text('Light')),
-                        DropdownMenuItem(value: 'dark', child: Text('Dark')),
-                      ],
-                      onChanged: (String? val) {
-                        if (val != null) {
-                          profileProvider.setThemeMode(val);
-                          final mode = val == 'dark'
-                              ? ThemeMode.dark
-                              : val == 'light'
-                                  ? ThemeMode.light
-                                  : ThemeMode.system;
-                          Provider.of<ThemeProvider>(context, listen: false).setThemeMode(mode);
-                        }
-                      },
-                    ),
-                  ),
+                   _buildSettingsRow(
+                     icon: FontAwesomeIcons.circleHalfStroke,
+                     title: 'App Theme',
+                     trailing: DropdownButton<String>(
+                       value: profileProvider.themeMode,
+                       underline: const SizedBox.shrink(),
+                       dropdownColor: theme.cardColor,
+                       style: const TextStyle(
+                         color: Color(0xFF14181F),
+                         fontWeight: FontWeight.bold,
+                         fontSize: 13,
+                       ),
+                       items: [
+                         DropdownMenuItem(value: 'system', child: Text('System', style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F)))),
+                         DropdownMenuItem(value: 'light', child: Text('Light', style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F)))),
+                         DropdownMenuItem(value: 'dark', child: Text('Dark', style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F)))),
+                       ],
+                       onChanged: (String? val) {
+                         if (val != null) {
+                           profileProvider.setThemeMode(val);
+                           final mode = val == 'dark'
+                               ? ThemeMode.dark
+                               : val == 'light'
+                                   ? ThemeMode.light
+                                   : ThemeMode.system;
+                           Provider.of<ThemeProvider>(context, listen: false).setThemeMode(mode);
+                         }
+                       },
+                     ),
+                   ),
                   const SizedBox(height: 8),
 
                   // Offline-Only AI toggle settings item
@@ -934,24 +961,25 @@ class ProfileScreen extends StatelessWidget {
                   InkWell(
                     onTap: showLogoutConfirmation,
                     borderRadius: BorderRadius.circular(16),
-                    child: GlassContainer(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      color: Colors.redAccent.withValues(alpha: 0.1),
+                    child: PastelGradientCard(
+                      type: PastelCardType.rose,
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           FaIcon(
                             FontAwesomeIcons.rightFromBracket,
-                            color: Colors.redAccent,
-                            size: 18,
+                            color: Color(0xFFC7363B),
+                            size: 16,
                           ),
                           SizedBox(width: 10),
                           Text(
                             'Sign Out',
                             style: TextStyle(
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              color: Color(0xFFC7363B),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                              letterSpacing: 1.0,
                             ),
                           ),
                         ],
@@ -975,22 +1003,34 @@ class ProfileScreen extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: GlassContainer(
+      child: PastelGradientCard(
+        type: PastelCardType.slate,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            FaIcon(
-              icon,
-              size: 16.0,
-              color: Colors.grey.shade400,
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF14181F).withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: FaIcon(
+                  icon,
+                  size: 14.0,
+                  color: const Color(0xFF14181F),
+                ),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: const TextStyle(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                   fontSize: 14,
+                  color: Color(0xFF14181F),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
