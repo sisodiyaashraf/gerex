@@ -254,6 +254,41 @@ class MealProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addCustomMealEntry({
+    required String name,
+    required String mealType,
+    required double calories,
+    required double protein,
+    required double carbs,
+    required double fat,
+    required DateTime date,
+  }) {
+    final newEntry = MealPlanEntry(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      recipeId: 'custom',
+      recipeName: name,
+      date: date,
+      mealType: mealType,
+      calories: calories,
+      protein: protein,
+      carbs: carbs,
+      fat: fat,
+    );
+    _mealPlan.add(newEntry);
+    _saveMealPlan();
+    if (newEntry.notificationEnabled) {
+      di.sl<NotificationProvider>().scheduleMealReminder(
+        entryId: newEntry.id,
+        recipeId: newEntry.recipeId,
+        mealName: newEntry.recipeName,
+        mealType: newEntry.mealType,
+        day: newEntry.date,
+        calories: newEntry.calories,
+      );
+    }
+    notifyListeners();
+  }
+
   void deleteMealPlanEntry(String id) {
     _mealPlan.removeWhere((m) => m.id == id);
     _saveMealPlan();

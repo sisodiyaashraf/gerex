@@ -7,6 +7,14 @@ import 'package:gerex/core/utils/logger.dart';
 import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/features/metrics/presentation/providers/metrics_provider.dart';
+import 'package:gerex/core/services/voice_coach_service.dart';
+
+class PrCelebrationEvent {
+  final String exerciseName;
+  final double weight;
+  final int reps;
+  PrCelebrationEvent({required this.exerciseName, required this.weight, required this.reps});
+}
 
 class WorkoutProvider extends ChangeNotifier {
   final WorkoutRepository _workoutRepository;
@@ -35,6 +43,41 @@ class WorkoutProvider extends ChangeNotifier {
   int _restTimerTotal = 0;
   Timer? _restTimer;
   bool _isRestActive = false;
+
+  // PR Celebration State
+  PrCelebrationEvent? _lastPrCelebration;
+  PrCelebrationEvent? get lastPrCelebration => _lastPrCelebration;
+
+  void clearPrCelebration() {
+    _lastPrCelebration = null;
+    notifyListeners();
+  }
+
+  Map<String, dynamic>? getPersonalRecordForExercise(String exerciseId) {
+    double maxWeight = 0.0;
+    int maxRepsForMaxWeight = 0;
+
+    for (final session in _sessions) {
+      for (final loggedSet in session.loggedSets) {
+        if (loggedSet.exerciseId == exerciseId && loggedSet.isCompleted) {
+          if (loggedSet.weight > maxWeight) {
+            maxWeight = loggedSet.weight;
+            maxRepsForMaxWeight = loggedSet.reps;
+          } else if (loggedSet.weight == maxWeight && loggedSet.reps > maxRepsForMaxWeight) {
+            maxRepsForMaxWeight = loggedSet.reps;
+          }
+        }
+      }
+    }
+
+    if (maxWeight == 0.0 && maxRepsForMaxWeight == 0) {
+      return null;
+    }
+    return {
+      'weight': maxWeight,
+      'reps': maxRepsForMaxWeight,
+    };
+  }
 
   // Getters
   List<Workout> get workouts => _workouts;
@@ -277,6 +320,24 @@ class WorkoutProvider extends ChangeNotifier {
       weight: weight ?? current.weight,
       isCompleted: current.isCompleted,
     );
+
+    if (reps != null && reps > current.reps) {
+      int targetReps = 10;
+      if (_activeTemplate != null) {
+        final match = _activeTemplate!.exercises.where((e) => e.exerciseId == exerciseId);
+        if (match.isNotEmpty) {
+          targetReps = match.first.reps;
+        }
+      }
+      if (reps == targetReps) {
+        di.sl<VoiceCoachService>().speak("Target reached!");
+      } else if (reps == targetReps - 3) {
+        di.sl<VoiceCoachService>().speak("Three reps left");
+      } else if (reps == targetReps - 1) {
+        di.sl<VoiceCoachService>().speak("One rep left");
+      }
+    }
+
     notifyListeners();
   }
 
@@ -300,7 +361,33 @@ class WorkoutProvider extends ChangeNotifier {
 
     // If completed, trigger rest timer
     if (nextState) {
+      di.sl<VoiceCoachService>().speak("Set complete, nice work");
       _triggerRestTimerForExercise(exerciseId);
+
+      // Check for New Personal Record
+      final previousPr = getPersonalRecordForExercise(exerciseId);
+      bool isPr = false;
+      if (previousPr == null) {
+        if (current.weight > 0 || current.reps > 0) {
+          isPr = true;
+        }
+      } else {
+        final double prevWeight = previousPr['weight'];
+        final int prevReps = previousPr['reps'];
+        if (current.weight > prevWeight) {
+          isPr = true;
+        } else if (current.weight == prevWeight && current.reps > prevReps) {
+          isPr = true;
+        }
+      }
+
+      if (isPr) {
+        _lastPrCelebration = PrCelebrationEvent(
+          exerciseName: current.exercise?.name ?? 'Exercise',
+          weight: current.weight,
+          reps: current.reps,
+        );
+      }
     }
 
     notifyListeners();
@@ -338,6 +425,8 @@ class WorkoutProvider extends ChangeNotifier {
     _isRestActive = true;
     notifyListeners();
 
+    di.sl<VoiceCoachService>().speak("Rest $duration seconds");
+
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_restTimeRemaining > 0) {
         _restTimeRemaining--;
@@ -346,6 +435,7 @@ class WorkoutProvider extends ChangeNotifier {
         _isRestActive = false;
         _restTimer?.cancel();
         notifyListeners();
+        di.sl<VoiceCoachService>().speak("Rest complete, prepare for next set");
       }
     });
   }
@@ -400,6 +490,9 @@ class WorkoutProvider extends ChangeNotifier {
             'Workout Completed!',
             'Fantastic! You completed "${savedSession.name}" in ${savedSession.durationSeconds ~/ 60} minutes.',
           );
+        } catch (_) {}
+        try {
+          di.sl<VoiceCoachService>().speak("Workout complete, nice work!");
         } catch (_) {}
         return true;
       },

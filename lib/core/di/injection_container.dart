@@ -34,6 +34,7 @@ import '../providers/notification_provider.dart';
 import '../../features/challenges/domain/repositories/challenge_repository.dart';
 import '../../features/challenges/data/repositories/challenge_repository_impl.dart';
 import '../../features/challenges/presentation/providers/challenge_provider.dart';
+import 'package:gerex/core/services/voice_coach_service.dart';
 
 final sl = GetIt.instance;
 
@@ -111,6 +112,7 @@ Future<void> init() async {
   sl.registerLazySingleton<MealProvider>(() => MealProvider(sl()));
 
   // Core tracking & notifications
+  sl.registerLazySingleton<VoiceCoachService>(() => VoiceCoachService());
   sl.registerLazySingleton<ActivityProvider>(() => ActivityProvider(sl()));
   sl.registerLazySingleton<NotificationProvider>(() => NotificationProvider(sl()));
   sl.registerLazySingleton<HeartRateProvider>(() => HeartRateProvider(sl(), sl()));

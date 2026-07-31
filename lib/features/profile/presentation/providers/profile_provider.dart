@@ -11,15 +11,18 @@ class ProfileProvider extends ChangeNotifier {
   String _units = 'kg';
   bool _notificationsEnabled = true;
   String _themeMode = 'system';
+  bool _voiceCoachingEnabled = true;
 
   String get units => _units;
   bool get notificationsEnabled => _notificationsEnabled;
   String get themeMode => _themeMode;
+  bool get voiceCoachingEnabled => _voiceCoachingEnabled;
 
   void _loadPreferences() {
     _units = _prefs.getString('units_preference') ?? 'kg';
     _notificationsEnabled = _prefs.getBool('notifications_enabled') ?? true;
     _themeMode = _prefs.getString('theme_mode') ?? 'system';
+    _voiceCoachingEnabled = _prefs.getBool('voice_coaching_enabled') ?? true;
     notifyListeners();
   }
 
@@ -38,6 +41,12 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> setThemeMode(String value) async {
     _themeMode = value;
     await _prefs.setString('theme_mode', value);
+    notifyListeners();
+  }
+
+  Future<void> toggleVoiceCoaching(bool value) async {
+    _voiceCoachingEnabled = value;
+    await _prefs.setBool('voice_coaching_enabled', value);
     notifyListeners();
   }
 }

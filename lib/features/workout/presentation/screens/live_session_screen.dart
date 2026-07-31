@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -29,6 +32,15 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
   bool _isCameraInitialized = false;
   bool _isAnalyzing = false;
   Timer? _simulationTimer;
+
+  // Motion Sensors State
+  bool _motionTrackingActive = false;
+  StreamSubscription<UserAccelerometerEvent>? _accelSubscription;
+  int _sensorRepCount = 0;
+  String? _selectedMotionExerciseId;
+  double _filteredMag = 0.0;
+  bool _isMotionPeak = false;
+  DateTime? _lastRepTime;
 
   // Selected analyzer target
   String _selectedExerciseTarget = 'Squat'; // 'Squat', 'Push-Up', 'Jumping Jack', 'Plank'
@@ -72,6 +84,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
     _cameraController?.dispose();
     _poseDetectorService.dispose();
     _simulationTimer?.cancel();
+    _accelSubscription?.cancel();
     super.dispose();
   }
 
@@ -276,6 +289,206 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
         );
       }
     }
+  }
+
+  void _toggleMotionTracking(WorkoutProvider provider) {
+    if (_motionTrackingActive) {
+      _stopMotionTracking();
+    } else {
+      _startMotionTracking(provider);
+    }
+  }
+
+  void _startMotionTracking(WorkoutProvider provider) {
+    if (provider.liveExercises.isEmpty) return;
+    
+    setState(() {
+      _motionTrackingActive = true;
+      if (_selectedMotionExerciseId == null || 
+          !provider.liveExercises.any((e) => e.id == _selectedMotionExerciseId)) {
+        _selectedMotionExerciseId = provider.liveExercises.first.id;
+      }
+      _sensorRepCount = 0;
+      _filteredMag = 0.0;
+      _isMotionPeak = false;
+      _lastRepTime = null;
+    });
+
+    _accelSubscription?.cancel();
+    _accelSubscription = userAccelerometerEventStream().listen((event) {
+      if (!mounted || !_motionTrackingActive) return;
+
+      final double rawMag = math.sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
+      
+      // Low pass filter
+      const double alpha = 0.15;
+      _filteredMag = alpha * rawMag + (1 - alpha) * _filteredMag;
+
+      final now = DateTime.now();
+      // Thresholds: departure > 2.0 (moving), return < 0.6 (rest)
+      if (!_isMotionPeak && _filteredMag > 2.0) {
+        _isMotionPeak = true;
+      } else if (_isMotionPeak && _filteredMag < 0.6) {
+        _isMotionPeak = false;
+        
+        if (_lastRepTime == null || now.difference(_lastRepTime!).inMilliseconds > 900) {
+          _lastRepTime = now;
+          setState(() {
+            _sensorRepCount++;
+          });
+          _incrementRepForSelectedExercise(provider);
+        }
+      }
+    });
+  }
+
+  void _stopMotionTracking() {
+    _accelSubscription?.cancel();
+    setState(() {
+      _motionTrackingActive = false;
+    });
+  }
+
+  void _incrementRepForSelectedExercise(WorkoutProvider provider) {
+    if (_selectedMotionExerciseId == null) return;
+    final sets = provider.liveSets[_selectedMotionExerciseId!] ?? [];
+    final incompleteIdx = sets.indexWhere((s) => !s.isCompleted);
+    if (incompleteIdx != -1) {
+      final currentSet = sets[incompleteIdx];
+      provider.updateSetValues(_selectedMotionExerciseId!, incompleteIdx, reps: currentSet.reps + 1);
+    }
+  }
+
+  void _manuallyAdjustRep(WorkoutProvider provider, int delta) {
+    if (_selectedMotionExerciseId == null) return;
+    setState(() {
+      _sensorRepCount = (_sensorRepCount + delta).clamp(0, 999);
+    });
+    
+    final sets = provider.liveSets[_selectedMotionExerciseId!] ?? [];
+    final incompleteIdx = sets.indexWhere((s) => !s.isCompleted);
+    if (incompleteIdx != -1) {
+      final currentSet = sets[incompleteIdx];
+      final newReps = (currentSet.reps + delta).clamp(0, 999);
+      provider.updateSetValues(_selectedMotionExerciseId!, incompleteIdx, reps: newReps);
+    }
+  }
+
+  Widget _buildSensorTrackerPanel(BuildContext context, ThemeData theme, WorkoutProvider provider) {
+    if (provider.liveExercises.isEmpty) return const SizedBox.shrink();
+
+    final activeExId = _selectedMotionExerciseId ?? provider.liveExercises.first.id;
+
+    return GlassContainer(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      borderRadius: 20,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  FaIcon(
+                    FontAwesomeIcons.mobileScreenButton,
+                    color: _motionTrackingActive ? theme.colorScheme.primary : theme.disabledColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Motion Rep Counter',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Switch(
+                value: _motionTrackingActive,
+                onChanged: (val) {
+                  _toggleMotionTracking(provider);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Keep your phone in your hand or pocket while exercising to automatically count reps using built-in motion sensors.',
+            style: TextStyle(
+              fontSize: 11,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          if (_motionTrackingActive) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: activeExId,
+                    decoration: const InputDecoration(
+                      labelText: 'Exercise Target',
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: provider.liveExercises.map((e) {
+                      return DropdownMenuItem(
+                        value: e.id,
+                        child: Text(e.name, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedMotionExerciseId = val;
+                        _sensorRepCount = 0;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton.filledTonal(
+                  icon: const Icon(Icons.remove_rounded),
+                  onPressed: () => _manuallyAdjustRep(provider, -1),
+                ),
+                const SizedBox(width: 24),
+                Column(
+                  children: [
+                    Text(
+                      '$_sensorRepCount',
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const Text(
+                      'REPS DETECTED',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 24),
+                IconButton.filledTonal(
+                  icon: const Icon(Icons.add_rounded),
+                  onPressed: () => _manuallyAdjustRep(provider, 1),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _buildAiTrackerPanel(BuildContext context, ThemeData theme) {
@@ -511,8 +724,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
         ],
       ),
       body: LiquidBackground(
-        child: Column(
+        child: Stack(
           children: [
+            Column(
+              children: [
             if (provider.isRestActive)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -558,6 +773,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
             // Live AI Tracker Panel
             if (provider.aiTrackingEnabled)
               _buildAiTrackerPanel(context, theme),
+
+            // Motion Sensor Tracker Panel
+            _buildSensorTrackerPanel(context, theme, provider),
 
             Expanded(
               child: ListView.builder(
@@ -681,8 +899,17 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
             ),
           ],
         ),
-      ),
-    );
+        if (provider.lastPrCelebration != null)
+          PrCelebrationOverlay(
+            event: provider.lastPrCelebration!,
+            onDismiss: () {
+              provider.clearPrCelebration();
+            },
+          ),
+      ],
+    ),
+  ),
+);
   }
 
   void _confirmCancelSession(BuildContext context, WorkoutProvider provider) {
@@ -800,6 +1027,17 @@ class _SetLogRowState extends State<_SetLogRow> {
   }
 
   @override
+  void didUpdateWidget(covariant _SetLogRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.setLog.weight != oldWidget.setLog.weight) {
+      _weightController.text = widget.setLog.weight.toString();
+    }
+    if (widget.setLog.reps != oldWidget.setLog.reps) {
+      _repsController.text = widget.setLog.reps.toString();
+    }
+  }
+
+  @override
   void dispose() {
     _weightController.dispose();
     _repsController.dispose();
@@ -899,4 +1137,216 @@ class _SetLogRowState extends State<_SetLogRow> {
       ),
     );
   }
+}
+
+class PrCelebrationOverlay extends StatefulWidget {
+  final PrCelebrationEvent event;
+  final VoidCallback onDismiss;
+
+  const PrCelebrationOverlay({
+    super.key,
+    required this.event,
+    required this.onDismiss,
+  });
+
+  @override
+  State<PrCelebrationOverlay> createState() => _PrCelebrationOverlayState();
+}
+
+class _PrCelebrationOverlayState extends State<PrCelebrationOverlay> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  final List<GlassParticle> _particles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    );
+
+    final random = math.Random();
+    final colors = [
+      AppColors.accentEmeraldLight,
+      const Color(0xFFF59E0B),
+      const Color(0xFF6366F1),
+      const Color(0xFF8B5CF6),
+      const Color(0xFFF43F5E),
+    ];
+
+    for (int i = 0; i < 35; i++) {
+      final double angle = random.nextDouble() * 2 * math.pi;
+      final double speed = 0.1 + random.nextDouble() * 0.3;
+      _particles.add(
+        GlassParticle(
+          x: 0.5,
+          y: 0.45,
+          vx: math.cos(angle) * speed,
+          vy: math.sin(angle) * speed - 0.2,
+          baseSize: 6.0 + random.nextDouble() * 12.0,
+          color: colors[random.nextInt(colors.length)],
+        ),
+      );
+    }
+
+    _controller.forward();
+
+    Future.delayed(const Duration(milliseconds: 3500), () {
+      if (mounted) {
+        widget.onDismiss();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final progress = _controller.value;
+          final opacity = progress < 0.1
+              ? (progress / 0.1).clamp(0.0, 1.0)
+              : (progress > 0.8
+                  ? ((1.0 - progress) / 0.2).clamp(0.0, 1.0)
+                  : 1.0);
+
+          return Opacity(
+            opacity: opacity,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: GlassConfettiPainter(
+                      particles: _particles,
+                      progress: progress,
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Transform.scale(
+                      scale: 0.9 + 0.1 * math.sin(progress * math.pi),
+                      child: GlassContainer(
+                        padding: const EdgeInsets.all(24),
+                        borderRadius: 24,
+                        borderGradient: LinearGradient(
+                          colors: [
+                            AppColors.accentEmeraldLight.withValues(alpha: 0.4),
+                            AppColors.accentEmeraldLight.withValues(alpha: 0.05),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              '🎉 NEW RECORD! 🎉',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.accentEmeraldLight,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.event.exerciseName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              '${widget.event.weight.toStringAsFixed(1)} kg × ${widget.event.reps} reps',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'You just set a new personal record for this exercise. Incredible work!',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                                height: 1.4,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class GlassConfettiPainter extends CustomPainter {
+  final List<GlassParticle> particles;
+  final double progress;
+
+  GlassConfettiPainter({required this.particles, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    for (final p in particles) {
+      final double progressScale = progress;
+      final double x = p.x + p.vx * progressScale * size.width;
+      final double y = p.y + p.vy * progressScale * size.height + (0.5 * 9.8 * progressScale * progressScale * 100);
+      final double scale = p.baseSize * (1.0 - progressScale * 0.5);
+      
+      paint.color = p.color.withValues(alpha: (1.0 - progressScale).clamp(0.0, 1.0));
+      canvas.drawCircle(Offset(x, y), scale, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class GlassParticle {
+  final double x;
+  final double y;
+  final double vx;
+  final double vy;
+  final double baseSize;
+  final Color color;
+
+  GlassParticle({
+    required this.x,
+    required this.y,
+    required this.vx,
+    required this.vy,
+    required this.baseSize,
+    required this.color,
+  });
 }

@@ -151,14 +151,14 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                 alignment: Alignment.centerLeft,
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  child: PastelGradientCard(
+                  child: const PastelGradientCard(
                     type: PastelCardType.slate,
                     borderRadius: 16,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(
+                        SizedBox(
                           width: 14,
                           height: 14,
                           child: CircularProgressIndicator(
@@ -166,8 +166,8 @@ class _AICoachChatScreenState extends State<AICoachChatScreen> {
                             color: Color(0xFF14181F),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const Text(
+                        SizedBox(width: 12),
+                        Text(
                           'Coach is thinking...',
                           style: TextStyle(
                             color: Color(0xFF14181F),

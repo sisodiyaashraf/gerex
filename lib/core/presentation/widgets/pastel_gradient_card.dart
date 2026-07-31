@@ -90,7 +90,6 @@ class PastelGradientCard extends StatelessWidget {
       case PastelCardType.rose:
         return const [Color(0xFFFCD9DE), Color(0xFFFFF3F5)];
       case PastelCardType.slate:
-      default:
         return const [Color(0xFFE2E8F0), Color(0xFFFFFFFF)];
     }
   }
@@ -110,7 +109,6 @@ class PastelGradientCard extends StatelessWidget {
       case PastelCardType.rose:
         return const Color(0xFFF43F5E);
       case PastelCardType.slate:
-      default:
         return const Color(0xFF64748B);
     }
   }

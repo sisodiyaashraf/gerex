@@ -152,9 +152,9 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   Consumer<AIProvider>(
                     builder: (context, ai, _) {
                       if (ai.isSummaryLoading) {
-                        return PastelGradientCard(
+                        return const PastelGradientCard(
                           type: PastelCardType.slate,
-                          margin: const EdgeInsets.only(bottom: 16),
+                          margin: EdgeInsets.only(bottom: 16),
                           padding: EdgeInsets.symmetric(
                             vertical: 24,
                             horizontal: 16,
@@ -173,7 +173,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               Text(
                                 'Analyzing your logs recap...',
                                 style: TextStyle(
-                                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                  color: Color(0x9914181F),
                                 ),
                               ),
                             ],

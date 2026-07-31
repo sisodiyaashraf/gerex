@@ -129,12 +129,12 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
   Widget _buildLoadingState(ThemeData theme) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PulsingLoadingIndicator(),
-            SizedBox(height: 32),
+            const PulsingLoadingIndicator(),
+            const SizedBox(height: 32),
             Text(
               'Assembling Your Weekly Plan...',
               style: TextStyle(
@@ -143,7 +143,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
                 color: AppColors.textDarkHeading,
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'Gemini is analyzing your selections to construct optimal gym splits, target sets volume, and rest metrics.',
               style: TextStyle(

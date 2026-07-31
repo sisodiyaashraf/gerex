@@ -730,6 +730,16 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
                   ),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.volumeHigh,
+                    title: 'Voice Coaching',
+                    trailing: Switch.adaptive(
+                      value: profileProvider.voiceCoachingEnabled,
+                      onChanged: (bool value) {
+                        profileProvider.toggleVoiceCoaching(value);
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Consumer<NotificationProvider>(builder: (context, notifications, _) => _buildSettingsRow(
                      icon: FontAwesomeIcons.language,

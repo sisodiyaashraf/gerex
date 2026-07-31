@@ -1,8 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
+import 'package:gerex/core/utils/logger.dart';
 
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
@@ -162,13 +165,17 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.calendar_month_rounded, color: AppColors.textDarkHeading),
-            onPressed: () => context.push('/meal-schedule'),
-          ),
-          IconButton(
-            icon: Icon(Icons.search_rounded, color: AppColors.textDarkHeading),
-            onPressed: () => context.push('/meal-browse'),
-          ),
+          icon: Icon(Icons.add_circle_outline_rounded, color: AppColors.textDarkHeading),
+          onPressed: () => _showLogMealDialog(context, mealProvider),
+        ),
+        IconButton(
+          icon: Icon(Icons.calendar_month_rounded, color: AppColors.textDarkHeading),
+          onPressed: () => context.push('/meal-schedule'),
+        ),
+        IconButton(
+          icon: Icon(Icons.search_rounded, color: AppColors.textDarkHeading),
+          onPressed: () => context.push('/meal-browse'),
+        ),
         ],
       ),
       body: CustomScrollView(
@@ -480,6 +487,249 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> _lookupOpenFoodFacts(String barcode) async {
+    try {
+      final client = HttpClient();
+      final uri = Uri.parse('https://world.openfoodfacts.org/api/v2/product/$barcode.json');
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final data = json.decode(body);
+        if (data['status'] == 1 && data['product'] != null) {
+          final prod = data['product'];
+          final nut = prod['nutriments'] ?? {};
+          return {
+            'name': prod['product_name'] ?? 'Unknown Scanned Food',
+            'calories': double.tryParse(nut['energy-kcal_100g']?.toString() ?? '') ?? 0.0,
+            'protein': double.tryParse(nut['proteins_100g']?.toString() ?? '') ?? 0.0,
+            'carbs': double.tryParse(nut['carbohydrates_100g']?.toString() ?? '') ?? 0.0,
+            'fat': double.tryParse(nut['fat_100g']?.toString() ?? '') ?? 0.0,
+          };
+        }
+      }
+    } catch (e) {
+      SecureLogger.logError('MealPlanner: OpenFoodFacts lookup failed', e);
+    }
+    return null;
+  }
+
+  void _showLogMealDialog(BuildContext context, MealProvider provider) {
+    final nameController = TextEditingController();
+    final caloriesController = TextEditingController();
+    final proteinController = TextEditingController();
+    final carbsController = TextEditingController();
+    final fatController = TextEditingController();
+    String selectedMealType = _categories[_selectedFilterIdx];
+    bool isSearching = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: AppColors.cardDarkGlass,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Log Custom Meal',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.accentEmeraldLight),
+                    tooltip: 'Scan Barcode',
+                    onPressed: isSearching
+                        ? null
+                        : () async {
+                            final barcode = await context.push('/meal-barcode-scanner');
+                            if (barcode != null && barcode is String) {
+                              setState(() {
+                                isSearching = true;
+                              });
+                              final product = await _lookupOpenFoodFacts(barcode);
+                              setState(() {
+                                isSearching = false;
+                                if (product != null) {
+                                  nameController.text = product['name'];
+                                  caloriesController.text = product['calories'].toStringAsFixed(0);
+                                  proteinController.text = product['protein'].toStringAsFixed(1);
+                                  carbsController.text = product['carbs'].toStringAsFixed(1);
+                                  fatController.text = product['fat'].toStringAsFixed(1);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Auto-filled: ${product['name']}'),
+                                      backgroundColor: AppColors.accentEmeraldLight,
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Product not found. Please log manually.'),
+                                      backgroundColor: Colors.orange,
+                                    ),
+                                  );
+                                }
+                              });
+                            }
+                          },
+                  ),
+                ],
+              ),
+              content: isSearching
+                  ? const SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(color: AppColors.accentEmeraldLight),
+                            SizedBox(height: 16),
+                            Text(
+                              'Searching Open Food Facts...',
+                              style: TextStyle(color: Colors.white70, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: nameController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Meal Name',
+                              labelStyle: TextStyle(color: Colors.white70),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: selectedMealType,
+                            dropdownColor: AppColors.cardDarkGlass,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Meal Category',
+                              labelStyle: TextStyle(color: Colors.white70),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                            ),
+                            items: _categories.map((c) {
+                              return DropdownMenuItem(value: c, child: Text(c));
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                selectedMealType = val;
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: caloriesController,
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Calories (kcal)',
+                              labelStyle: TextStyle(color: Colors.white70),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: proteinController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Protein (g)',
+                              labelStyle: TextStyle(color: Colors.white70),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: carbsController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Carbs (g)',
+                              labelStyle: TextStyle(color: Colors.white70),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: fatController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Fat (g)',
+                              labelStyle: TextStyle(color: Colors.white70),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentEmeraldLight,
+                    foregroundColor: const Color(0xFF14181F),
+                  ),
+                  onPressed: isSearching
+                      ? null
+                      : () {
+                          final name = nameController.text.trim();
+                          if (name.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter a meal name')),
+                            );
+                            return;
+                          }
+                          final calories = double.tryParse(caloriesController.text) ?? 0.0;
+                          final protein = double.tryParse(proteinController.text) ?? 0.0;
+                          final carbs = double.tryParse(carbsController.text) ?? 0.0;
+                          final fat = double.tryParse(fatController.text) ?? 0.0;
+
+                          provider.addCustomMealEntry(
+                            name: name,
+                            mealType: selectedMealType,
+                            calories: calories,
+                            protein: protein,
+                            carbs: carbs,
+                            fat: fat,
+                            date: DateTime.now(),
+                          );
+
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Logged "$name" successfully!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                  child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
         );
       },
     );
