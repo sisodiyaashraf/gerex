@@ -7,6 +7,7 @@ import '../providers/workout_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ai/presentation/providers/ai_provider.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
+import '../../../metrics/presentation/providers/heart_rate_provider.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
@@ -69,6 +70,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
     final activity = Provider.of<ActivityProvider>(context);
     final notifications = Provider.of<NotificationProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
+    final hrProvider = Provider.of<HeartRateProvider>(context);
 
     final displayName = auth.user?.userMetadata?['full_name'] ??
         auth.user?.userMetadata?['name'] ??
@@ -397,72 +399,129 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     const SizedBox(height: 16),
 
                     // 5. Activity Status (heart-rate sparkline placeholder)
-                    PastelGradientCard(
-                      type: PastelCardType.rose,
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Heart Rate Status',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                    AnimatedTappable(
+                      onTap: () => context.push('/heart-rate-connect'),
+                      child: PastelGradientCard(
+                        type: PastelCardType.rose,
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Left Details: Status, BPM, Badge
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Heart Rate Status',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: Color(0xFF1F2937),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(
+                                        hrProvider.connectionState == HeartRateConnectionState.live && hrProvider.currentBpm != null
+                                            ? '${hrProvider.currentBpm}'
+                                            : '--',
+                                        style: theme.textTheme.displaySmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF111827),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Text(
+                                        'BPM',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF4B5563),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Connection Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: hrProvider.connectionState == HeartRateConnectionState.live
+                                          ? (hrProvider.activeSource == HeartRateSource.manual
+                                              ? Colors.purple.shade100
+                                              : const Color(0xFFA7F3D0))
+                                          : (hrProvider.connectionState == HeartRateConnectionState.disconnected
+                                              ? const Color(0xFFFCA5A5)
+                                              : const Color(0xFFFDA4AF)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      hrProvider.connectionState == HeartRateConnectionState.live
+                                          ? (hrProvider.activeSource == HeartRateSource.manual ? 'Manual Log' : 'Live')
+                                          : (hrProvider.connectionState == HeartRateConnectionState.disconnected
+                                              ? 'Disconnected'
+                                              : 'Connect Device'),
+                                      style: TextStyle(
+                                        color: hrProvider.connectionState == HeartRateConnectionState.live
+                                            ? (hrProvider.activeSource == HeartRateSource.manual
+                                                ? Colors.purple.shade900
+                                                : const Color(0xFF065F46))
+                                            : (hrProvider.connectionState == HeartRateConnectionState.disconnected
+                                                ? const Color(0xFF991B1B)
+                                                : const Color(0xFF9F1239)),
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFDA4AF),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Text(
-                                  'UI-Only / Sensor Needed',
-                                  style: TextStyle(
-                                    color: Color(0xFF9F1239),
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
+                            ),
+                            const SizedBox(width: 12),
+                            // Right Details: Sparkline + Smartwatch Image
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                // Smartwatch Image
+                                Container(
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.05),
+                                        blurRadius: 10,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Image.asset(
+                                    'assets/images/gerex smartwatch.png',
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Text(
-                                '72',
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF14181F),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'BPM',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF14181F),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Spacer(),
-                              // Custom sparkline layout
-                              SizedBox(
-                                width: 120,
-                                height: 32,
-                                child: CustomPaint(
-                                  painter: _HeartSparklinePainter(
-                                    theme: theme,
-                                    color: const Color(0xFFE11D48),
+                                const SizedBox(height: 8),
+                                // Custom sparkline layout
+                                SizedBox(
+                                  width: 90,
+                                  height: 24,
+                                  child: CustomPaint(
+                                    painter: _HeartSparklinePainter(
+                                      theme: theme,
+                                      color: const Color(0xFFE11D48),
+                                      history: hrProvider.recentHistory,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -1098,8 +1157,13 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
 class _HeartSparklinePainter extends CustomPainter {
   final ThemeData theme;
   final Color color;
+  final List<int> history;
 
-  _HeartSparklinePainter({required this.theme, required this.color});
+  _HeartSparklinePainter({
+    required this.theme,
+    required this.color,
+    required this.history,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1109,19 +1173,44 @@ class _HeartSparklinePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    final path = Path()
-      ..moveTo(0, size.height * 0.5)
-      ..lineTo(size.width * 0.25, size.height * 0.5)
-      ..lineTo(size.width * 0.35, size.height * 0.2)
-      ..lineTo(size.width * 0.45, size.height * 0.8)
-      ..lineTo(size.width * 0.55, size.height * 0.1)
-      ..lineTo(size.width * 0.65, size.height * 0.6)
-      ..lineTo(size.width * 0.75, size.height * 0.5)
-      ..lineTo(size.width, size.height * 0.5);
+    final path = Path();
+    if (history.isEmpty || history.length < 2) {
+      path.moveTo(0, size.height * 0.5);
+      path.lineTo(size.width * 0.25, size.height * 0.5);
+      path.lineTo(size.width * 0.35, size.height * 0.2);
+      path.lineTo(size.width * 0.45, size.height * 0.8);
+      path.lineTo(size.width * 0.55, size.height * 0.1);
+      path.lineTo(size.width * 0.65, size.height * 0.6);
+      path.lineTo(size.width * 0.75, size.height * 0.5);
+      path.lineTo(size.width, size.height * 0.5);
+    } else {
+      final double dx = size.width / (history.length - 1);
+      int minVal = 200;
+      int maxVal = 40;
+      for (var val in history) {
+        if (val < minVal) minVal = val;
+        if (val > maxVal) maxVal = val;
+      }
+      final double range = (maxVal - minVal).toDouble();
+      final double heightRange = size.height * 0.6;
+
+      for (int i = 0; i < history.length; i++) {
+        final double x = i * dx;
+        final double normalized = range > 0 ? (history[i] - minVal) / range : 0.5;
+        final double y = size.height * 0.8 - (normalized * heightRange);
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+    }
 
     canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _HeartSparklinePainter oldDelegate) {
+    return oldDelegate.history != history;
+  }
 }

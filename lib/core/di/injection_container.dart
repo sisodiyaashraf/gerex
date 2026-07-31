@@ -28,6 +28,7 @@ import '../../features/profile/presentation/providers/progress_photos_provider.d
 import '../../features/metrics/presentation/providers/sleep_provider.dart';
 import '../../features/nutrition/presentation/providers/meal_provider.dart';
 import '../network/network_info.dart';
+import '../../features/metrics/presentation/providers/heart_rate_provider.dart';
 import '../providers/activity_provider.dart';
 import '../providers/notification_provider.dart';
 import '../../features/challenges/domain/repositories/challenge_repository.dart';
@@ -112,4 +113,5 @@ Future<void> init() async {
   // Core tracking & notifications
   sl.registerLazySingleton<ActivityProvider>(() => ActivityProvider(sl()));
   sl.registerLazySingleton<NotificationProvider>(() => NotificationProvider(sl()));
+  sl.registerLazySingleton<HeartRateProvider>(() => HeartRateProvider(sl(), sl()));
 }

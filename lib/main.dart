@@ -17,6 +17,7 @@ import 'features/profile/presentation/providers/progress_photos_provider.dart';
 import 'features/metrics/presentation/providers/sleep_provider.dart';
 import 'features/nutrition/presentation/providers/meal_provider.dart';
 import 'features/challenges/presentation/providers/challenge_provider.dart';
+import 'features/metrics/presentation/providers/heart_rate_provider.dart';
 import 'core/providers/activity_provider.dart';
 import 'core/providers/notification_provider.dart';
 
@@ -62,6 +63,7 @@ void main() async {
         ChangeNotifierProvider.value(value: di.sl<ActivityProvider>()),
         ChangeNotifierProvider.value(value: di.sl<NotificationProvider>()),
         ChangeNotifierProvider.value(value: di.sl<ChallengeProvider>()),
+        ChangeNotifierProvider.value(value: di.sl<HeartRateProvider>()),
       ],
       child: const MainApp(),
     ),

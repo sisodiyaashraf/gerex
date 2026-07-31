@@ -38,6 +38,7 @@ import '../../features/exercise/domain/entities/exercise.dart';
 import '../../features/nutrition/presentation/screens/meal_schedule_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_browse_screen.dart';
 import '../../features/profile/presentation/screens/guided_photo_capture_screen.dart';
+import '../../features/metrics/presentation/screens/heart_rate_connection_screen.dart';
 import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
 import '../../features/workout/presentation/screens/quick_workout_screen.dart';
 import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
@@ -177,6 +178,10 @@ class AppRouter {
       GoRoute(
         path: '/progress-photos',
         builder: (context, state) => const ProgressPhotosScreen(),
+      ),
+      GoRoute(
+        path: '/heart-rate-connect',
+        builder: (context, state) => const HeartRateConnectionScreen(),
       ),
       GoRoute(
         path: '/sleep-tracker',

@@ -167,6 +167,30 @@ class ActivityProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateHealthConnectMetrics({
+    int? steps,
+    double? sleep,
+    int? calories,
+  }) async {
+    bool changed = false;
+    if (steps != null && steps != _stepsCount) {
+      _stepsCount = steps;
+      changed = true;
+    }
+    if (sleep != null && sleep != _sleepHours) {
+      _sleepHours = sleep;
+      changed = true;
+    }
+    if (calories != null && calories != _calories) {
+      _calories = calories;
+      changed = true;
+    }
+    if (changed) {
+      await _saveState();
+      notifyListeners();
+    }
+  }
+
   Future<void> clearLogs() async {
     _logs.clear();
     await _saveState();
