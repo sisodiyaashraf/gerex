@@ -971,10 +971,10 @@ class ProfileScreen extends StatelessWidget {
                   InkWell(
                     onTap: showLogoutConfirmation,
                     borderRadius: BorderRadius.circular(16),
-                    child: PastelGradientCard(
+                    child: const PastelGradientCard(
                       type: PastelCardType.rose,
-                      padding: const EdgeInsets.symmetric(vertical: 14.0),
-                      child: const Row(
+                      padding: EdgeInsets.symmetric(vertical: 14.0),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           FaIcon(

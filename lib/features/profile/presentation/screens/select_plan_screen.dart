@@ -127,7 +127,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                               letterSpacing: -0.5,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             'Unlock your ultimate athletic aesthetic',
                             style: TextStyle(

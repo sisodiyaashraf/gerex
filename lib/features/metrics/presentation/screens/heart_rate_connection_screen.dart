@@ -689,15 +689,15 @@ class HeartRateConnectionScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.info_outline_rounded,
                 color: Colors.amberAccent,
                 size: 20,
               ),
-              const SizedBox(width: 12),
-              const Text(
+              SizedBox(width: 12),
+              Text(
                 'Smartwatch Compatibility Notice',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,

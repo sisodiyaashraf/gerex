@@ -66,7 +66,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                   style: TextStyle(color: AppColors.textDarkHeading),
                   decoration: InputDecoration(
                     labelText: 'Template Name',
-                    labelStyle: TextStyle(color: AppColors.accentEmeraldLight),
+                    labelStyle: const TextStyle(color: AppColors.accentEmeraldLight),
                     hintText: 'e.g. Upper Body Focus',
                     hintStyle: TextStyle(color: AppColors.textDarkMuted),
                     border: InputBorder.none,

@@ -147,22 +147,21 @@ class MetricsProvider extends ChangeNotifier {
       return;
     }
 
-    // Compute streaks
-    int longest = 0;
-    int current = 0;
+    int longest = 1;
+    int current = 1;
 
     final today = DateTime.now();
     final todayDateOnly = DateTime(today.year, today.month, today.day);
-    final yesterdayDateOnly = todayDateOnly.subtract(const Duration(days: 1));
 
     int tempStreak = 1;
-    longest = 1;
 
     for (int i = 1; i < sortedDates.length; i++) {
       final diff = sortedDates[i].difference(sortedDates[i - 1]).inDays;
       if (diff == 1) {
         tempStreak++;
-      } else if (diff > 1) {
+      } else if (diff == 2 || diff == 3) {
+        // Paused/Grace period - streak is preserved, does not reset to 1
+      } else if (diff > 3) {
         if (tempStreak > longest) {
           longest = tempStreak;
         }
@@ -173,21 +172,29 @@ class MetricsProvider extends ChangeNotifier {
       longest = tempStreak;
     }
 
-    // Calculate current streak
+    // Calculate current streak with grace/pause period
     final lastWorkoutDate = sortedDates.last;
-    if (lastWorkoutDate == todayDateOnly ||
-        lastWorkoutDate == yesterdayDateOnly) {
+    final daysSinceLastWorkout = todayDateOnly.difference(lastWorkoutDate).inDays;
+
+    if (daysSinceLastWorkout <= 3) {
       current = 1;
       for (int i = sortedDates.length - 2; i >= 0; i--) {
         final diff = sortedDates[i + 1].difference(sortedDates[i]).inDays;
         if (diff == 1) {
           current++;
-        } else if (diff > 1) {
+        } else if (diff == 2 || diff == 3) {
+          // Paused/Grace - keep current value, do not break.
+        } else if (diff > 3) {
           break;
         }
       }
     } else {
       current = 0;
+    }
+
+    // Ensure longest streak is at least the current streak
+    if (current > longest) {
+      longest = current;
     }
 
     _currentStreak = current;

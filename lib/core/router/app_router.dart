@@ -278,6 +278,10 @@ class AppRouter {
         builder: (context, state) => const MealBarcodeScannerScreen(),
       ),
       GoRoute(
+        path: '/analytics',
+        builder: (context, state) => const MetricsDashboardScreen(),
+      ),
+      GoRoute(
         path: '/guided-capture',
         builder: (context, state) => const GuidedPhotoCaptureScreen(),
       ),

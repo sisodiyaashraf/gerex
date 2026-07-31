@@ -145,11 +145,11 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
+                        const Text(
                           'Water Intake',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF14181F),
+                            color: Color(0xFF14181F),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -206,11 +206,11 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
+                        const Text(
                           'Foot Steps',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF14181F),
+                            color: Color(0xFF14181F),
                           ),
                         ),
                         const SizedBox(height: 4),

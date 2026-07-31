@@ -239,9 +239,9 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                PastelGradientCard(
+                const PastelGradientCard(
                   type: PastelCardType.slate,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   child: GerexLineChart(
                     data: calorieTrendPoints,
                     unit: 'kcal',

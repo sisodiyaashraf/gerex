@@ -289,13 +289,13 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Average Progress', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF14181F))),
+                  Text('Average Progress', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF14181F))),
                   Text(
                     'Great Change',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: const Color(0xFF0284C7)),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0284C7)),
                   ),
                 ],
               ),

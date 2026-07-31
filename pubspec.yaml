@@ -35,6 +35,8 @@ dependencies:
   sensors_plus: ^7.1.0
   flutter_tts: ^4.2.5
   google_mlkit_barcode_scanning: ^0.12.1
+  share_plus: ^10.0.0
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:

@@ -225,32 +225,126 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                     },
                   ),
 
-                  // 1. Streaks Dashboard Panel
+                  // 1. Streaks Dashboard Panel with Flame Medallion
                   PastelGradientCard(
                     type: PastelCardType.indigo,
                     padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildStreakIndicator(
-                          context,
-                          'Current Streak',
-                          '${metricsProvider.currentStreak} Days',
-                          FontAwesomeIcons.fire,
-                          const Color(0xFFEA580C),
+                        Row(
+                          children: [
+                            // Flame Medallion
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFFFF5722).withValues(alpha: 0.35),
+                                    const Color(0xFFFF9800).withValues(alpha: 0.1),
+                                  ],
+                                ),
+                              ),
+                              child: Center(
+                                child: FaIcon(
+                                  FontAwesomeIcons.fire,
+                                  color: metricsProvider.workoutDates.contains(
+                                    '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                                  ) ? const Color(0xFFFF5722) : const Color(0xFF6B7280),
+                                  size: 26,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildStreakIndicator(
+                                    context,
+                                    'Current Streak',
+                                    '${metricsProvider.currentStreak} Days',
+                                    FontAwesomeIcons.fire,
+                                    metricsProvider.workoutDates.contains(
+                                      '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                                    ) ? const Color(0xFFEA580C) : const Color(0xFF94A3B8),
+                                  ),
+                                  Container(
+                                    height: 30,
+                                    width: 1,
+                                    color: const Color(0xFF14181F).withValues(alpha: 0.1),
+                                  ),
+                                  _buildStreakIndicator(
+                                    context,
+                                    'Longest Streak',
+                                    '${metricsProvider.longestStreak} Days',
+                                    FontAwesomeIcons.trophy,
+                                    const Color(0xFFD97706),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        Container(
-                          height: 40,
-                          width: 1,
-                          color: const Color(0xFF14181F).withValues(alpha: 0.1),
-                        ),
-                        _buildStreakIndicator(
-                          context,
-                          'Longest Streak',
-                          '${metricsProvider.longestStreak} Days',
-                          FontAwesomeIcons.trophy,
-                          const Color(0xFFD97706),
-                        ),
+                        if (metricsProvider.currentStreak > 0 && !metricsProvider.workoutDates.contains(
+                          '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                        )) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.pause_circle_filled_rounded, color: Color(0xFFD97706), size: 16),
+                                SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'Streak Paused: Grace Period Active. Complete a workout to resume!',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF9A3412),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (metricsProvider.workoutDates.contains(
+                          '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                        )) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 16),
+                                SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'You logged a workout today! Active streak is hot!',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF065F46),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]
                       ],
                     ),
                   ),

@@ -1,13 +1,18 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
 import '../../domain/entities/workout_entities.dart';
 import '../providers/workout_provider.dart';
@@ -793,9 +798,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                           label: const Text('Add Exercise'),
                         ),
                         const SizedBox(height: 24),
-                        provider.isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : SlideToConfirmButton(
+                        SlideToConfirmButton(
                                 label: 'Slide to Finish Workout',
                                 knobIcon: FontAwesomeIcons.solidCircleCheck,
                                 onConfirm: () async {
@@ -807,7 +810,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                                         backgroundColor: Colors.green,
                                       ),
                                     );
-                                    context.pop();
+                                    if (provider.sessions.isNotEmpty) {
+                                      _showShareSummaryDialog(context, provider.sessions.first);
+                                    } else {
+                                      context.pop();
+                                    }
                                   }
                                 },
                               ),
@@ -990,6 +997,236 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
         );
       },
     );
+  }
+
+  void _showShareSummaryDialog(BuildContext context, WorkoutSession session) {
+    final boundaryKey = GlobalKey();
+
+    double totalVolume = 0;
+    int totalSets = 0;
+    final Set<String> uniqueExerciseIds = {};
+    for (final loggedSet in session.loggedSets) {
+      if (loggedSet.isCompleted) {
+        totalVolume += loggedSet.weight * loggedSet.reps;
+        totalSets++;
+        uniqueExerciseIds.add(loggedSet.exerciseId);
+      }
+    }
+
+    final minutes = session.durationSeconds ~/ 60;
+    final seconds = session.durationSeconds % 60;
+    final durationStr = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RepaintBoundary(
+                key: boundaryKey,
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(24),
+                  borderRadius: 24,
+                  borderGradient: LinearGradient(
+                    colors: [
+                      AppColors.accentEmeraldLight.withValues(alpha: 0.4),
+                      AppColors.accentEmeraldLight.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'GEREX',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.accentEmeraldLight,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'COMPLETED',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.accentEmeraldLight,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        session.name,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${session.completedAt?.day ?? DateTime.now().day} ${_getMonthName(session.completedAt?.month ?? DateTime.now().month)} ${session.completedAt?.year ?? DateTime.now().year}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildShareStat('Duration', durationStr),
+                          _buildShareStat('Exercises', '${uniqueExerciseIds.length}'),
+                          _buildShareStat('Sets Logged', '$totalSets'),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total Volume Lifted',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '${totalVolume.toStringAsFixed(0)} kg',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.accentEmeraldLight,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Center(
+                        child: Text(
+                          'Tracked with Gerex Coach App',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.white30,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white30),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    onPressed: () async {
+                      final RenderRepaintBoundary? boundary = boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+                      if (boundary == null) return;
+                      
+                      if (boundary.debugNeedsPaint) {
+                        await Future.delayed(const Duration(milliseconds: 100));
+                      }
+                      
+                      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+                      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+                      final Uint8List? pngBytes = byteData?.buffer.asUint8List();
+                      
+                      if (pngBytes != null) {
+                        final tempDir = await getTemporaryDirectory();
+                        final file = await File('${tempDir.path}/gerex_workout_${DateTime.now().millisecondsSinceEpoch}.png').create();
+                        await file.writeAsBytes(pngBytes);
+                        
+                        await Share.shareXFiles(
+                          [XFile(file.path)],
+                          text: 'Finished my workout session "${session.name}" on Gerex! 💪🔥',
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.share_rounded),
+                    label: const Text('Share Card', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accentEmeraldLight,
+                      foregroundColor: const Color(0xFF14181F),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Done', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShareStat(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getMonthName(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
   }
 }
 
