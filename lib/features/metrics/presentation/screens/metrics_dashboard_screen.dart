@@ -262,26 +262,30 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  _buildStreakIndicator(
-                                    context,
-                                    'Current Streak',
-                                    '${metricsProvider.currentStreak} Days',
-                                    FontAwesomeIcons.fire,
-                                    metricsProvider.workoutDates.contains(
-                                      '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
-                                    ) ? const Color(0xFFEA580C) : const Color(0xFF94A3B8),
+                                  Expanded(
+                                    child: _buildStreakIndicator(
+                                      context,
+                                      'Current Streak',
+                                      '${metricsProvider.currentStreak} Days',
+                                      FontAwesomeIcons.fire,
+                                      metricsProvider.workoutDates.contains(
+                                        '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                                      ) ? const Color(0xFFEA580C) : const Color(0xFF94A3B8),
+                                    ),
                                   ),
                                   Container(
                                     height: 30,
                                     width: 1,
                                     color: const Color(0xFF14181F).withValues(alpha: 0.1),
                                   ),
-                                  _buildStreakIndicator(
-                                    context,
-                                    'Longest Streak',
-                                    '${metricsProvider.longestStreak} Days',
-                                    FontAwesomeIcons.trophy,
-                                    const Color(0xFFD97706),
+                                  Expanded(
+                                    child: _buildStreakIndicator(
+                                      context,
+                                      'Longest Streak',
+                                      '${metricsProvider.longestStreak} Days',
+                                      FontAwesomeIcons.trophy,
+                                      const Color(0xFFD97706),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -572,25 +576,31 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        FaIcon(icon, color: color, size: 30.0),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF14181F).withValues(alpha: 0.6),
+        FaIcon(icon, color: color, size: 22.0),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                  fontSize: 10,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            Text(
-              value,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF14181F),
+              Text(
+                value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF14181F),
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
