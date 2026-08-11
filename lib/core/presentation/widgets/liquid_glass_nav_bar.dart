@@ -199,19 +199,43 @@ class LiquidGlassNavBar extends StatelessWidget {
                                 children: [
                                   BouncingIcon(
                                     isActive: isActive,
-                                    child: _buildIcon(item.icon, isActive, isDark),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    item.label,
-                                    style: TextStyle(
-                                      color: labelColor,
-                                      fontSize: 10.5,
-                                      fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
-                                      letterSpacing: 0.2,
+                                    child: _buildIcon(
+                                      item.icon,
+                                      isActive,
+                                      isDark,
+                                      isActive ? 20.0 : 28.0,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeOutCubic,
+                                    height: isActive ? 16.0 : 0.0,
+                                    child: AnimatedOpacity(
+                                      duration: const Duration(milliseconds: 200),
+                                      opacity: isActive ? 1.0 : 0.0,
+                                      curve: Curves.easeOutCubic,
+                                      child: SingleChildScrollView(
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        child: Column(
+                                          children: [
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              item.label,
+                                              style: TextStyle(
+                                                color: labelColor,
+                                                fontSize: 10.5,
+                                                fontWeight: isActive
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w600,
+                                                letterSpacing: 0.2,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -280,35 +304,42 @@ class LiquidGlassNavBar extends StatelessWidget {
     }
   }
 
-  Widget _buildIcon(dynamic iconData, bool isActive, bool isDark) {
+  Widget _buildIcon(dynamic iconData, bool isActive, bool isDark, double targetSize) {
     final Color color = isActive
         ? Colors.white
         : (isDark
             ? const Color(0xFFE2E8F0).withValues(alpha: 0.85)
             : const Color(0xFF475569).withValues(alpha: 0.85));
 
-    if (iconData is String) {
-      if (iconData.endsWith('.png')) {
-        return Image.asset(
-          iconData,
-          width: 20,
-          height: 20,
-          color: color,
-        );
-      }
-      return SvgPicture.asset(
-        iconData,
-        width: 20,
-        height: 20,
-        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-      );
-    } else if (iconData is IconData) {
-      return Icon(
-        iconData,
-        size: 20,
-        color: color,
-      );
-    }
-    return const SizedBox.shrink();
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: targetSize, end: targetSize),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      builder: (context, size, child) {
+        if (iconData is String) {
+          if (iconData.endsWith('.png')) {
+            return Image.asset(
+              iconData,
+              width: size,
+              height: size,
+              color: color,
+            );
+          }
+          return SvgPicture.asset(
+            iconData,
+            width: size,
+            height: size,
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          );
+        } else if (iconData is IconData) {
+          return Icon(
+            iconData,
+            size: size,
+            color: color,
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
   }
 }
