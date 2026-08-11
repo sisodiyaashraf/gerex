@@ -377,23 +377,34 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
           else
             ...exercise.instructions.asMap().entries.map((entry) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 6.0),
+                padding: const EdgeInsets.only(bottom: 8.0),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${entry.key + 1}. ',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.accentEmeraldLight,
-                        fontSize: 11,
+                    Container(
+                      width: 18,
+                      height: 18,
+                      margin: const EdgeInsets.only(top: 2, right: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${entry.key + 1}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.accentEmeraldLight,
+                            fontSize: 10,
+                          ),
+                        ),
                       ),
                     ),
                     Expanded(
                       child: Text(
                         entry.value,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 11.5,
                           height: 1.4,
                           color: theme.brightness == Brightness.dark
                               ? AppColors.textDarkBody

@@ -434,23 +434,34 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
               else
                 ...exercise.instructions.asMap().entries.map((entry) {
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 6.0),
+                    padding: const EdgeInsets.only(bottom: 8.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${entry.key + 1}. ',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.accentEmeraldLight,
-                            fontSize: 11,
+                        Container(
+                          width: 18,
+                          height: 18,
+                          margin: const EdgeInsets.only(top: 2, right: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${entry.key + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.accentEmeraldLight,
+                                fontSize: 10,
+                              ),
+                            ),
                           ),
                         ),
                         Expanded(
                           child: Text(
                             entry.value,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 11.5,
                               height: 1.4,
                               color: theme.brightness == Brightness.dark
                                   ? AppColors.textDarkBody
@@ -525,12 +536,23 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
             final isJoined = provider.isJoined(challenge.id);
             final difficultyColor = challenge.getDifficultyColor(context);
 
+            // Determine card background type based on difficulty
+            PastelCardType cardType;
+            final diff = challenge.difficultyLabel.toLowerCase();
+            if (diff.contains('begin') || diff.contains('easy')) {
+              cardType = PastelCardType.mint; // Green
+            } else if (diff.contains('inter') || diff.contains('medium')) {
+              cardType = PastelCardType.sky;  // Blue
+            } else {
+              cardType = PastelCardType.rose; // Red/Pink
+            }
+
             return GestureDetector(
               onTap: () {
                 context.push('/challenge-detail', extra: challenge);
               },
               child: PastelGradientCard(
-                type: PastelCardType.indigo,
+                type: cardType,
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -717,8 +739,18 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
           itemCount: _trophyBadges.length,
           itemBuilder: (context, idx) {
             final badge = _trophyBadges[idx];
+            final cardTypes = [
+              PastelCardType.mint,
+              PastelCardType.indigo,
+              PastelCardType.sky,
+              PastelCardType.violet,
+              PastelCardType.sunset,
+              PastelCardType.rose,
+            ];
+            final type = cardTypes[idx % cardTypes.length];
+
             return PastelGradientCard(
-              type: PastelCardType.rose,
+              type: type,
               padding: const EdgeInsets.all(8),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -727,14 +759,14 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                     badge.path,
                     width: 34,
                     height: 34,
-                    colorFilter: ColorFilter.mode(
-                      theme.colorScheme.primary,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF14181F),
                       BlendMode.srcIn,
                     ),
                     placeholderBuilder: (context) => FaIcon(
                       badge.fallback as FaIconData?,
                       size: 26,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                      color: const Color(0xFF14181F),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -743,6 +775,7 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
+                      color: Color(0xFF14181F),
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,

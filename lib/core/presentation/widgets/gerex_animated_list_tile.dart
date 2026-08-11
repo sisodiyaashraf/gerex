@@ -248,6 +248,25 @@ class _GerexAnimatedListTileState extends State<GerexAnimatedListTile>
         ? AppColors.cardDarkGlass.withValues(alpha: 0.4)
         : Colors.white.withValues(alpha: 0.3);
 
+    final defaultShadow = [
+      BoxShadow(
+        color: isDark
+            ? Colors.black.withValues(alpha: 0.3)
+            : Colors.grey.shade300.withValues(alpha: 0.2),
+        blurRadius: 10,
+        offset: const Offset(0, 4),
+      ),
+    ];
+
+    final pressedShadow = [
+      BoxShadow(
+        color: glowColor,
+        blurRadius: 16 * _pressGlow.value,
+        spreadRadius: 2 * _pressGlow.value,
+        offset: const Offset(0, 4),
+      )
+    ];
+
     return AnimatedBuilder(
       animation: Listenable.merge([_entranceController, _pressController]),
       builder: (context, child) {
@@ -261,16 +280,7 @@ class _GerexAnimatedListTileState extends State<GerexAnimatedListTile>
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: _isPressed
-                      ? [
-                          BoxShadow(
-                            color: glowColor,
-                            blurRadius: 16 * _pressGlow.value,
-                            spreadRadius: 2 * _pressGlow.value,
-                            offset: const Offset(0, 4),
-                          )
-                        ]
-                      : [],
+                  boxShadow: _isPressed ? pressedShadow : defaultShadow,
                 ),
                 child: child,
               ),
@@ -369,19 +379,61 @@ class _GerexAnimatedListTileState extends State<GerexAnimatedListTile>
                                     Text(
                                       widget.title,
                                       style: GoogleFonts.outfit(
-                                        fontSize: 15,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: isDark ? AppColors.textDarkHeading : AppColors.textLightHeading,
+                                        letterSpacing: -0.2,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      widget.subtitle,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: isDark ? AppColors.textDarkMuted : AppColors.textLightBody.withValues(alpha: 0.6),
+                                    const SizedBox(height: 6),
+                                    if (widget.subtitle.contains('•')) ...[
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 4,
+                                        children: widget.subtitle
+                                            .split('•')
+                                            .map((part) => part.trim())
+                                            .where((part) => part.isNotEmpty)
+                                            .map((part) {
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? Colors.white.withValues(alpha: 0.08)
+                                                  : Colors.black.withValues(alpha: 0.05),
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: isDark
+                                                    ? Colors.white.withValues(alpha: 0.05)
+                                                    : Colors.black.withValues(alpha: 0.03),
+                                                width: 0.5,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              part,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark
+                                                    ? AppColors.textDarkMuted
+                                                    : AppColors.textLightBody.withValues(alpha: 0.7),
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
                                       ),
-                                    ),
+                                    ] else ...[
+                                      Text(
+                                        widget.subtitle,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: isDark ? AppColors.textDarkMuted : AppColors.textLightBody.withValues(alpha: 0.6),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -439,25 +491,38 @@ class _GerexAnimatedListTileState extends State<GerexAnimatedListTile>
   }
 
   Widget _buildLeading(ThemeData theme) {
-    // If a custom leading widget (like an image) is provided, render it.
+    final isDark = theme.brightness == Brightness.dark;
     final hasProgress = widget.progress != null;
 
-    final leadingContent = widget.leadingWidget ??
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.cardDarkGlass.withValues(alpha: 0.3),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Icon(
-              widget.leadingIcon,
-              color: AppColors.accentEmeraldLight,
-              size: 20,
+    final leadingContent = Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+          width: 1.5,
+        ),
+      ),
+      padding: const EdgeInsets.all(2),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: widget.leadingWidget ??
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.cardDarkGlass.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  widget.leadingIcon,
+                  color: AppColors.accentEmeraldLight,
+                  size: 20,
+                ),
+              ),
             ),
-          ),
-        );
+      ),
+    );
 
     if (!hasProgress) return leadingContent;
 
@@ -469,12 +534,12 @@ class _GerexAnimatedListTileState extends State<GerexAnimatedListTile>
           animation: _progressAnimation,
           builder: (context, _) {
             return SizedBox(
-              width: 52,
-              height: 52,
+              width: 58,
+              height: 58,
               child: CircularProgressIndicator(
                 value: _progressAnimation.value,
-                strokeWidth: 2.5,
-                backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.1),
+                strokeWidth: 3.0,
+                backgroundColor: theme.colorScheme.surface.withValues(alpha: isDark ? 0.08 : 0.04),
                 color: AppColors.accentEmeraldLight,
               ),
             );
