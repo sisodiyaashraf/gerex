@@ -46,7 +46,6 @@ import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
 import '../../features/exercise/presentation/screens/create_exercise_screen.dart';
 import '../di/injection_container.dart';
 import '../presentation/widgets/liquid_glass_nav_bar.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
 class AppRouter {
@@ -348,15 +347,15 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
                   label: 'Workouts',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: 'assets/svg icons/running-man-and-fitness-16873.svg',
+                  icon: 'assets/images/explore_icon.png',
                   label: 'Explore',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: FontAwesomeIcons.utensils,
+                  icon: 'assets/images/meal_icon.png',
                   label: 'Meals',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: 'assets/svg icons/track progress icon.svg',
+                  icon: 'assets/images/analytics_icon.png',
                   label: 'Analytics',
                 ),
               ],

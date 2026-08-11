@@ -288,6 +288,14 @@ class LiquidGlassNavBar extends StatelessWidget {
             : const Color(0xFF475569).withValues(alpha: 0.85));
 
     if (iconData is String) {
+      if (iconData.endsWith('.png')) {
+        return Image.asset(
+          iconData,
+          width: 20,
+          height: 20,
+          color: color,
+        );
+      }
       return SvgPicture.asset(
         iconData,
         width: 20,
