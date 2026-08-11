@@ -23,17 +23,25 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
     final mealProvider = Provider.of<MealProvider>(context);
 
     // Categories derived dynamically from recipes list + 'All'
-    final categories = ['All', ...mealProvider.recipes.map((r) => r.category).toSet()];
+    final categories = [
+      'All',
+      ...mealProvider.recipes.map((r) => r.category).toSet(),
+    ];
 
     // Filtering recipes
     final filteredRecipes = mealProvider.recipes.where((recipe) {
-      final matchesSearch = recipe.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategory == 'All' || recipe.category == _selectedCategory;
+      final matchesSearch = recipe.name.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+      final matchesCategory =
+          _selectedCategory == 'All' || recipe.category == _selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
 
     // Recommendations (let's show high-protein category items or first 3)
-    final recommended = mealProvider.recipes.where((r) => r.protein >= 25).toList();
+    final recommended = mealProvider.recipes
+        .where((r) => r.protein >= 25)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -60,9 +68,15 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                         style: const TextStyle(color: Color(0xFF14181F)),
                         decoration: InputDecoration(
                           hintText: 'Search Recipes (e.g. Avocado)...',
-                          hintStyle: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.5)),
+                          hintStyle: TextStyle(
+                            color: const Color(
+                              0xFF14181F,
+                            ).withValues(alpha: 0.5),
+                          ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ),
                         ),
                         onChanged: (val) {
                           setState(() {
@@ -100,15 +114,26 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          gradient: isSelected ? GerexGradients.primaryCTA : null,
-                          color: isSelected ? null : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                          gradient: isSelected
+                              ? GerexGradients.primaryCTA
+                              : null,
+                          color: isSelected
+                              ? null
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.05,
+                                ),
                           borderRadius: BorderRadius.circular(20),
                           border: isSelected
                               ? null
                               : Border.all(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.1,
+                                  ),
                                 ),
                         ),
                         alignment: Alignment.center,
@@ -117,7 +142,11 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                            color: isSelected
+                                ? Colors.white
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.8,
+                                  ),
                           ),
                         ),
                       ),
@@ -137,10 +166,14 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         // Recommendation Row
-                        if (_selectedCategory == 'All' && _searchQuery.isEmpty && recommended.isNotEmpty) ...[
+                        if (_selectedCategory == 'All' &&
+                            _searchQuery.isEmpty &&
+                            recommended.isNotEmpty) ...[
                           Text(
                             'Recommendations for Diet',
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           SizedBox(
@@ -159,11 +192,14 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                     padding: const EdgeInsets.all(12),
                                     borderRadius: 16,
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Expanded(
                                               child: Text(
@@ -178,7 +214,11 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                               ),
                                             ),
                                             const SizedBox(width: 4),
-                                            Icon(Icons.star_rounded, color: Colors.amberAccent[400], size: 14),
+                                            Icon(
+                                              Icons.star_rounded,
+                                              color: Colors.amberAccent[400],
+                                              size: 14,
+                                            ),
                                           ],
                                         ),
                                         const SizedBox(height: 4),
@@ -186,18 +226,28 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                           '${recipe.calories.toInt()} kcal • P: ${recipe.protein.toInt()}g',
                                           style: TextStyle(
                                             fontSize: 10,
-                                            color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                            color: const Color(
+                                              0xFF14181F,
+                                            ).withValues(alpha: 0.6),
                                           ),
                                         ),
                                         const Spacer(),
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFF0D807B).withValues(alpha: 0.1),
-                                                borderRadius: BorderRadius.circular(6),
+                                                color: const Color(
+                                                  0xFF0D807B,
+                                                ).withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
                                               ),
                                               child: Text(
                                                 recipe.category,
@@ -210,11 +260,21 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                             ),
                                             ElevatedButton(
                                               style: ElevatedButton.styleFrom(
-                                                visualDensity: VisualDensity.compact,
-                                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                visualDensity:
+                                                    VisualDensity.compact,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                    ),
                                               ),
-                                              onPressed: () => context.push('/meal-details', extra: recipe),
-                                              child: const Text('View', style: TextStyle(fontSize: 11)),
+                                              onPressed: () => context.push(
+                                                '/meal-details',
+                                                extra: recipe,
+                                              ),
+                                              child: const Text(
+                                                'View',
+                                                style: TextStyle(fontSize: 11),
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -231,7 +291,9 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                         // Main list results section
                         Text(
                           'Popular Recipes',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         if (filteredRecipes.isEmpty)
@@ -240,57 +302,81 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                             child: Center(
                               child: Text(
                                 'No recipes match search criteria.',
-                                style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
                               ),
                             ),
                           )
                         else
-                          ...filteredRecipes.map((recipe) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: PastelGradientCard(
-                                  type: PastelCardType.sunset,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
-                                        child: const Icon(Icons.restaurant_menu_rounded, color: Color(0xFF14181F), size: 16),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              recipe.name,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 13,
-                                                color: Color(0xFF14181F),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              '${recipe.calories.toInt()} kcal • P: ${recipe.protein.toInt()}g • F: ${recipe.fat.toInt()}g',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: const Color(0xFF14181F).withValues(alpha: 0.6),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          visualDensity: VisualDensity.compact,
-                                        ),
-                                        onPressed: () => context.push('/meal-details', extra: recipe),
-                                        child: const Text('View', style: TextStyle(fontSize: 12)),
-                                      ),
-                                    ],
-                                  ),
+                          ...filteredRecipes.map(
+                            (recipe) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: PastelGradientCard(
+                                type: PastelCardType.sunset,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                              )),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: const Color(
+                                        0xFF14181F,
+                                      ).withValues(alpha: 0.08),
+                                      child: const Icon(
+                                        Icons.restaurant_menu_rounded,
+                                        color: Color(0xFF14181F),
+                                        size: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            recipe.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              color: Color(0xFF14181F),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${recipe.calories.toInt()} kcal • P: ${recipe.protein.toInt()}g • F: ${recipe.fat.toInt()}g',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: const Color(
+                                                0xFF14181F,
+                                              ).withValues(alpha: 0.6),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                      onPressed: () => context.push(
+                                        '/meal-details',
+                                        extra: recipe,
+                                      ),
+                                      child: const Text(
+                                        'View',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 100),
                       ]),
                     ),

@@ -88,7 +88,9 @@ class _ExerciseImageWidgetState extends State<ExerciseImageWidget> {
       final frame = await codec.getNextFrame();
       final ui.Image rawImage = frame.image;
 
-      final byteData = await rawImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final byteData = await rawImage.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       if (byteData != null) {
         final buffer = byteData.buffer.asUint8List();
         // Remove white or near-white background pixels
@@ -163,9 +165,7 @@ class _ExerciseImageWidgetState extends State<ExerciseImageWidget> {
       return SizedBox(
         width: widget.size,
         height: widget.size,
-        child: const Center(
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
 
@@ -173,10 +173,7 @@ class _ExerciseImageWidgetState extends State<ExerciseImageWidget> {
       return SizedBox(
         width: widget.size,
         height: widget.size,
-        child: RawImage(
-          image: _processedImage,
-          fit: BoxFit.contain,
-        ),
+        child: RawImage(image: _processedImage, fit: BoxFit.contain),
       );
     }
 
@@ -185,7 +182,8 @@ class _ExerciseImageWidgetState extends State<ExerciseImageWidget> {
       width: widget.size,
       height: widget.size,
       decoration: BoxDecoration(
-        color: Colors.white, // Blends perfectly with the white background of exercise illustrations
+        color: Colors
+            .white, // Blends perfectly with the white background of exercise illustrations
         borderRadius: BorderRadius.circular(widget.size * 0.2),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.15),
@@ -215,8 +213,8 @@ class _ExerciseImageWidgetState extends State<ExerciseImageWidget> {
                 ),
               )
             : path.startsWith('assets/')
-                ? Image.asset(path, fit: BoxFit.cover)
-                : Image.file(File(path), fit: BoxFit.cover),
+            ? Image.asset(path, fit: BoxFit.cover)
+            : Image.file(File(path), fit: BoxFit.cover),
       ),
     );
   }

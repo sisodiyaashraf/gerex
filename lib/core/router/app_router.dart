@@ -46,6 +46,8 @@ import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
 import '../../features/exercise/presentation/screens/create_exercise_screen.dart';
 import '../di/injection_container.dart';
 import '../presentation/widgets/liquid_glass_nav_bar.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 class AppRouter {
   AppRouter._();
@@ -341,10 +343,22 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
                 });
               },
               items: const [
-                LiquidGlassNavBarItem(icon: Icons.fitness_center_rounded, label: 'Workouts'),
-                LiquidGlassNavBarItem(icon: Icons.explore_rounded, label: 'Explore'),
-                LiquidGlassNavBarItem(icon: Icons.restaurant_menu_rounded, label: 'Meals'),
-                LiquidGlassNavBarItem(icon: Icons.analytics_rounded, label: 'Analytics'),
+                LiquidGlassNavBarItem(
+                  icon: 'assets/svg icons/barbel.svg',
+                  label: 'Workouts',
+                ),
+                LiquidGlassNavBarItem(
+                  icon: 'assets/svg icons/running-man-and-fitness-16873.svg',
+                  label: 'Explore',
+                ),
+                LiquidGlassNavBarItem(
+                  icon: FontAwesomeIcons.utensils,
+                  label: 'Meals',
+                ),
+                LiquidGlassNavBarItem(
+                  icon: 'assets/svg icons/track progress icon.svg',
+                  label: 'Analytics',
+                ),
               ],
             ),
           ),
