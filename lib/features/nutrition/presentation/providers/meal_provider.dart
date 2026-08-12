@@ -46,6 +46,7 @@ class MealProvider extends ChangeNotifier {
         protein: 18.0,
         carbs: 24.0,
         fat: 14.0,
+        tags: ['egg', 'bread', 'fruit'],
       ),
       Recipe(
         id: 'rec_2',
@@ -70,6 +71,7 @@ class MealProvider extends ChangeNotifier {
         protein: 28.0,
         carbs: 48.0,
         fat: 8.0,
+        tags: ['oats', 'dairy', 'fruit', 'nuts'],
       ),
       Recipe(
         id: 'rec_3',
@@ -95,6 +97,7 @@ class MealProvider extends ChangeNotifier {
         protein: 42.0,
         carbs: 52.0,
         fat: 12.0,
+        tags: ['meat', 'rice', 'vegetable'],
       ),
       Recipe(
         id: 'rec_4',
@@ -119,6 +122,7 @@ class MealProvider extends ChangeNotifier {
         protein: 46.0,
         carbs: 64.0,
         fat: 18.0,
+        tags: ['fish', 'rice', 'vegetable'],
       ),
       Recipe(
         id: 'rec_5',
@@ -140,6 +144,7 @@ class MealProvider extends ChangeNotifier {
         protein: 17.0,
         carbs: 18.0,
         fat: 3.0,
+        tags: ['dairy', 'fruit', 'nuts'],
       ),
       Recipe(
         id: 'rec_6',
@@ -161,6 +166,7 @@ class MealProvider extends ChangeNotifier {
         protein: 8.0,
         carbs: 22.0,
         fat: 7.0,
+        tags: ['rice', 'nuts'],
       ),
     ];
   }

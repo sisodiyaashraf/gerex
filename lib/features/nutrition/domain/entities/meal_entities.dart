@@ -4,13 +4,15 @@ class Recipe {
   final String description;
   final String author;
   final String category; // 'Breakfast', 'Lunch', 'Dinner', 'Snack'
-  final List<String> ingredients; // e.g. ["2 Eggs", "1 Slice Whole Wheat Bread"]
+  final List<String>
+  ingredients; // e.g. ["2 Eggs", "1 Slice Whole Wheat Bread"]
   final List<String> steps; // instructions list
   final double calories;
   final double protein; // grams
   final double carbs; // grams
   final double fat; // grams
   bool isFavorite;
+  final List<String>? tags;
 
   Recipe({
     required this.id,
@@ -25,6 +27,7 @@ class Recipe {
     required this.carbs,
     required this.fat,
     this.isFavorite = false,
+    this.tags = const [],
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -41,6 +44,7 @@ class Recipe {
       carbs: (json['carbs'] as num? ?? 0.0).toDouble(),
       fat: (json['fat'] as num? ?? 0.0).toDouble(),
       isFavorite: json['is_favorite'] as bool? ?? false,
+      tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
     );
   }
 
@@ -58,6 +62,7 @@ class Recipe {
       'carbs': carbs,
       'fat': fat,
       'is_favorite': isFavorite,
+      'tags': tags,
     };
   }
 }

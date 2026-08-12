@@ -7,6 +7,7 @@ import '../../domain/entities/meal_entities.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import '../../domain/ingredient_icon_map.dart';
 
 class MealDetailsScreen extends StatefulWidget {
   final Recipe recipe;
@@ -31,10 +32,94 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
     final isFavorite = currentRecipe.isFavorite;
 
+    Color categoryColor = theme.colorScheme.primary;
+    if (currentRecipe.category == 'Breakfast') {
+      categoryColor = const Color(0xFFB8860B);
+    } else if (currentRecipe.category == 'Lunch') {
+      categoryColor = const Color(0xFFD84315);
+    } else if (currentRecipe.category == 'Dinner') {
+      categoryColor = const Color(0xFF3F51B5);
+    } else if (currentRecipe.category == 'Snack') {
+      categoryColor = const Color(0xFF2E7D32);
+    }
+
+    final categoryGradients = {
+      'Breakfast': LinearGradient(
+        colors: [
+          const Color(0xFFF59E0B).withValues(alpha: 0.15),
+          const Color(0xFF14181F).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+      'Lunch': LinearGradient(
+        colors: [
+          const Color(0xFFF97316).withValues(alpha: 0.15),
+          const Color(0xFF14181F).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+      'Dinner': LinearGradient(
+        colors: [
+          const Color(0xFF6366F1).withValues(alpha: 0.15),
+          const Color(0xFF14181F).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+      'Snack': LinearGradient(
+        colors: [
+          const Color(0xFF22C55E).withValues(alpha: 0.15),
+          const Color(0xFF14181F).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+    };
+    final headerGradient = categoryGradients[currentRecipe.category] ?? GerexGradients.scaffoldBackground;
+
     return Scaffold(
       body: LiquidBackground(
         child: Stack(
           children: [
+            // Category-specific glow blobs in background
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: categoryColor.withValues(alpha: 0.15),
+                      blurRadius: 100,
+                      spreadRadius: 50,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 100,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: categoryColor.withValues(alpha: 0.1),
+                      blurRadius: 120,
+                      spreadRadius: 60,
+                    ),
+                  ],
+                ),
+              ),
+            ),
             CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
@@ -57,16 +142,56 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                     ),
                     centerTitle: true,
                     background: Container(
-                      decoration: const BoxDecoration(
-                        gradient: GerexGradients.scaffoldBackground,
+                      decoration: BoxDecoration(
+                        gradient: headerGradient,
                       ),
                       child: Center(
-                        child: Opacity(
-                          opacity: 0.15,
-                          child: Icon(
-                            Icons.restaurant_menu_rounded,
-                            size: 100,
-                            color: theme.colorScheme.primary,
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                categoryColor.withValues(alpha: 0.3),
+                                categoryColor.withValues(alpha: 0.05),
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: categoryColor.withValues(alpha: 0.2),
+                                blurRadius: 20,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                border: Border.all(
+                                  color: categoryColor.withValues(alpha: 0.4),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: Image.asset(
+                                  currentRecipe.category == 'Breakfast'
+                                      ? 'assets/images/breakfast_icon.png'
+                                      : currentRecipe.category == 'Lunch'
+                                          ? 'assets/images/lunch_icon.png'
+                                          : currentRecipe.category == 'Dinner'
+                                              ? 'assets/images/dinner_icon.png'
+                                              : 'assets/images/snack_icon.png',
+                                  width: 32,
+                                  height: 32,
+                                  color: categoryColor,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -106,23 +231,26 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                               ),
                             ),
                           ),
-                          Container(
+                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 10,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.15,
+                              color: categoryColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: categoryColor.withValues(alpha: 0.3),
+                                width: 1,
                               ),
-                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              currentRecipe.category,
+                              currentRecipe.category.toUpperCase(),
                               style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                                color: categoryColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.0,
                               ),
                             ),
                           ),
@@ -160,7 +288,36 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      // Ingredient matching icons row
+                      Builder(
+                        builder: (context) {
+                          final matchedIcons = getPrioritizedIcons(currentRecipe.tags);
+                          if (matchedIcons.isEmpty) return const SizedBox(height: 24);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 24.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'KEY INGREDIENTS',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: matchedIcons.map((item) => _buildIngredientIconBadge(theme, item)).toList(),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
 
                       // Description
                       const Text(
@@ -237,7 +394,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                 children: [
                                   Icon(
                                     Icons.check_circle_outline_rounded,
-                                    color: theme.colorScheme.primary,
+                                    color: categoryColor,
                                     size: 16,
                                   ),
                                   const SizedBox(width: 12),
@@ -280,7 +437,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                               children: [
                                 CircleAvatar(
                                   radius: 12,
-                                  backgroundColor: theme.colorScheme.primary,
+                                  backgroundColor: categoryColor,
                                   child: Text(
                                     '${idx + 1}',
                                     style: const TextStyle(
@@ -379,28 +536,77 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        child: GlassContainer(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+          ),
           child: Column(
             children: [
               Text(
                 value,
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
                   color: color,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 10,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  letterSpacing: 0.5,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIngredientIconBadge(
+    ThemeData theme,
+    IngredientCategoryIcon item,
+  ) {
+    return Tooltip(
+      message: 'Contains ${item.label}',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: item.accentColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: item.accentColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(
+              item.faIcon,
+              size: 11,
+              color: item.accentColor,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              item.label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
       ),
     );
