@@ -61,6 +61,7 @@ flutter:
     - assets/images/breakfast_icon.png
     - assets/images/dinner_icon.png
     - assets/images/lunch_icon.png
+    - assets/images/snack_icon.png
     - assets/svg icons/
     - assets/exercise/
     - assets/data/exercises.json

@@ -292,27 +292,14 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                                               CircleAvatar(
                                                 backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
                                                 child: typeName == 'Breakfast'
-                                                    ? Image.asset(
-                                                        'assets/images/breakfast_icon.png',
-                                                        color: const Color(0xFF14181F),
-                                                        width: 22,
-                                                        height: 22,
-                                                      )
-                                                    : (typeName == 'Dinner'
-                                                        ? Image.asset(
-                                                            'assets/images/dinner_icon.png',
-                                                            color: const Color(0xFF14181F),
-                                                            width: 22,
-                                                            height: 22,
-                                                          )
-                                                        : (typeName == 'Lunch'
-                                                            ? Image.asset(
-                                                                'assets/images/lunch_icon.png',
-                                                                color: const Color(0xFF14181F),
-                                                                width: 22,
-                                                                height: 22,
-                                                              )
-                                                            : FaIcon(iconData as FaIconData, color: const Color(0xFF14181F), size: 16))),
+                                                    ? Image.asset('assets/images/breakfast_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
+                                                    : typeName == 'Dinner'
+                                                        ? Image.asset('assets/images/dinner_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
+                                                        : typeName == 'Lunch'
+                                                            ? Image.asset('assets/images/lunch_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
+                                                            : typeName == 'Snack'
+                                                                ? Image.asset('assets/images/snack_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
+                                                                : FaIcon(iconData as FaIconData, color: const Color(0xFF14181F), size: 16),
                                               ),
                                               const SizedBox(width: 16),
                                               Expanded(

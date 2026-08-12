@@ -458,32 +458,15 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 name == 'Breakfast'
-                    ? Image.asset(
-                        'assets/images/breakfast_icon.png',
-                        color: const Color(0xFFB8860B),
-                        width: 26,
-                        height: 26,
-                      )
-                    : (name == 'Dinner'
-                        ? Image.asset(
-                            'assets/images/dinner_icon.png',
-                            color: const Color(0xFF3F51B5),
-                            width: 26,
-                            height: 26,
-                          )
-                        : (name == 'Lunch'
-                            ? Image.asset(
-                                'assets/images/lunch_icon.png',
-                                color: const Color(0xFFD84315),
-                                width: 26,
-                                height: 26,
-                              )
-                            : FaIcon(
-                                icon,
-                                color: const Color(0xFF2E7D32),
-                                size: 20,
-                              ))),
-                const SizedBox(height: 8),
+                    ? Image.asset('assets/images/breakfast_icon.png', color: const Color(0xFFB8860B), width: 32, height: 32)
+                    : name == 'Dinner'
+                        ? Image.asset('assets/images/dinner_icon.png', color: const Color(0xFF3F51B5), width: 32, height: 32)
+                        : name == 'Lunch'
+                            ? Image.asset('assets/images/lunch_icon.png', color: const Color(0xFFD84315), width: 32, height: 32)
+                            : name == 'Snack'
+                                ? Image.asset('assets/images/snack_icon.png', color: const Color(0xFF2E7D32), width: 32, height: 32)
+                                : FaIcon(icon, color: const Color(0xFF2E7D32), size: 26),
+                const SizedBox(height: 4),
                 Text(
                   name,
                   style: const TextStyle(
