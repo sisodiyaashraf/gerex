@@ -11,6 +11,8 @@ import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import '../widgets/streak_flame_widget.dart';
+import '../../profile/presentation/providers/profile_provider.dart';
 
 class MetricsDashboardScreen extends StatefulWidget {
   const MetricsDashboardScreen({super.key});
@@ -573,10 +575,22 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
     Color color,
   ) {
     final theme = Theme.of(context);
+    final metricsProvider = Provider.of<MetricsProvider>(context, listen: false);
+    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    final isStreakFlame = icon == FontAwesomeIcons.fire && profileProvider.streakFlameEnabled;
+    final isTodayLogged = metricsProvider.workoutDates.contains(
+      '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+    );
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        FaIcon(icon, color: color, size: 22.0),
+        isStreakFlame
+            ? StreakFlameWidget(
+                streakCount: metricsProvider.currentStreak,
+                isTodayLogged: isTodayLogged,
+              )
+            : FaIcon(icon, color: color, size: 22.0),
         const SizedBox(width: 8),
         Flexible(
           child: Column(

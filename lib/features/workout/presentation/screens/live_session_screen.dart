@@ -4,9 +4,11 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../profile/presentation/providers/profile_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
@@ -267,6 +269,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
 
   void _onAiRepCompleted() {
     final provider = context.read<WorkoutProvider>();
+    final profileProvider = context.read<ProfileProvider>();
     if (provider.liveExercises.isEmpty) return;
 
     // Find the first exercise matching our target name (or default to current first)
@@ -282,9 +285,16 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       final targetReps = currentSet.reps;
       provider.updateSetValues(activeEx.id, incompleteIdx, reps: currentSet.reps + 1);
       
+      if (profileProvider.hapticsEnabled) {
+        HapticFeedback.lightImpact();
+      }
+
       // Auto-complete set if reps completed matches target reps
       if (currentSet.reps + 1 >= targetReps) {
         provider.toggleSetComplete(activeEx.id, incompleteIdx);
+        if (profileProvider.hapticsEnabled) {
+          HapticFeedback.mediumImpact();
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('AI Tracker: Set ${incompleteIdx + 1} for ${activeEx.name} Completed!'),
@@ -360,7 +370,28 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
     final incompleteIdx = sets.indexWhere((s) => !s.isCompleted);
     if (incompleteIdx != -1) {
       final currentSet = sets[incompleteIdx];
+      final targetReps = currentSet.reps;
       provider.updateSetValues(_selectedMotionExerciseId!, incompleteIdx, reps: currentSet.reps + 1);
+
+      final profileProvider = context.read<ProfileProvider>();
+      if (profileProvider.hapticsEnabled) {
+        HapticFeedback.lightImpact();
+      }
+
+      // Auto-complete set if reps completed matches target reps
+      if (currentSet.reps + 1 >= targetReps) {
+        provider.toggleSetComplete(_selectedMotionExerciseId!, incompleteIdx);
+        if (profileProvider.hapticsEnabled) {
+          HapticFeedback.mediumImpact();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Motion Tracker: Set ${incompleteIdx + 1} Completed!'),
+            backgroundColor: AppColors.accentEmeraldLight,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -376,6 +407,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       final currentSet = sets[incompleteIdx];
       final newReps = (currentSet.reps + delta).clamp(0, 999);
       provider.updateSetValues(_selectedMotionExerciseId!, incompleteIdx, reps: newReps);
+
+      final profileProvider = context.read<ProfileProvider>();
+      if (profileProvider.hapticsEnabled) {
+        HapticFeedback.lightImpact();
+      }
     }
   }
 

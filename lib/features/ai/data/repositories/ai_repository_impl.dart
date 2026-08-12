@@ -99,4 +99,18 @@ class AIRepositoryImpl implements AIRepository {
       onFailure: (fail) => FailureResult(fail),
     );
   }
+
+  @override
+  Future<Result<String, Failure>> getWeeklyTrainingStory({
+    required List<String> sessionsSummary,
+  }) async {
+    final prompt =
+        'Based on the user\'s workout history: $sessionsSummary, write a short, friendly, narrative-style fitness story of their week (maximum 3 sentences) (e.g. "This week you showed up 4 times, pushed hardest on Wednesday\'s leg day, and your consistency is trending up."). Make it feel personal and encouraging, using a conversational storytelling tone.';
+
+    final res = await _aiRouter.routeQuery(prompt: prompt);
+    return res.fold(
+      onSuccess: (result) => Success(result.text.trim()),
+      onFailure: (fail) => FailureResult(fail),
+    );
+  }
 }

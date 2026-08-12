@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
 import '../../domain/entities/meal_entities.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import '../../domain/ingredient_icon_map.dart';
 
@@ -80,7 +78,15 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     final headerGradient = categoryGradients[currentRecipe.category] ?? GerexGradients.scaffoldBackground;
 
     return Scaffold(
-      body: LiquidBackground(
+      backgroundColor: const Color(0xFF0F1319),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F1319), Color(0xFF14181F)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Stack(
           children: [
             // Category-specific glow blobs in background
@@ -147,8 +153,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       ),
                       child: Center(
                         child: Container(
-                          width: 80,
-                          height: 80,
+                          width: 100,
+                          height: 100,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
@@ -167,8 +173,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                           ),
                           child: Center(
                             child: Container(
-                              width: 60,
-                              height: 60,
+                              width: 80,
+                              height: 80,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: const Color(0xFF14181F).withValues(alpha: 0.6),
@@ -186,8 +192,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                           : currentRecipe.category == 'Dinner'
                                               ? 'assets/images/dinner_icon.png'
                                               : 'assets/images/snack_icon.png',
-                                  width: 32,
-                                  height: 32,
+                                  width: 44,
+                                  height: 44,
                                   color: categoryColor,
                                 ),
                               ),
@@ -320,21 +326,28 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       ),
 
                       // Description
-                      const Text(
-                        'Description',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      _buildSectionHeader('Description', categoryColor, theme),
                       const SizedBox(height: 8),
                       GestureDetector(
                         onTap: () => setState(
                           () =>
                               _isDescriptionExpanded = !_isDescriptionExpanded,
                         ),
-                        child: GlassContainer(
+                        child: Container(
                           padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface.withValues(alpha: 0.4),
+                            borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
+                            ),
+                            border: Border(
+                              left: BorderSide(
+                                color: categoryColor,
+                                width: 3,
+                              ),
+                            ),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -345,9 +358,10 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                     ? TextOverflow.visible
                                     : TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 14,
+                                  height: 1.5,
                                   color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.8,
+                                    alpha: 0.9,
                                   ),
                                 ),
                               ),
@@ -359,7 +373,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,
-                                  color: theme.colorScheme.primary,
+                                  color: categoryColor,
                                 ),
                               ),
                             ],
@@ -369,13 +383,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       const SizedBox(height: 24),
 
                       // Ingredients
-                      const Text(
-                        'Ingredients You Will Need',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      _buildSectionHeader('Ingredients You Will Need', categoryColor, theme),
                       const SizedBox(height: 12),
                       ListView.builder(
                         shrinkWrap: true,
@@ -385,25 +393,34 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                           final ing = currentRecipe.ingredients[idx];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
-                            child: GlassContainer(
+                            child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
-                                vertical: 10,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface.withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                  width: 1,
+                                ),
                               ),
                               child: Row(
                                 children: [
                                   Icon(
-                                    Icons.check_circle_outline_rounded,
+                                    Icons.check_circle_rounded,
                                     color: categoryColor,
-                                    size: 16,
+                                    size: 18,
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
                                       ing,
-                                      style: const TextStyle(
-                                        fontSize: 13,
+                                      style: TextStyle(
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w600,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.95),
                                       ),
                                     ),
                                   ),
@@ -416,13 +433,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       const SizedBox(height: 24),
 
                       // Step by Step directions
-                      const Text(
-                        'Step by Step Instructions',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      _buildSectionHeader('Step by Step Instructions', categoryColor, theme),
                       const SizedBox(height: 12),
                       ListView.builder(
                         shrinkWrap: true,
@@ -435,28 +446,46 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: categoryColor,
-                                  child: Text(
-                                    '${idx + 1}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: categoryColor.withValues(alpha: 0.15),
+                                    border: Border.all(
+                                      color: categoryColor,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '${idx + 1}',
+                                      style: TextStyle(
+                                        color: categoryColor,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: GlassContainer(
-                                    padding: const EdgeInsets.all(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surface.withValues(alpha: 0.4),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                        width: 1,
+                                      ),
+                                    ),
                                     child: Text(
                                       step,
                                       style: TextStyle(
-                                        fontSize: 13,
-                                        color: theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.8),
+                                        fontSize: 14,
+                                        height: 1.4,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.95),
                                       ),
                                     ),
                                   ),
@@ -570,6 +599,31 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, Color accentColor, ThemeData theme) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: accentColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 15,
+            color: theme.colorScheme.onSurface,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
     );
   }
 

@@ -28,4 +28,8 @@ abstract class AIRepository {
   Future<Result<String, Failure>> getProgressSummary({
     required List<String> sessionsSummary,
   });
+
+  Future<Result<String, Failure>> getWeeklyTrainingStory({
+    required List<String> sessionsSummary,
+  });
 }

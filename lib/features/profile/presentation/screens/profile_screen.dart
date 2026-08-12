@@ -1,10 +1,19 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../challenges/presentation/providers/challenge_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../workout/presentation/providers/workout_provider.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
+import '../../../metrics/presentation/widgets/streak_flame_widget.dart';
 import '../providers/profile_provider.dart';
 import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
@@ -48,6 +57,7 @@ class ProfileScreen extends StatelessWidget {
     final metricsProvider = Provider.of<MetricsProvider>(context);
     final profileProvider = Provider.of<ProfileProvider>(context);
     final activity = Provider.of<ActivityProvider>(context);
+    final challengeProvider = Provider.of<ChallengeProvider>(context);
 
     // Profile Details
     final user = authProvider.user;
@@ -250,10 +260,33 @@ class ProfileScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      BigStatNumber(
-                        number: formatWeight(currentWeight),
-                        label: 'Current Weight • Trend: $trendText',
-                        isDarkCard: false,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: BigStatNumber(
+                              number: formatWeight(currentWeight),
+                              label: 'Current Weight • Trend: $trendText',
+                              isDarkCard: false,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const FaIcon(FontAwesomeIcons.shareFromSquare, color: AppColors.textLightHeading, size: 20),
+                            tooltip: 'Share Training Card',
+                            onPressed: () {
+                              _showShareCardDialog(
+                                context,
+                                displayName,
+                                streak,
+                                workoutsCount,
+                                totalVolume,
+                                displayUnit,
+                                photoUrl,
+                                initials,
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -302,14 +335,29 @@ class ProfileScreen extends StatelessWidget {
                           children: [
                             FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
-                                '$streak d',
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontFamily: 'Outfit',
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.orangeAccent,
-                                  fontSize: context.sp(28),
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (profileProvider.streakFlameEnabled) ...[
+                                    StreakFlameWidget(
+                                      streakCount: streak,
+                                      isTodayLogged: metricsProvider.workoutDates.contains(
+                                        '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Text(
+                                    '$streak d',
+                                    style: theme.textTheme.headlineMedium?.copyWith(
+                                      fontFamily: 'Outfit',
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.orangeAccent,
+                                      fontSize: context.sp(28),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -546,6 +594,59 @@ class ProfileScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Badge Achievements Grid Title
+                  Text(
+                    'My Badges & Achievements',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Grid of Badges
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.25,
+                    children: [
+                      _buildBadgeCard(
+                        theme,
+                        title: 'Consistency Flame',
+                        description: 'Reach a streak of 7+ days.',
+                        unlocked: metricsProvider.longestStreak >= 7 || metricsProvider.currentStreak >= 7,
+                        icon: FontAwesomeIcons.fire,
+                        color: Colors.orangeAccent,
+                      ),
+                      _buildBadgeCard(
+                        theme,
+                        title: 'Conqueror',
+                        description: 'Complete first challenge.',
+                        unlocked: challengeProvider.progressMap.values.any((p) => p.status == 'completed'),
+                        icon: FontAwesomeIcons.trophy,
+                        color: Colors.amber,
+                      ),
+                      _buildBadgeCard(
+                        theme,
+                        title: 'Iron Centurion',
+                        description: 'Log 100+ workouts total.',
+                        unlocked: workoutsCount >= 100,
+                        icon: FontAwesomeIcons.dumbbell,
+                        color: theme.colorScheme.primary,
+                      ),
+                      _buildBadgeCard(
+                        theme,
+                        title: 'Early Bird',
+                        description: 'Trained before 9:00 AM.',
+                        unlocked: workoutProvider.sessions.any((s) => s.startedAt.hour < 9),
+                        icon: FontAwesomeIcons.cloudSun,
+                        color: const Color(0xFF38BDF8),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
@@ -916,6 +1017,42 @@ class ProfileScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.bolt,
+                    title: 'Workout Haptic Feedback',
+                    trailing: Switch.adaptive(
+                      value: profileProvider.hapticsEnabled,
+                      onChanged: (val) => profileProvider.toggleHaptics(val),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.fire,
+                    title: 'Animated Streak Flame',
+                    trailing: Switch.adaptive(
+                      value: profileProvider.streakFlameEnabled,
+                      onChanged: (val) => profileProvider.toggleStreakFlame(val),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.gift,
+                    title: 'Confetti PR Celebrations',
+                    trailing: Switch.adaptive(
+                      value: profileProvider.confettiEnabled,
+                      onChanged: (val) => profileProvider.toggleConfetti(val),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.ghost,
+                    title: 'AR Ghost Trainer Silhouette',
+                    trailing: Switch.adaptive(
+                      value: profileProvider.ghostTrainerEnabled,
+                      onChanged: (val) => profileProvider.toggleGhostTrainer(val),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
                   // Subscription Plan settings item
                   _buildSettingsRow(
@@ -1117,6 +1254,312 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBadgeCard(
+    ThemeData theme, {
+    required String title,
+    required String description,
+    required bool unlocked,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: unlocked
+            ? color.withOpacity(0.08)
+            : Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: unlocked
+              ? color.withOpacity(0.25)
+              : Colors.white.withOpacity(0.05),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: unlocked ? color.withOpacity(0.15) : Colors.white10,
+            ),
+            child: FaIcon(
+              icon,
+              color: unlocked ? color : Colors.grey.withOpacity(0.4),
+              size: 18,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              color: unlocked ? theme.colorScheme.onSurface : Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 9,
+              color: unlocked
+                  ? theme.colorScheme.onSurface.withOpacity(0.6)
+                  : Colors.grey.withOpacity(0.4),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showShareCardDialog(
+    BuildContext context,
+    String name,
+    int streak,
+    int workouts,
+    double totalVolume,
+    String unit,
+    String? photoUrl,
+    String initials,
+  ) {
+    final GlobalKey boundaryKey = GlobalKey();
+
+    // Calculate favorite category
+    final wp = Provider.of<WorkoutProvider>(context, listen: false);
+    final favoriteCategory = wp.sessions.isEmpty
+        ? 'General Fitness'
+        : () {
+            final Map<String, int> counts = {};
+            for (final s in wp.sessions) {
+              for (final setLog in s.loggedSets) {
+                final muscle = setLog.exercise?.muscleGroup ?? 'General';
+                counts[muscle] = (counts[muscle] ?? 0) + 1;
+              }
+            }
+            if (counts.isEmpty) return 'General Fitness';
+            final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+            return sorted.first.key;
+          }();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RepaintBoundary(
+                key: boundaryKey,
+                child: Container(
+                  width: 320,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: AppColors.accentEmeraldLight.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          GerexAvatar(
+                            imageUrl: photoUrl,
+                            initials: initials,
+                            size: 48,
+                            hasNotification: false,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const Text(
+                                  'Gerex Certified Athlete',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.accentEmeraldLight,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              '🔥 Current Streak',
+                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                            ),
+                            Text(
+                              '$streak Days',
+                              style: const TextStyle(
+                                color: Colors.orangeAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              '💪 Total Workouts',
+                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                            ),
+                            Text(
+                              '$workouts Logged',
+                              style: const TextStyle(
+                                color: AppColors.accentEmeraldLight,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              '🏋️ Focus Category',
+                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                            ),
+                            Text(
+                              favoriteCategory,
+                              style: const TextStyle(
+                                color: Color(0xFF818CF8),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Icon(
+                        Icons.verified_user_rounded,
+                        size: 36,
+                        color: AppColors.accentEmeraldLight,
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Gerex • Smarter Offline Fitness',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: Colors.white38,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentEmeraldLight,
+                      foregroundColor: const Color(0xFF14181F),
+                    ),
+                    onPressed: () async {
+                      try {
+                        final RenderRepaintBoundary? boundary =
+                            boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+                        if (boundary == null) return;
+                        
+                        if (boundary.debugNeedsPaint) {
+                          await Future.delayed(const Duration(milliseconds: 100));
+                        }
+                        
+                        final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+                        final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+                        final Uint8List? pngBytes = byteData?.buffer.asUint8List();
+                        
+                        if (pngBytes != null) {
+                          final tempDir = await getTemporaryDirectory();
+                          final file = await File('${tempDir.path}/gerex_training_card_${DateTime.now().millisecondsSinceEpoch}.png').create();
+                          await file.writeAsBytes(pngBytes);
+                          
+                          await Share.shareXFiles(
+                            [XFile(file.path)],
+                            text: 'Check out my training stats on Gerex! 💪🔥',
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to share training card: $e')),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.share_rounded),
+                    label: const Text('Share Card'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

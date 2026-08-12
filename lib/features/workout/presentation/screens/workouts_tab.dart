@@ -36,7 +36,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
       await wp.fetchSessions();
       await mp.fetchWeightLogs();
       if (mounted) {
-        context.read<AIProvider>().loadDailyInsight(wp.sessions);
+        final ai = context.read<AIProvider>();
+        ai.loadDailyInsight(wp.sessions);
+        ai.loadWeeklyTrainingStory(wp.sessions);
       }
     });
   }
@@ -109,6 +111,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
           await workoutProvider.fetchSessions();
           await metricsProvider.fetchWeightLogs();
           await ai.loadDailyInsight(workoutProvider.sessions, forceRefresh: true);
+          await ai.loadWeeklyTrainingStory(workoutProvider.sessions, forceRefresh: true);
         },
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

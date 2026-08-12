@@ -441,4 +441,79 @@ class AIProvider extends ChangeNotifier {
     }
     return ['Bodyweight Squat', 'Push Up', 'Plank'];
   }
+
+  // ----------------------------------------------------
+  // Weekly Training Story
+  // ----------------------------------------------------
+  String? _weeklyTrainingStory;
+  bool _isStoryLoading = false;
+  String? _storyError;
+
+  String? get weeklyTrainingStory => _weeklyTrainingStory;
+  bool get isStoryLoading => _isStoryLoading;
+  String? get storyError => _storyError;
+
+  Future<void> loadWeeklyTrainingStory(List<dynamic> sessions, {bool forceRefresh = false}) async {
+    final cacheKey = 'weekly_story_${sessions.length}_${sessions.isNotEmpty ? (sessions.last.completedAt?.toIso8601String() ?? '') : ''}';
+    
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      final cachedKey = prefs.getString('weekly_story_cache_key');
+      final cachedText = prefs.getString('weekly_story_text');
+      
+      if (cachedKey == cacheKey && cachedText != null && !forceRefresh) {
+        _weeklyTrainingStory = cachedText;
+        notifyListeners();
+        return;
+      }
+    } catch (_) {}
+
+    _isStoryLoading = true;
+    _storyError = null;
+    notifyListeners();
+
+    final allowed = await _checkAndRecordAiCall();
+    if (!allowed) {
+      _storyError = 'AI quota reached for this hour.';
+      _isStoryLoading = false;
+      _weeklyTrainingStory = 'You started off strong this week, maintaining your consistency and hitting key personal records! Keep pushing forward and logging those routines.';
+      notifyListeners();
+      return;
+    }
+
+    final sessionsSummary = sessions.map((s) {
+      final name = s.name ?? 'Workout';
+      final date = s.completedAt != null ? s.completedAt.toIso8601String().substring(0, 10) : 'recent';
+      final duration = '${(s.durationSeconds ?? 0) ~/ 60} minutes';
+      final exerciseCount = '${s.loggedSets?.length ?? 0} sets logged';
+      return '$name on $date lasting $duration with $exerciseCount';
+    }).toList();
+
+    if (sessionsSummary.isEmpty) {
+      sessionsSummary.add('No workouts recorded in this cycle.');
+    }
+
+    final result = await _aiRepository.getWeeklyTrainingStory(
+      sessionsSummary: sessionsSummary,
+    );
+
+    result.fold(
+      onSuccess: (story) {
+        _weeklyTrainingStory = story;
+        _isStoryLoading = false;
+        try {
+          final prefs = di.sl<SharedPreferences>();
+          prefs.setString('weekly_story_cache_key', cacheKey);
+          prefs.setString('weekly_story_text', story);
+        } catch (_) {}
+      },
+      onFailure: (failure) {
+        SecureLogger.logError('loadWeeklyTrainingStory failed', failure.message);
+        _storyError = SecureLogger.sanitizeException(failure.message);
+        _isStoryLoading = false;
+        _weeklyTrainingStory = 'You started off strong this week, maintaining your consistency and hitting key personal records! Keep pushing forward and logging those routines.';
+      },
+    );
+    notifyListeners();
+  }
 }
