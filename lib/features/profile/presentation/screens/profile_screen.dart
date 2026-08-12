@@ -9,7 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../challenges/presentation/providers/challenge_provider.dart';
+import '../../../challenges/presentation/providers/challenge_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../workout/presentation/providers/workout_provider.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
@@ -1262,7 +1262,7 @@ class ProfileScreen extends StatelessWidget {
     required String title,
     required String description,
     required bool unlocked,
-    required IconData icon,
+    required dynamic icon,
     required Color color,
   }) {
     return Container(

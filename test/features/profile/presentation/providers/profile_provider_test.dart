@@ -40,5 +40,28 @@ void main() {
       expect(profileProvider.themeMode, 'dark');
       expect(prefs.getString('theme_mode'), 'dark');
     });
+
+    test('toggle toggles new preferences correctly', () async {
+      expect(profileProvider.hapticsEnabled, true);
+      expect(profileProvider.streakFlameEnabled, true);
+      expect(profileProvider.confettiEnabled, true);
+      expect(profileProvider.ghostTrainerEnabled, false);
+
+      await profileProvider.toggleHaptics(false);
+      expect(profileProvider.hapticsEnabled, false);
+      expect(prefs.getBool('haptics_enabled'), false);
+
+      await profileProvider.toggleStreakFlame(false);
+      expect(profileProvider.streakFlameEnabled, false);
+      expect(prefs.getBool('streak_flame_enabled'), false);
+
+      await profileProvider.toggleConfetti(false);
+      expect(profileProvider.confettiEnabled, false);
+      expect(prefs.getBool('confetti_enabled'), false);
+
+      await profileProvider.toggleGhostTrainer(true);
+      expect(profileProvider.ghostTrainerEnabled, true);
+      expect(prefs.getBool('ghost_trainer_enabled'), true);
+    });
   });
 }

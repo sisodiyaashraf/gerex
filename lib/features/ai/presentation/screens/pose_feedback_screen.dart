@@ -9,6 +9,8 @@ import '../../data/services/exercise_classifier.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 
 class PoseFeedbackScreen extends StatefulWidget {
   /// Optional: if provided, form-check mode targets this specific exercise.
@@ -299,6 +301,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                         pose: _lastPose!,
                         imageSize: _cameraPreviewSize,
                         isGoodForm: _isGoodForm,
+                        showGhostTrainer: Provider.of<ProfileProvider>(context).ghostTrainerEnabled,
+                        exercise: widget.targetExercise ?? _classifiedExercise ?? 'custom',
+                        phase: _currentPhase,
                       ),
                     ),
 
@@ -491,17 +496,48 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF0D807B)),
-          ),
-          icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFF0D807B)),
-          label: const Text('Reset Rep Count', style: TextStyle(color: Color(0xFF0D807B), fontWeight: FontWeight.bold)),
-          onPressed: () => setState(() {
-            _repCount = 0;
-            _currentPhase = 'up';
-            _maxFlexion = 180.0;
-          }),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF0D807B)),
+              ),
+              icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFF0D807B)),
+              label: const Text('Reset', style: TextStyle(color: Color(0xFF0D807B), fontWeight: FontWeight.bold)),
+              onPressed: () => setState(() {
+                _repCount = 0;
+                _currentPhase = 'up';
+                _maxFlexion = 180.0;
+              }),
+            ),
+            const SizedBox(width: 12),
+            Consumer<ProfileProvider>(
+              builder: (context, profileProvider, _) {
+                final bool ghostEnabled = profileProvider.ghostTrainerEnabled;
+                return OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: ghostEnabled ? Colors.teal : Colors.grey),
+                    backgroundColor: ghostEnabled ? Colors.teal.withOpacity(0.08) : null,
+                  ),
+                  icon: Icon(
+                    ghostEnabled ? Icons.visibility : Icons.visibility_off,
+                    color: ghostEnabled ? Colors.teal : Colors.grey,
+                  ),
+                  label: Text(
+                    'Ghost Outline',
+                    style: TextStyle(
+                      color: ghostEnabled ? Colors.teal : Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onPressed: () {
+                    profileProvider.toggleGhostTrainer(!ghostEnabled);
+                  },
+                );
+              },
+            ),
+          ],
         ),
       ],
     );
@@ -601,11 +637,17 @@ class _SkeletonOverlayPainter extends CustomPainter {
   final Pose pose;
   final Size imageSize;
   final bool isGoodForm;
+  final bool showGhostTrainer;
+  final String exercise;
+  final String phase;
 
   _SkeletonOverlayPainter({
     required this.pose,
     required this.imageSize,
     required this.isGoodForm,
+    this.showGhostTrainer = false,
+    this.exercise = 'custom',
+    this.phase = 'up',
   });
 
   static const _connections = [
@@ -639,13 +681,98 @@ class _SkeletonOverlayPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     Offset toScreen(PoseLandmark lm) {
-      // Mirror x for front camera
       final double x = (1.0 - lm.x / imageSize.width) * size.width;
       final double y = (lm.y / imageSize.height) * size.height;
       return Offset(x, y);
     }
 
-    // Draw connecting lines
+    // Capture baseline landmark points mapped to screen coordinates
+    final Map<PoseLandmarkType, Offset> points = {};
+    for (final entry in pose.landmarks.entries) {
+      if (entry.value.likelihood > 0.5) {
+        points[entry.key] = toScreen(entry.value);
+      }
+    }
+
+    // 1. Draw Ghost Silhouette if enabled
+    if (showGhostTrainer && points.isNotEmpty) {
+      final Map<PoseLandmarkType, Offset> ghostPoints = Map.from(points);
+      final ex = exercise.toLowerCase();
+
+      if (ex.contains('squat')) {
+        // Adjust knees and hips for squat targets
+        final leftHip = points[PoseLandmarkType.leftHip];
+        final leftAnkle = points[PoseLandmarkType.leftAnkle];
+        if (leftHip != null && leftAnkle != null) {
+          final double distance = (leftAnkle.dy - leftHip.dy).abs();
+          if (phase == 'down') {
+            ghostPoints[PoseLandmarkType.leftHip] = Offset(leftHip.dx + distance * 0.15, leftHip.dy + distance * 0.1);
+            ghostPoints[PoseLandmarkType.leftKnee] = Offset(leftHip.dx - distance * 0.18, leftHip.dy + distance * 0.5);
+          } else {
+            ghostPoints[PoseLandmarkType.leftKnee] = Offset(leftHip.dx, leftHip.dy + distance * 0.5);
+          }
+        }
+
+        final rightHip = points[PoseLandmarkType.rightHip];
+        final rightAnkle = points[PoseLandmarkType.rightAnkle];
+        if (rightHip != null && rightAnkle != null) {
+          final double distance = (rightAnkle.dy - rightHip.dy).abs();
+          if (phase == 'down') {
+            ghostPoints[PoseLandmarkType.rightHip] = Offset(rightHip.dx + distance * 0.15, rightHip.dy + distance * 0.1);
+            ghostPoints[PoseLandmarkType.rightKnee] = Offset(rightHip.dx - distance * 0.18, rightHip.dy + distance * 0.5);
+          } else {
+            ghostPoints[PoseLandmarkType.rightKnee] = Offset(rightHip.dx, rightHip.dy + distance * 0.5);
+          }
+        }
+      } else if (ex.contains('push_up') || ex.contains('pushup')) {
+        // Adjust elbows for pushup targets
+        final leftShoulder = points[PoseLandmarkType.leftShoulder];
+        final leftWrist = points[PoseLandmarkType.leftWrist];
+        if (leftShoulder != null && leftWrist != null) {
+          final double distance = (leftWrist.dx - leftShoulder.dx).abs();
+          if (phase == 'down') {
+            ghostPoints[PoseLandmarkType.leftElbow] = Offset((leftShoulder.dx + leftWrist.dx) / 2, leftShoulder.dy + distance * 0.35);
+          } else {
+            ghostPoints[PoseLandmarkType.leftElbow] = Offset((leftShoulder.dx + leftWrist.dx) / 2, (leftShoulder.dy + leftWrist.dy) / 2);
+          }
+        }
+
+        final rightShoulder = points[PoseLandmarkType.rightShoulder];
+        final rightWrist = points[PoseLandmarkType.rightWrist];
+        if (rightShoulder != null && rightWrist != null) {
+          final double distance = (rightWrist.dx - rightShoulder.dx).abs();
+          if (phase == 'down') {
+            ghostPoints[PoseLandmarkType.rightElbow] = Offset((rightShoulder.dx + rightWrist.dx) / 2, rightShoulder.dy + distance * 0.35);
+          } else {
+            ghostPoints[PoseLandmarkType.rightElbow] = Offset((rightShoulder.dx + rightWrist.dx) / 2, (rightShoulder.dy + rightWrist.dy) / 2);
+          }
+        }
+      }
+
+      final ghostPaint = Paint()
+        ..color = const Color(0xFF14B8A6).withValues(alpha: 0.35)
+        ..strokeWidth = 6.0
+        ..strokeCap = StrokeCap.round;
+
+      final ghostJointPaint = Paint()
+        ..color = const Color(0xFF2DD4BF).withValues(alpha: 0.5)
+        ..strokeWidth = 10.0
+        ..style = PaintingStyle.fill;
+
+      for (final pair in _connections) {
+        final a = ghostPoints[pair[0]];
+        final b = ghostPoints[pair[1]];
+        if (a != null && b != null) {
+          canvas.drawLine(a, b, ghostPaint);
+        }
+      }
+
+      for (final pt in ghostPoints.values) {
+        canvas.drawCircle(pt, 5.0, ghostJointPaint);
+      }
+    }
+
+    // 2. Draw actual user skeleton overlay
     for (final pair in _connections) {
       final a = pose.landmarks[pair[0]];
       final b = pose.landmarks[pair[1]];
@@ -654,7 +781,6 @@ class _SkeletonOverlayPainter extends CustomPainter {
       }
     }
 
-    // Draw joints
     for (final entry in pose.landmarks.entries) {
       final lm = entry.value;
       if (lm.likelihood > 0.5) {

@@ -64,6 +64,13 @@ class MockAIRepository implements AIRepository {
       'Progress Summary: You are performing exceptionally well.',
     );
   }
+
+  @override
+  Future<Result<String, Failure>> getWeeklyTrainingStory({
+    required List<String> sessionsSummary,
+  }) async {
+    return const Success('Weekly Story: Consistency is key.');
+  }
 }
 
 void main() {
@@ -152,6 +159,12 @@ void main() {
         'Progress Summary: You are performing exceptionally well.',
       );
       expect(aiProvider.isSummaryLoading, false);
+    });
+
+    test('loadWeeklyTrainingStory success sets weeklyTrainingStory text', () async {
+      await aiProvider.loadWeeklyTrainingStory([]);
+      expect(aiProvider.weeklyTrainingStory, 'Weekly Story: Consistency is key.');
+      expect(aiProvider.isStoryLoading, false);
     });
 
     test('getExerciseAlternatives returns list of swap alternatives', () async {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -639,74 +640,143 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       const SizedBox(height: 16),
                     ],
 
-                    // AI Daily Insight Card
+                    // AI Daily Insight & Weekly Story Card
                     Consumer<AIProvider>(
                       builder: (context, ai, _) {
+                        final List<Widget> cards = [];
+
                         if (ai.isInsightLoading) {
-                          return PastelGradientCard(
-                            type: PastelCardType.mint,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                            child: Row(
-                              children: [
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  'Generating coach insight...',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                          cards.add(
+                            PastelGradientCard(
+                              type: PastelCardType.mint,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                              child: Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    'Generating coach insight...',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
-                        }
-
-                        if (ai.dailyInsight != null) {
-                          return PastelGradientCard(
-                            type: PastelCardType.mint,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Row(
-                                  children: [
-                                    FaIcon(
-                                      FontAwesomeIcons.wandMagicSparkles,
-                                      color: Color(0xFF0D807B),
-                                      size: 16,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Daily Coach Insight',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
+                        } else if (ai.dailyInsight != null) {
+                          cards.add(
+                            PastelGradientCard(
+                              type: PastelCardType.mint,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      FaIcon(
+                                        FontAwesomeIcons.wandMagicSparkles,
                                         color: Color(0xFF0D807B),
-                                        fontSize: 14,
+                                        size: 16,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  ai.dailyInsight!,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: const Color(0xFF14181F).withValues(alpha: 0.85),
-                                    height: 1.4,
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Daily Coach Insight',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF0D807B),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    ai.dailyInsight!,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: const Color(0xFF14181F).withValues(alpha: 0.85),
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         }
 
-                        return const SizedBox.shrink();
+                        if (ai.isStoryLoading) {
+                          cards.add(
+                            PastelGradientCard(
+                              type: PastelCardType.sunset,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                              child: Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    'Generating weekly training story...',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        } else if (ai.weeklyTrainingStory != null) {
+                          cards.add(
+                            PastelGradientCard(
+                              type: PastelCardType.sunset,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      FaIcon(
+                                        FontAwesomeIcons.bookOpen,
+                                        color: Color(0xFFC2410C),
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Weekly Training Story',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFFC2410C),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TypewriterText(
+                                    text: ai.weeklyTrainingStory!,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (cards.isEmpty) return const SizedBox.shrink();
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: cards,
+                        );
                       },
                     ),
 
@@ -1215,5 +1285,75 @@ class _HeartSparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _HeartSparklinePainter oldDelegate) {
     return oldDelegate.history != history;
+  }
+}
+
+class TypewriterText extends StatefulWidget {
+  final String text;
+  final Duration duration;
+
+  const TypewriterText({
+    super.key,
+    required this.text,
+    this.duration = const Duration(milliseconds: 35),
+  });
+
+  @override
+  State<TypewriterText> createState() => _TypewriterTextState();
+}
+
+class _TypewriterTextState extends State<TypewriterText> {
+  String _displayedText = '';
+  int _currentIndex = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTyping();
+  }
+
+  @override
+  void didUpdateWidget(TypewriterText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _timer?.cancel();
+      _displayedText = '';
+      _currentIndex = 0;
+      _startTyping();
+    }
+  }
+
+  void _startTyping() {
+    _timer = Timer.periodic(widget.duration, (timer) {
+      if (_currentIndex < widget.text.length) {
+        if (mounted) {
+          setState(() {
+            _displayedText += widget.text[_currentIndex];
+            _currentIndex++;
+          });
+        }
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      _displayedText,
+      style: TextStyle(
+        fontSize: 13,
+        color: const Color(0xFF14181F).withValues(alpha: 0.85),
+        height: 1.4,
+      ),
+    );
   }
 }

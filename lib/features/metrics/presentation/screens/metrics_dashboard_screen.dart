@@ -12,7 +12,7 @@ import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import '../widgets/streak_flame_widget.dart';
-import '../../profile/presentation/providers/profile_provider.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 
 class MetricsDashboardScreen extends StatefulWidget {
   const MetricsDashboardScreen({super.key});
