@@ -41,11 +41,12 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
       categoryColor = const Color(0xFF2E7D32);
     }
 
+    final isDark = theme.brightness == Brightness.dark;
     final categoryGradients = {
       'Breakfast': LinearGradient(
         colors: [
           const Color(0xFFF59E0B).withValues(alpha: 0.15),
-          const Color(0xFF14181F).withValues(alpha: 0.95),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -53,7 +54,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
       'Lunch': LinearGradient(
         colors: [
           const Color(0xFFF97316).withValues(alpha: 0.15),
-          const Color(0xFF14181F).withValues(alpha: 0.95),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -61,7 +62,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
       'Dinner': LinearGradient(
         colors: [
           const Color(0xFF6366F1).withValues(alpha: 0.15),
-          const Color(0xFF14181F).withValues(alpha: 0.95),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -69,20 +70,22 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
       'Snack': LinearGradient(
         colors: [
           const Color(0xFF22C55E).withValues(alpha: 0.15),
-          const Color(0xFF14181F).withValues(alpha: 0.95),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ),
     };
-    final headerGradient = categoryGradients[currentRecipe.category] ?? GerexGradients.scaffoldBackground;
+    final headerGradient = categoryGradients[currentRecipe.category] ?? (isDark ? GerexGradients.scaffoldBackground : const LinearGradient(colors: [Color(0xFFF8FAFC), Color(0xFFEEF2F6)]));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1319),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0F1319), Color(0xFF14181F)],
+            colors: isDark
+                ? [const Color(0xFF0F1319), const Color(0xFF14181F)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEEF2F6)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -100,7 +103,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: categoryColor.withValues(alpha: 0.15),
+                      color: categoryColor.withValues(alpha: isDark ? 0.15 : 0.06),
                       blurRadius: 100,
                       spreadRadius: 50,
                     ),
@@ -118,7 +121,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: categoryColor.withValues(alpha: 0.1),
+                      color: categoryColor.withValues(alpha: isDark ? 0.1 : 0.04),
                       blurRadius: 120,
                       spreadRadius: 60,
                     ),
@@ -273,24 +276,28 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                             '${currentRecipe.calories.toInt()} kcal',
                             'Calories',
                             Colors.orangeAccent,
+                            FontAwesomeIcons.fire,
                           ),
                           _buildNutrientChip(
                             theme,
                             '${currentRecipe.protein.toInt()}g',
                             'Protein',
                             Colors.greenAccent,
+                            FontAwesomeIcons.dumbbell,
                           ),
                           _buildNutrientChip(
                             theme,
                             '${currentRecipe.carbs.toInt()}g',
                             'Carbs',
                             Colors.blueAccent,
+                            FontAwesomeIcons.wheatAwn,
                           ),
                           _buildNutrientChip(
                             theme,
                             '${currentRecipe.fat.toInt()}g',
                             'Fats',
                             Colors.pinkAccent,
+                            FontAwesomeIcons.droplet,
                           ),
                         ],
                       ),
@@ -336,7 +343,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(alpha: 0.4),
+                            color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
                             borderRadius: const BorderRadius.only(
                               topRight: Radius.circular(16),
                               bottomRight: Radius.circular(16),
@@ -347,6 +354,13 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                 width: 3,
                               ),
                             ),
+                            boxShadow: isDark ? null : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,12 +413,19 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surface.withValues(alpha: 0.4),
+                                color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                  color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
                                   width: 1,
                                 ),
+                                boxShadow: isDark ? null : [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.02),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ],
                               ),
                               child: Row(
                                 children: [
@@ -473,12 +494,19 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.surface.withValues(alpha: 0.4),
+                                      color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                        color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
                                         width: 1,
                                       ),
+                                      boxShadow: isDark ? null : [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.02),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        )
+                                      ],
                                     ),
                                     child: Text(
                                       step,
@@ -561,31 +589,46 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     String value,
     String label,
     Color color,
+    dynamic icon,
   ) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(16),
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: color.withValues(alpha: 0.25),
               width: 1.5,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.03),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
           ),
           child: Column(
             children: [
+              FaIcon(
+                icon,
+                color: color,
+                size: 14,
+              ),
+              const SizedBox(height: 8),
               Text(
                 value,
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 14,
+                  fontSize: 13,
                   color: color,
+                  fontFamily: 'Outfit',
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
