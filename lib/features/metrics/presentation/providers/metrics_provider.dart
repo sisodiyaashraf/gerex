@@ -174,7 +174,9 @@ class MetricsProvider extends ChangeNotifier {
 
     // Calculate current streak with grace/pause period
     final lastWorkoutDate = sortedDates.last;
-    final daysSinceLastWorkout = todayDateOnly.difference(lastWorkoutDate).inDays;
+    final daysSinceLastWorkout = todayDateOnly
+        .difference(lastWorkoutDate)
+        .inDays;
 
     if (daysSinceLastWorkout <= 3) {
       current = 1;
