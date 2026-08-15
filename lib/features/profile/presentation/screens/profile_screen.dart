@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1269,13 +1268,13 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: unlocked
-            ? color.withOpacity(0.08)
-            : Colors.white.withOpacity(0.03),
+            ? color.withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: unlocked
-              ? color.withOpacity(0.25)
-              : Colors.white.withOpacity(0.05),
+              ? color.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.05),
           width: 1.5,
         ),
       ),
@@ -1286,11 +1285,11 @@ class ProfileScreen extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: unlocked ? color.withOpacity(0.15) : Colors.white10,
+              color: unlocked ? color.withValues(alpha: 0.15) : Colors.white10,
             ),
             child: FaIcon(
               icon,
-              color: unlocked ? color : Colors.grey.withOpacity(0.4),
+              color: unlocked ? color : Colors.grey.withValues(alpha: 0.4),
               size: 18,
             ),
           ),
@@ -1310,8 +1309,8 @@ class ProfileScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 9,
               color: unlocked
-                  ? theme.colorScheme.onSurface.withOpacity(0.6)
-                  : Colors.grey.withOpacity(0.4),
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                  : Colors.grey.withValues(alpha: 0.4),
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
@@ -1372,7 +1371,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: AppColors.accentEmeraldLight.withOpacity(0.2),
+                      color: AppColors.accentEmeraldLight.withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),
@@ -1418,7 +1417,7 @@ class ProfileScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -1443,7 +1442,7 @@ class ProfileScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -1468,7 +1467,7 @@ class ProfileScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -1546,9 +1545,11 @@ class ProfileScreen extends StatelessWidget {
                           );
                         }
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to share training card: $e')),
-                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to share training card: $e')),
+                          );
+                        }
                       }
                     },
                     icon: const Icon(Icons.share_rounded),

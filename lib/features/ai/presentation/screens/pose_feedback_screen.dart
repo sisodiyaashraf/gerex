@@ -518,7 +518,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                 return OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: ghostEnabled ? Colors.teal : Colors.grey),
-                    backgroundColor: ghostEnabled ? Colors.teal.withOpacity(0.08) : null,
+                    backgroundColor: ghostEnabled ? Colors.teal.withValues(alpha: 0.08) : null,
                   ),
                   icon: Icon(
                     ghostEnabled ? Icons.visibility : Icons.visibility_off,

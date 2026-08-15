@@ -78,7 +78,7 @@ class _StreakFlameWidgetState extends State<StreakFlameWidget>
 
   @override
   Widget build(BuildContext context) {
-    final double baseSize = 22.0;
+    const double baseSize = 22.0;
     final double growth = (widget.streakCount * 1.0).clamp(0.0, 12.0);
     final double finalSize = baseSize + growth;
 
@@ -87,7 +87,7 @@ class _StreakFlameWidgetState extends State<StreakFlameWidget>
         : const Color(0xFF94A3B8);
 
     final Color glowColor = widget.isTodayLogged
-        ? flameColor.withOpacity(0.35)
+        ? flameColor.withValues(alpha: 0.35)
         : Colors.transparent;
 
     Widget flameIcon = FaIcon(
