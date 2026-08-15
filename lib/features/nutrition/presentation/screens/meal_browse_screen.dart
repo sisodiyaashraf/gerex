@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/meal_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
+import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
 class MealBrowseScreen extends StatefulWidget {
@@ -43,14 +43,23 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
         .where((r) => r.protein >= 25)
         .toList();
 
-    return Scaffold(
+    return GerexScaffold(
       appBar: AppBar(
-        title: const Text('Browse Recipes'),
+        title: Text(
+          'Browse Recipes',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: theme.colorScheme.onSurface),
+          onPressed: () => context.pop(),
+        ),
       ),
-      body: LiquidBackground(
-        child: Column(
+      body: Column(
           children: [
             // Glass Search Bar
             Padding(
@@ -386,7 +395,6 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }

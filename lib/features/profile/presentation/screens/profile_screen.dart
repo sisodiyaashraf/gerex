@@ -17,7 +17,6 @@ import '../providers/profile_provider.dart';
 import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
-import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
@@ -200,21 +199,75 @@ class ProfileScreen extends StatelessWidget {
       );
     }
 
-    return GerexScaffold(
+    final isDark = theme.brightness == Brightness.dark;
+    const accentColor = Color(0xFF10B981); // Emerald Green / Profile accent
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           'Profile & Settings',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF0F1319), const Color(0xFF14181F)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEEF2F6)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Decorative glow blobs
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                      blurRadius: 100,
+                      spreadRadius: 50,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 100,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.1 : 0.04),
+                      blurRadius: 120,
+                      spreadRadius: 60,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             sliver: SliverList(
@@ -1137,6 +1190,9 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
+          ],
+        ),
+      ),
     );
   }
 

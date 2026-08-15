@@ -12,7 +12,6 @@ import '../../../metrics/presentation/providers/heart_rate_provider.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
-import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
@@ -104,50 +103,103 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
       return '$mins min';
     }
 
-    return GerexScaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          final ai = context.read<AIProvider>();
-          await workoutProvider.fetchWorkouts();
-          await workoutProvider.fetchSessions();
-          await metricsProvider.fetchWeightLogs();
-          await ai.loadDailyInsight(workoutProvider.sessions, forceRefresh: true);
-          await ai.loadWeeklyTrainingStory(workoutProvider.sessions, forceRefresh: true);
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              floating: true,
-              title: Text(
-                'Gerex Dashboard',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDarkHeading,
+    final isDark = theme.brightness == Brightness.dark;
+    const accentColor = Color(0xFF10B981); // Emerald Green / Dashboard accent
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF0F1319), const Color(0xFF14181F)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEEF2F6)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Decorative glow blobs
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                      blurRadius: 100,
+                      spreadRadius: 50,
+                    ),
+                  ],
                 ),
               ),
-              backgroundColor: Colors.transparent,
-              scrolledUnderElevation: 0,
-              elevation: 0,
-              leading: Padding(
-                padding: const EdgeInsets.only(left: 16.0),
-                child: Center(
-                  child: GerexAvatar(
-                    imageUrl: photoUrl,
-                    initials: displayName.isNotEmpty ? displayName[0] : 'G',
-                    size: 36,
-                    hasNotification: notifications.unreadCount > 0,
-                    onTap: () => context.push('/profile'),
-                  ),
+            ),
+            Positioned(
+              bottom: 100,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.1 : 0.04),
+                      blurRadius: 120,
+                      spreadRadius: 60,
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                IconButton(
-                  icon: FaIcon(FontAwesomeIcons.solidBell, size: 18, color: AppColors.textDarkHeading),
-                  onPressed: () => context.push('/notifications'),
-                ),
-                const SizedBox(width: 8),
-              ],
+            ),
+            RefreshIndicator(
+              onRefresh: () async {
+                final ai = context.read<AIProvider>();
+                await workoutProvider.fetchWorkouts();
+                await workoutProvider.fetchSessions();
+                await metricsProvider.fetchWeightLogs();
+                await ai.loadDailyInsight(workoutProvider.sessions, forceRefresh: true);
+                await ai.loadWeeklyTrainingStory(workoutProvider.sessions, forceRefresh: true);
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    title: Text(
+                      'Gerex Dashboard',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    backgroundColor: Colors.transparent,
+                    scrolledUnderElevation: 0,
+                    elevation: 0,
+                    leading: Padding(
+                      padding: const EdgeInsets.only(left: 16.0),
+                      child: Center(
+                        child: GerexAvatar(
+                          imageUrl: photoUrl,
+                          initials: displayName.isNotEmpty ? displayName[0] : 'G',
+                          size: 36,
+                          hasNotification: notifications.unreadCount > 0,
+                          onTap: () => context.push('/profile'),
+                        ),
+                      ),
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: FaIcon(FontAwesomeIcons.solidBell, size: 18, color: theme.colorScheme.onSurface),
+                        onPressed: () => context.push('/notifications'),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
             ),
 
             SliverPadding(
@@ -1152,13 +1204,16 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                           );
                         },
                       ),
-                    const SizedBox(height: 40),
+                     const SizedBox(height: 40),
                   ]),
                 ),
               ),
             ],
           ),
         ),
+          ],
+        ),
+      ),
     );
   }
 

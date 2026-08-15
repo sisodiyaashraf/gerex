@@ -6,7 +6,6 @@ import '../../../workout/presentation/providers/workout_provider.dart';
 import '../providers/metrics_provider.dart';
 import '../../../ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
-import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
@@ -64,40 +63,93 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
     final daysInMonth = lastDayOfMonth.day;
     final startWeekday = firstDayOfMonth.weekday;
 
-    return GerexScaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          _loadData(forceRefresh: true);
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              floating: true,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              title: Text(
-                'Analytics & Progress',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDarkHeading,
+    final isDark = theme.brightness == Brightness.dark;
+    const accentColor = Color(0xFF10B981); // Emerald Green / Analytics accent
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF0F1319), const Color(0xFF14181F)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEEF2F6)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Decorative glow blobs
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                      blurRadius: 100,
+                      spreadRadius: 50,
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: GerexAvatar(
-                    size: 38,
-                    hasNotification: true,
-                    onTap: () => context.push('/notifications'),
-                  ),
-                ),
-              ],
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
-              sliver: SliverList(
+            Positioned(
+              bottom: 100,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.1 : 0.04),
+                      blurRadius: 120,
+                      spreadRadius: 60,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            RefreshIndicator(
+              onRefresh: () async {
+                _loadData(forceRefresh: true);
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    pinned: true,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    title: Text(
+                      'Analytics & Progress',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    actions: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: GerexAvatar(
+                          size: 38,
+                          hasNotification: true,
+                          onTap: () => context.push('/notifications'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
+                    sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // Signature Light Hero Mint Header Card
                   HeroMintCard(
@@ -561,6 +613,9 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                 ]),
               ),
             ),
+          ],
+        ),
+      ),
           ],
         ),
       ),
