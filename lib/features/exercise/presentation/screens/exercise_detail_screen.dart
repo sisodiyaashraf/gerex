@@ -1,9 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/exercise.dart';
-import '../widgets/exercise_image_widget.dart';
 import '../../../../features/workout/presentation/providers/workout_provider.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
@@ -206,53 +207,59 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     centerTitle: true,
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: headerGradient,
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                difficultyColor.withValues(alpha: 0.3),
-                                difficultyColor.withValues(alpha: 0.05),
-                              ],
+                    background: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (widget.exercise.effectiveImagePath != null && widget.exercise.effectiveImagePath!.isNotEmpty)
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: headerGradient,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: difficultyColor.withValues(alpha: 0.2),
-                                blurRadius: 20,
-                                spreadRadius: 5,
-                              ),
-                            ],
+                            child: widget.exercise.effectiveImagePath!.startsWith('http')
+                                ? CachedNetworkImage(
+                                    imageUrl: widget.exercise.effectiveImagePath!,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Center(
+                                      child: CircularProgressIndicator(
+                                        color: difficultyColor,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => Icon(
+                                      Icons.fitness_center_rounded,
+                                      color: difficultyColor,
+                                      size: 40,
+                                    ),
+                                  )
+                                : widget.exercise.effectiveImagePath!.startsWith('assets/')
+                                    ? Image.asset(widget.exercise.effectiveImagePath!, fit: BoxFit.cover)
+                                    : Image.file(File(widget.exercise.effectiveImagePath!), fit: BoxFit.cover),
+                          )
+                        else
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: headerGradient,
+                            ),
+                            child: Icon(
+                              Icons.fitness_center_rounded,
+                              color: difficultyColor,
+                              size: 48,
+                            ),
                           ),
-                          child: Center(
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF14181F).withValues(alpha: 0.6),
-                                border: Border.all(
-                                  color: difficultyColor.withValues(alpha: 0.4),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Center(
-                                child: ExerciseImageWidget(
-                                  imagePath: widget.exercise.effectiveImagePath,
-                                  removeBackground: widget.exercise.removeBackground,
-                                  size: 56.0,
-                                ),
-                              ),
+                        // Overlay gradient for title text readability
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                isDark ? const Color(0xFF0F1319).withValues(alpha: 0.85) : const Color(0xFFF8FAFC).withValues(alpha: 0.85),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
