@@ -9,8 +9,6 @@ import '../../domain/entities/exercise.dart';
 import '../widgets/exercise_image_widget.dart';
 import 'package:gerex/core/presentation/widgets/gerex_animated_list_tile.dart';
 import 'package:gerex/core/presentation/widgets/gerex_staggered_list_view.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
-import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/difficulty_tag.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
@@ -80,139 +78,209 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = Provider.of<ExerciseProvider>(context);
+    final isDark = theme.brightness == Brightness.dark;
+    const accentColor = Color(0xFF10B981); // Emerald Green
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Exercise Database',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDarkHeading, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.colorScheme.onSurface, size: 20),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded, color: AppColors.textDarkHeading),
+            icon: Icon(Icons.refresh_rounded, color: theme.colorScheme.onSurface),
             onPressed: () => provider.loadExercises(),
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: LiquidBackground(
-        child: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF0F1319), const Color(0xFF14181F)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEEF2F6)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
           children: [
-            // Search Input inside HeroMintCard
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: HeroMintCard(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Find your next challenge',
-                      style: GoogleFonts.outfit(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textLightHeading,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          width: 1,
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: TextField(
-                        controller: _searchController,
-                        style: const TextStyle(
-                          color: AppColors.textLightBody,
-                          fontSize: 14,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Search 800+ exercises...',
-                          hintStyle: TextStyle(
-                            color: AppColors.textLightBody.withValues(alpha: 0.5),
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.search_rounded,
-                            color: AppColors.textLightBody,
-                            size: 20,
-                          ),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? GestureDetector(
-                                  onTap: () {
-                                    _searchController.clear();
-                                    provider.search('');
-                                  },
-                                  child: const Icon(
-                                    Icons.close_rounded,
-                                    color: AppColors.textLightBody,
-                                    size: 18,
-                                  ),
-                                )
-                              : null,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
+            // Decorative glow blobs
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                      blurRadius: 100,
+                      spreadRadius: 50,
                     ),
                   ],
                 ),
               ),
             ),
-
-            // Muscle Filters Row
-            _buildFilterLabel('Target Muscle Group'),
-            const SizedBox(height: 8),
-            _buildFilterRow(
-              items: _muscles,
-              selectedItem: provider.selectedMuscle ?? 'All',
-              onSelected: (val) => provider.filterByMuscle(val),
-              theme: theme,
+            Positioned(
+              bottom: 100,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.1 : 0.04),
+                      blurRadius: 120,
+                      spreadRadius: 60,
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-
-            // Equipment Filters Row
-            _buildFilterLabel('Equipment Type'),
-            const SizedBox(height: 8),
-            _buildFilterRow(
-              items: _equipments,
-              selectedItem: provider.selectedEquipment ?? 'All',
-              onSelected: (val) => provider.filterByEquipment(val),
-              theme: theme,
-            ),
-            const SizedBox(height: 16),
-
-            // Results List
-            Expanded(
-              child: provider.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.accentEmeraldLight,
-                      ),
-                    )
-                  : provider.exercises.isEmpty
-                      ? _buildEmptyState(theme)
-                      : GerexStaggeredListView(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                          estimatedItemHeight: 96.0,
-                          children: provider.exercises.map((exercise) {
-                            return _buildExerciseCard(context, exercise, theme);
-                          }).toList(),
+            SafeArea(
+              child: Column(
+                children: [
+                  // Search Input inside modern Translucent/Glass Card
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                          width: 1.5,
                         ),
+                        boxShadow: isDark ? null : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Find your next challenge',
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.1 : 0.05),
+                                width: 1,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 14,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Search 800+ exercises...',
+                                hintStyle: TextStyle(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search_rounded,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  size: 20,
+                                ),
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? GestureDetector(
+                                        onTap: () {
+                                          _searchController.clear();
+                                          provider.search('');
+                                        },
+                                        child: Icon(
+                                          Icons.close_rounded,
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                          size: 18,
+                                        ),
+                                      )
+                                    : null,
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Muscle Filters Row
+                  _buildFilterLabel('Target Muscle Group'),
+                  const SizedBox(height: 8),
+                  _buildFilterRow(
+                    items: _muscles,
+                    selectedItem: provider.selectedMuscle ?? 'All',
+                    onSelected: (val) => provider.filterByMuscle(val),
+                    theme: theme,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Equipment Filters Row
+                  _buildFilterLabel('Equipment Type'),
+                  const SizedBox(height: 8),
+                  _buildFilterRow(
+                    items: _equipments,
+                    selectedItem: provider.selectedEquipment ?? 'All',
+                    onSelected: (val) => provider.filterByEquipment(val),
+                    theme: theme,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Results List
+                  Expanded(
+                    child: provider.isLoading
+                        ? Center(
+                            child: CircularProgressIndicator(
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : provider.exercises.isEmpty
+                            ? _buildEmptyState(theme)
+                            : GerexStaggeredListView(
+                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                                estimatedItemHeight: 96.0,
+                                children: provider.exercises.map((exercise) {
+                                  return _buildExerciseCard(context, exercise, theme);
+                                }).toList(),
+                              ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -243,6 +311,7 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
     required Function(String) onSelected,
     required ThemeData theme,
   }) {
+    final isDark = theme.brightness == Brightness.dark;
     return SizedBox(
       height: 38,
       child: ListView.builder(
@@ -263,11 +332,15 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   gradient: isSelected ? GerexGradients.primaryCTA : null,
-                  color: isSelected ? null : AppColors.cardDarkGlass.withValues(alpha: 0.5),
+                  color: isSelected
+                      ? null
+                      : isDark
+                          ? theme.colorScheme.surface.withValues(alpha: 0.3)
+                          : theme.colorScheme.surface,
                   border: Border.all(
                     color: isSelected
-                        ? AppColors.accentEmeraldLight.withValues(alpha: 0.5)
-                        : AppColors.cardDarkGlass.withValues(alpha: 0.3),
+                        ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                        : theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
                     width: 1,
                   ),
                 ),
@@ -275,7 +348,7 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
                   child: Text(
                     item,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textDarkBody,
+                      color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.8),
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: 12,
                     ),

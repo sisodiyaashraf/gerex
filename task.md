@@ -5,6 +5,17 @@
 - [x] Secure stats widgets, body weight cards and preference settings in `lib/features/profile/presentation/screens/profile_screen.dart` against text scaling overflows
 - [x] Auth & Onboarding: Add `signInWithDemoUser` and Demo button on Login
 - [x] Workout Provider: Inject MetricsProvider to trigger streak updates on session saves/fetches
+- [x] Redesign `SelectChallengeScreen` (Explore Tab) in `lib/features/challenges/presentation/screens/select_challenge_screen.dart`
+  - [x] Replace `LiquidBackground` with custom gradient background and glow blobs
+  - [x] Style AppBar and Glass search/filter layout
+  - [x] Redesign TabBar and indicators
+  - [x] Redesign My Workouts, All Workouts, and Challenges cards/list tiles
+- [x] Redesign `ExerciseBrowseScreen` (Exercise Database) in `lib/features/exercise/presentation/screens/exercise_browse_screen.dart`
+  - [x] Replace `LiquidBackground` with custom gradient background and glow blobs
+  - [x] Redesign search input header card with modern glass style
+  - [x] Redesign horizontal filter buttons and rows
+  - [x] Align exercise card items and empty states
+- [x] Verify the implementation (manual checking of layouts, button triggers, and notifications)
 - [x] Exercise Provider: Add `addExerciseEntity` and wire it inside Add Exercise screen navigation
 - [x] Camera Scanner: Create mock capture mode on emulator in Guided Photo Capture screen
 - [x] Harden chat bubbles limits, input floating offsets and empty states in `lib/features/ai/presentation/screens/ai_coach_chat_screen.dart`

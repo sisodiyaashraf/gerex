@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:gerex/core/presentation/widgets/gerex_animated_list_tile.dart';
 import 'package:gerex/core/presentation/widgets/gerex_staggered_list_view.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
 import '../../../exercise/presentation/widgets/exercise_image_widget.dart';
@@ -165,6 +165,7 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    const accentColor = Color(0xFF10B981); // Emerald Green
 
     final exerciseProvider = Provider.of<ExerciseProvider>(context);
     final challengeProvider = Provider.of<ChallengeProvider>(context);
@@ -178,119 +179,200 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
     final allExercises = exerciseProvider.exercises;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Explore & Challenges'),
+        title: Text(
+          'Explore & Challenges',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: LiquidBackground(
-        child: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF0F1319), const Color(0xFF14181F)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEEF2F6)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
           children: [
-            // Search field & filter button
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GlassContainer(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      borderRadius: 16,
-                      child: TextField(
-                        controller: _searchController,
-                        style: const TextStyle(fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Search exercises...',
-                          hintStyle: TextStyle(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.4)
-                                : Colors.black.withValues(alpha: 0.4),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.5)
-                                : Colors.black.withValues(alpha: 0.5),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
+            // Decorative glow blobs
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                      blurRadius: 100,
+                      spreadRadius: 50,
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () => _showFilterBottomSheet(context),
-                    child: GlassContainer(
-                      padding: const EdgeInsets.all(12),
-                      borderRadius: 16,
-                      child: Icon(
-                        Icons.tune_rounded,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Tab navigation Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GlassContainer(
-                padding: const EdgeInsets.all(4),
-                borderRadius: 20,
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  dividerColor: Colors.transparent,
-                  indicator: BoxDecoration(
-                    gradient: GerexGradients.primaryCTA,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: isDark
-                      ? Colors.white60
-                      : Colors.black54,
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                  tabs: const [
-                    Tab(text: 'My Workouts'),
-                    Tab(text: 'All Workouts'),
-                    Tab(text: 'Challenges'),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 12),
-
-            // Tabs Content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
+            Positioned(
+              bottom: 100,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.1 : 0.04),
+                      blurRadius: 120,
+                      spreadRadius: 60,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Column(
                 children: [
-                  // Tab 1: My Workouts
-                  _buildExerciseList(
-                    context,
-                    myExercises,
-                    'No custom workouts created yet.',
+                  // Search field & filter button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                                width: 1.5,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 14,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Search exercises...',
+                                hintStyle: TextStyle(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search_rounded,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () => _showFilterBottomSheet(context),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                                width: 1.5,
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  // Tab 2: All Workouts
-                  _buildExerciseList(
-                    context,
-                    allExercises,
-                    'No exercises found.',
+
+                  const SizedBox(height: 10),
+
+                  // Tab navigation Row
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.3) : theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: Colors.transparent,
+                        indicator: BoxDecoration(
+                          gradient: GerexGradients.primaryCTA,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        labelColor: Colors.white,
+                        unselectedLabelColor: isDark
+                            ? Colors.white60
+                            : Colors.black54,
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                        tabs: const [
+                          Tab(text: 'My Workouts'),
+                          Tab(text: 'All Workouts'),
+                          Tab(text: 'Challenges'),
+                        ],
+                      ),
+                    ),
                   ),
-                  // Tab 3: Challenges
-                  _buildChallengesList(context, challengeProvider),
+
+                  const SizedBox(height: 12),
+
+                  // Tabs Content
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // Tab 1: My Workouts
+                        _buildExerciseList(
+                          context,
+                          myExercises,
+                          'No custom workouts created yet.',
+                        ),
+                        // Tab 2: All Workouts
+                        _buildExerciseList(
+                          context,
+                          allExercises,
+                          'No exercises found.',
+                        ),
+                        // Tab 3: Challenges
+                        _buildChallengesList(context, challengeProvider),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
