@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../domain/entities/exercise.dart';
 import '../widgets/exercise_image_widget.dart';
 import '../../../../features/workout/presentation/providers/workout_provider.dart';
-import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 
@@ -25,10 +23,8 @@ class ExerciseDetailScreen extends StatefulWidget {
 }
 
 class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
-  VideoPlayerController? _videoController;
   bool _isDescriptionExpanded = false;
   int _selectedReps = 10;
-  bool _isVideoInitialized = false;
 
   void _selectExerciseReminder(BuildContext context) async {
     final date = await showDatePicker(
@@ -72,30 +68,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    // Initialize video player with a sample fitness instructional clip
-    _videoController = VideoPlayerController.networkUrl(
-      Uri.parse('https://assets.mixkit.co/videos/preview/mixkit-fitness-woman-doing-lunges-with-dumbbells-41484-large.mp4'),
-    )..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isVideoInitialized = true;
-          });
-          _videoController?.setLooping(true);
-        }
-      }).catchError((e) {
-        debugPrint('Video Player error: $e');
-      });
-  }
-
-  @override
-  void dispose() {
-    _videoController?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final workoutProvider = Provider.of<WorkoutProvider>(context);
@@ -106,18 +78,112 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     final totalBurn = _selectedReps * baseBurn;
 
     // Expandable text description
-    final description = 'The ${widget.exercise.name} targetting ${widget.exercise.muscleGroup} is an excellent exercise for building muscular strength and cardiovascular stamina. It requires using ${widget.exercise.equipment} with strict biomechanical control to avoid spinal pressure and focus load on key muscle pathways.';
+    final description = 'The ${widget.exercise.name} targeting ${widget.exercise.muscleGroup} is an excellent exercise for building muscular strength and cardiovascular stamina. It requires using ${widget.exercise.equipment} with strict biomechanical control to avoid spinal pressure and focus load on key muscle pathways.';
+
+    Color difficultyColor = theme.colorScheme.primary;
+    final diffLower = difficulty.toLowerCase();
+    if (diffLower == 'beginner') {
+      difficultyColor = const Color(0xFF10B981); // Emerald
+    } else if (diffLower == 'intermediate') {
+      difficultyColor = const Color(0xFFF59E0B); // Amber
+    } else {
+      difficultyColor = const Color(0xFFEF4444); // Red/Expert/Advanced
+    }
+
+    final isDark = theme.brightness == Brightness.dark;
+
+    final difficultyGradients = {
+      'Beginner': LinearGradient(
+        colors: [
+          const Color(0xFF10B981).withValues(alpha: 0.15),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+      'Intermediate': LinearGradient(
+        colors: [
+          const Color(0xFFF59E0B).withValues(alpha: 0.15),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+      'Advanced': LinearGradient(
+        colors: [
+          const Color(0xFFEF4444).withValues(alpha: 0.15),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+      'Expert': LinearGradient(
+        colors: [
+          const Color(0xFFEF4444).withValues(alpha: 0.15),
+          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+    };
+
+    final headerGradient = difficultyGradients[difficulty] ?? (isDark ? GerexGradients.scaffoldBackground : const LinearGradient(colors: [Color(0xFFF8FAFC), Color(0xFFEEF2F6)]));
 
     return Scaffold(
-      body: LiquidBackground(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF0F1319), const Color(0xFF14181F)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEEF2F6)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Stack(
           children: [
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: difficultyColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                      blurRadius: 100,
+                      spreadRadius: 50,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 100,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: difficultyColor.withValues(alpha: isDark ? 0.1 : 0.04),
+                      blurRadius: 120,
+                      spreadRadius: 60,
+                    ),
+                  ],
+                ),
+              ),
+            ),
             CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // Video header
                 SliverAppBar(
-                  expandedHeight: 240.0,
+                  expandedHeight: 200.0,
                   floating: false,
                   pinned: true,
                   backgroundColor: Colors.transparent,
@@ -140,120 +206,180 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     centerTitle: true,
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (_isVideoInitialized && _videoController != null)
-                          GestureDetector(
-                            onTap: () {
-                              if (_videoController!.value.isPlaying) {
-                                _videoController!.pause();
-                              } else {
-                                _videoController!.play();
-                              }
-                              setState(() {});
-                            },
-                            child: AspectRatio(
-                              aspectRatio: _videoController!.value.aspectRatio,
-                              child: VideoPlayer(_videoController!),
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: headerGradient,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                difficultyColor.withValues(alpha: 0.3),
+                                difficultyColor.withValues(alpha: 0.05),
+                              ],
                             ),
-                          )
-                        else
-                          Container(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            child: Center(
-                              child: ExerciseImageWidget(
-                                imagePath: widget.exercise.effectiveImagePath,
-                                removeBackground: widget.exercise.removeBackground,
-                                size: 160.0,
+                            boxShadow: [
+                              BoxShadow(
+                                color: difficultyColor.withValues(alpha: 0.2),
+                                blurRadius: 20,
+                                spreadRadius: 5,
                               ),
-                            ),
+                            ],
                           ),
-                        // Play/Pause Overlay Indication
-                        if (_videoController != null)
-                          Center(
-                            child: IgnorePointer(
-                              child: AnimatedOpacity(
-                                opacity: _videoController!.value.isPlaying ? 0.0 : 1.0,
-                                duration: const Duration(milliseconds: 300),
-                                child: CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: Colors.black.withValues(alpha: 0.5),
-                                  child: const Icon(
-                                    Icons.play_arrow_rounded,
-                                    size: 36,
-                                    color: Colors.white,
-                                  ),
+                          child: Center(
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                border: Border.all(
+                                  color: difficultyColor.withValues(alpha: 0.4),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: ExerciseImageWidget(
+                                  imagePath: widget.exercise.effectiveImagePath,
+                                  removeBackground: widget.exercise.removeBackground,
+                                  size: 56.0,
                                 ),
                               ),
                             ),
                           ),
-                      ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.all(16.0),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      // Info Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              difficulty,
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                          Text(
+                            'Exercise Breakdown',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
                               ),
                             ),
                           ),
-                          Text(
-                            'Burn: ${totalBurn.toStringAsFixed(1)} kcal',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: Colors.orangeAccent,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: difficultyColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: difficultyColor.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              difficulty.toUpperCase(),
+                              style: TextStyle(
+                                color: difficultyColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.0,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-
-                      // Description
-                      const Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildStatChip(
+                            theme,
+                            difficulty,
+                            'Difficulty',
+                            difficultyColor,
+                            FontAwesomeIcons.circleInfo,
+                          ),
+                          _buildStatChip(
+                            theme,
+                            widget.exercise.equipment,
+                            'Equipment',
+                            const Color(0xFF38BDF8),
+                            FontAwesomeIcons.screwdriverWrench,
+                          ),
+                          _buildStatChip(
+                            theme,
+                            '${totalBurn.toStringAsFixed(1)} kcal',
+                            'Calories',
+                            const Color(0xFFF43F5E),
+                            FontAwesomeIcons.fire,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('Description', difficultyColor, theme),
                       const SizedBox(height: 8),
                       GestureDetector(
-                        onTap: () => setState(() => _isDescriptionExpanded = !_isDescriptionExpanded),
-                        child: GlassContainer(
+                        onTap: () => setState(
+                          () =>
+                              _isDescriptionExpanded = !_isDescriptionExpanded,
+                        ),
+                        child: Container(
                           padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                            borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
+                            ),
+                            border: Border(
+                              left: BorderSide(
+                                color: difficultyColor,
+                                width: 3,
+                              ),
+                            ),
+                            boxShadow: isDark ? null : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 description,
                                 maxLines: _isDescriptionExpanded ? null : 3,
-                                overflow: _isDescriptionExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                                overflow: _isDescriptionExpanded
+                                    ? TextOverflow.visible
+                                    : TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                  fontSize: 14,
+                                  height: 1.5,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.9,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                _isDescriptionExpanded ? 'Read Less' : 'Read More',
+                                _isDescriptionExpanded
+                                    ? 'Read Less'
+                                    : 'Read More',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,
-                                  color: theme.colorScheme.primary,
+                                  color: difficultyColor,
                                 ),
                               ),
                             ],
@@ -261,14 +387,20 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // Numbered Steps Instructions List
-                      const Text('How To Do It', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      _buildSectionHeader('How To Do It', difficultyColor, theme),
                       const SizedBox(height: 12),
                       if (widget.exercise.instructions.isEmpty)
-                        const GlassContainer(
-                          padding: EdgeInsets.all(16),
-                          child: Text('No instruction steps registered for this exercise.'),
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Text('No instruction steps registered for this exercise.'),
                         )
                       else
                         ListView.builder(
@@ -282,23 +414,53 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 12,
-                                    backgroundColor: theme.colorScheme.primary,
-                                    child: Text(
-                                      '${idx + 1}',
-                                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: difficultyColor.withValues(alpha: 0.15),
+                                      border: Border.all(
+                                        color: difficultyColor,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${idx + 1}',
+                                        style: TextStyle(
+                                          color: difficultyColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: GlassContainer(
-                                      padding: const EdgeInsets.all(12),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                                          width: 1,
+                                        ),
+                                        boxShadow: isDark ? null : [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.02),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          )
+                                        ],
+                                      ),
                                       child: Text(
                                         step,
                                         style: TextStyle(
-                                          fontSize: 13,
-                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                          fontSize: 14,
+                                          height: 1.4,
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.95),
                                         ),
                                       ),
                                     ),
@@ -309,12 +471,18 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                           },
                         ),
                       const SizedBox(height: 24),
-
-                      // Custom Repetitions Picker
-                      const Text('Custom Repetitions Count', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      const SizedBox(height: 8),
-                      SizedBox(
+                      _buildSectionHeader('Custom Repetitions Count', difficultyColor, theme),
+                      const SizedBox(height: 12),
+                      Container(
                         height: 110,
+                        decoration: BoxDecoration(
+                          color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.3) : theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                            width: 1,
+                          ),
+                        ),
                         child: ListWheelScrollView.useDelegate(
                           itemExtent: 36,
                           physics: const FixedExtentScrollPhysics(),
@@ -336,7 +504,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                     fontSize: isSelected ? 18 : 14,
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                     color: isSelected
-                                        ? theme.colorScheme.primary
+                                        ? difficultyColor
                                         : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                                   ),
                                 ),
@@ -345,15 +513,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 100), // Sticky CTA spacing
+                      const SizedBox(height: 140),
                     ]),
                   ),
                 ),
               ],
             ),
-
-            // Sticky Bottom CTA Panel
             Positioned(
               bottom: 16 + MediaQuery.of(context).padding.bottom,
               left: 16,
@@ -362,23 +527,21 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Live AI Detector optional toggle
                   if (!widget.isPicker)
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.accentEmeraldLight),
-                        foregroundColor: AppColors.accentEmeraldLight,
+                        side: BorderSide(color: difficultyColor),
+                        foregroundColor: difficultyColor,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        backgroundColor: Colors.black.withValues(alpha: 0.4),
+                        backgroundColor: isDark ? Colors.black.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.8),
                       ),
-                      icon: const Icon(Icons.videocam_rounded, size: 18),
+                      icon: const FaIcon(FontAwesomeIcons.robot, size: 18),
                       label: const Text(
-                        'Live AI Detector',
+                        'Live AI Trainer Feedback',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       onPressed: () {
-                        // Map exercise name/category to classifier key
                         final name = widget.exercise.name.toLowerCase();
                         String? targetKey;
                         if (name.contains('squat')) {
@@ -392,7 +555,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         } else if (widget.exercise.posePattern != null) {
                           targetKey = 'custom';
                         }
-
                         context.push('/pose-feedback', extra: {
                           'targetExercise': targetKey,
                           'customPattern': widget.exercise.posePattern,
@@ -402,11 +564,13 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   if (!widget.isPicker) const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      gradient: GerexGradients.primaryCTA,
+                      gradient: LinearGradient(
+                        colors: [difficultyColor.withValues(alpha: 0.9), difficultyColor.withValues(alpha: 0.7)],
+                      ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                          color: difficultyColor.withValues(alpha: 0.3),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
@@ -422,7 +586,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         if (widget.isPicker) {
                           Navigator.pop(context, _selectedReps);
                         } else {
-                          // Save to active live workout session
                           if (workoutProvider.isSessionActive) {
                             workoutProvider.addExerciseToSession(widget.exercise);
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -430,7 +593,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                             );
                             context.pop();
                           } else {
-                            // Quick-log workout
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('No active workout session. Open the Workout tab or Workout Builder to save exercises!')),
                             );
@@ -449,6 +611,92 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStatChip(
+    ThemeData theme,
+    String value,
+    String label,
+    Color color,
+    dynamic icon,
+  ) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: color.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.03),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              FaIcon(
+                icon,
+                color: color,
+                size: 14,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                  color: color,
+                  fontFamily: 'Outfit',
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, Color accentColor, ThemeData theme) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: accentColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 15,
+            color: theme.colorScheme.onSurface,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
     );
   }
 }
