@@ -169,6 +169,11 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: Icon(Icons.photo_camera_rounded, color: theme.colorScheme.onSurface),
+            tooltip: 'AI Food Scanner',
+            onPressed: () => context.push('/meal-food-scanner'),
+          ),
+          IconButton(
             icon: Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.onSurface),
             onPressed: () => _showLogMealDialog(context, mealProvider),
           ),
