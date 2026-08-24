@@ -5,6 +5,7 @@ class ScanResult {
   final double carbs;   // in grams
   final double fat;     // in grams
   final double portionSize; // in grams
+  final bool isFood;
 
   const ScanResult({
     required this.foodName,
@@ -13,6 +14,7 @@ class ScanResult {
     required this.carbs,
     required this.fat,
     this.portionSize = 100.0,
+    this.isFood = true,
   });
 
   ScanResult copyWith({
@@ -22,6 +24,7 @@ class ScanResult {
     double? carbs,
     double? fat,
     double? portionSize,
+    bool? isFood,
   }) {
     return ScanResult(
       foodName: foodName ?? this.foodName,
@@ -30,6 +33,7 @@ class ScanResult {
       carbs: carbs ?? this.carbs,
       fat: fat ?? this.fat,
       portionSize: portionSize ?? this.portionSize,
+      isFood: isFood ?? this.isFood,
     );
   }
 }

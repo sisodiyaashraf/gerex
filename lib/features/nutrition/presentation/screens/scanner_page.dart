@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../domain/entities/scan_result.dart';
 import '../providers/scanner_provider.dart';
 import '../providers/meal_provider.dart';
 import 'scanner_camera_view.dart';
@@ -124,6 +125,8 @@ class _ScannerPageState extends State<ScannerPage> {
   }
 
   Widget _buildResultView(ScannerProvider scannerProvider, MealProvider mealProvider) {
+    final result = scannerProvider.scanResult!;
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
@@ -141,40 +144,71 @@ class _ScannerPageState extends State<ScannerPage> {
               ),
             ),
           const SizedBox(height: 16),
-          ScanResultCard(result: scannerProvider.scanResult!),
-          const SizedBox(height: 20),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedMealType,
-            dropdownColor: const Color(0xFF151729),
-            style: GoogleFonts.outfit(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Meal Category',
-              labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-              enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white24), borderRadius: BorderRadius.circular(16)),
-              focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Color(0xFF50C19D)), borderRadius: BorderRadius.circular(16)),
+          if (!result.isFood) ...[
+            _buildNonFoodView(result),
+          ] else ...[
+            ScanResultCard(result: result),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedMealType,
+              dropdownColor: const Color(0xFF151729),
+              style: GoogleFonts.outfit(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Meal Category',
+                labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white24), borderRadius: BorderRadius.circular(16)),
+                focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Color(0xFF50C19D)), borderRadius: BorderRadius.circular(16)),
+              ),
+              items: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
+                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                  .toList(),
+              onChanged: (val) => setState(() => _selectedMealType = val ?? 'Breakfast'),
             ),
-            items: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
-                .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-                .toList(),
-            onChanged: (val) => setState(() => _selectedMealType = val ?? 'Breakfast'),
-          ),
-          const SizedBox(height: 24),
-          GerexButton(
-            text: 'Log this meal',
-            icon: Icons.check_circle_outline_rounded,
-            onPressed: () {
-              scannerProvider.logMeal(
-                context: context,
-                mealProvider: mealProvider,
-                mealType: _selectedMealType,
-              );
-              Navigator.pop(context);
-            },
-          ),
+            const SizedBox(height: 24),
+            GerexButton(
+              text: 'Log this meal',
+              icon: Icons.check_circle_outline_rounded,
+              onPressed: () {
+                scannerProvider.logMeal(
+                  context: context,
+                  mealProvider: mealProvider,
+                  mealType: _selectedMealType,
+                );
+                Navigator.pop(context);
+              },
+            ),
+          ],
           const SizedBox(height: 12),
           TextButton(
             onPressed: scannerProvider.reset,
             child: Text('Retake Photo / Scan Again', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w500)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNonFoodView(ScanResult result) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDC2626).withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4), width: 1.5),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 48),
+          const SizedBox(height: 12),
+          Text(
+            'No Food Detected',
+            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'We identified a "${result.foodName}" in the image. Please scan edible meal items to analyze calories and macronutrients.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(fontSize: 13, color: Colors.white.withValues(alpha: 0.95)),
           ),
         ],
       ),
