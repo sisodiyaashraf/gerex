@@ -70,17 +70,82 @@ class _ScannerCameraViewState extends State<ScannerCameraView> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Text(_errorMsg, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 16), textAlign: TextAlign.center),
+          child: Text(_errorMsg, style: GoogleFonts.outfit(color: Colors.white, fontSize: 16), textAlign: TextAlign.center),
         ),
       );
     }
     if (!_isInitialized || _controller == null) {
       return const Center(child: CircularProgressIndicator(color: Color(0xFF50C19D)));
     }
+
+    final size = MediaQuery.of(context).size;
+
     return Stack(
       children: [
         Positioned.fill(
           child: CameraPreview(_controller!),
+        ),
+        Positioned.fill(
+          child: ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              Colors.black.withValues(alpha: 0.5),
+              BlendMode.srcOut,
+            ),
+            child: Stack(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: size.width * 0.75,
+                    height: size.width * 0.75,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.center,
+          child: Container(
+            width: size.width * 0.75,
+            height: size.width * 0.75,
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFF50C19D), width: 3),
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 24,
+          left: 20,
+          right: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white24, width: 1),
+            ),
+            child: Text(
+              'Align your meal inside the frame',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
         ),
         Positioned(
           bottom: 40,

@@ -33,13 +33,23 @@ class ScanResultCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(result.foodName, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 2),
-                  Text('Portion: ${result.portionSize.toInt()}g', style: GoogleFonts.outfit(fontSize: 13, color: Colors.white70)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      result.foodName,
+                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Portion Size: ${result.portionSize.toInt()}g',
+                      style: GoogleFonts.outfit(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
+                    ),
+                  ],
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.edit_rounded, color: Color(0xFF50C19D), size: 24),
@@ -47,31 +57,35 @@ class ScanResultCard extends StatelessWidget {
               ),
             ],
           ),
-          const Divider(color: Colors.white12, height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const Divider(color: Colors.white24, height: 24),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${result.calories.toInt()}', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: const Color(0xFF50C19D))),
-                  Text('Calories (kcal)', style: GoogleFonts.outfit(fontSize: 11, color: Colors.white60)),
-                ],
+              Text(
+                '${result.calories.toInt()} kcal',
+                style: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.w900, color: const Color(0xFF50C19D)),
               ),
-              Row(
-                children: [
-                  MacroRingWidget(label: 'Protein', value: result.protein, percentage: result.protein / 50, color: Colors.greenAccent),
-                  const SizedBox(width: 8),
-                  MacroRingWidget(label: 'Carbs', value: result.carbs, percentage: result.carbs / 80, color: Colors.blueAccent),
-                  const SizedBox(width: 8),
-                  MacroRingWidget(label: 'Fats', value: result.fat, percentage: result.fat / 30, color: Colors.pinkAccent),
-                ],
+              Text(
+                'Estimated Calories',
+                style: GoogleFonts.outfit(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text('Daily Goal Impact', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              MacroRingWidget(label: 'Protein', value: result.protein, percentage: result.protein / 150, color: Colors.greenAccent),
+              MacroRingWidget(label: 'Carbs', value: result.carbs, percentage: result.carbs / 300, color: Colors.blueAccent),
+              MacroRingWidget(label: 'Fats', value: result.fat, percentage: result.fat / 80, color: Colors.pinkAccent),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Daily Goal Impact',
+            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
           _buildImpactBar('Calories', loggedCals, result.calories, 2500, 'kcal', const Color(0xFF50C19D)),
           _buildImpactBar('Protein', loggedP, result.protein, 150, 'g', Colors.greenAccent),
           _buildImpactBar('Carbs', loggedC, result.carbs, 300, 'g', Colors.blueAccent),
@@ -87,27 +101,37 @@ class ScanResultCard extends StatelessWidget {
     double addedRatio = (added / target).clamp(0.0, 1.0);
     if (currentRatio + addedRatio > 1.0) addedRatio = 1.0 - currentRatio;
 
+    int currentFlex = (currentRatio * 1000).toInt();
+    int addedFlex = (addedRatio * 1000).toInt();
+    int remainingFlex = 1000 - (currentFlex + addedFlex);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$label: ${total.toInt()}/${target.toInt()} $unit', style: GoogleFonts.outfit(fontSize: 11, color: Colors.white70)),
-              Text('+${added.toInt()} $unit', style: GoogleFonts.outfit(fontSize: 11, color: color, fontWeight: FontWeight.bold)),
+              Text(
+                '$label: ${total.toInt()}/${target.toInt()} $unit',
+                style: GoogleFonts.outfit(fontSize: 12, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
+              ),
+              Text(
+                '+${added.toInt()} $unit',
+                style: GoogleFonts.outfit(fontSize: 12, color: color, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: SizedBox(
-              height: 5,
+              height: 6,
               child: Row(
                 children: [
-                  if (currentRatio > 0) Expanded(flex: (currentRatio * 100).toInt(), child: Container(color: Colors.white30)),
-                  if (addedRatio > 0) Expanded(flex: (addedRatio * 100).toInt(), child: Container(color: color)),
-                  Expanded(flex: ((1.0 - (currentRatio + addedRatio)) * 100).toInt(), child: Container(color: Colors.white10)),
+                  if (currentFlex > 0) Expanded(flex: currentFlex, child: Container(color: Colors.white30)),
+                  if (addedFlex > 0) Expanded(flex: addedFlex, child: Container(color: color)),
+                  if (remainingFlex > 0) Expanded(flex: remainingFlex, child: Container(color: Colors.white10)),
                 ],
               ),
             ),

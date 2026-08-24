@@ -84,7 +84,7 @@ class _ScannerPageState extends State<ScannerPage> {
             const SizedBox(height: 12),
             Text('Point your camera at any meal to instantly estimate calories and track macros.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(fontSize: 14, color: Colors.white70)),
+                style: GoogleFonts.outfit(fontSize: 14, color: Colors.white.withValues(alpha: 0.9))),
             const SizedBox(height: 40),
             GerexButton(
               text: 'Use Camera',
@@ -117,7 +117,7 @@ class _ScannerPageState extends State<ScannerPage> {
           const SizedBox(height: 32),
           Text('Analyzing meal image...', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 8),
-          Text('Identifying food items and calculating macros', style: GoogleFonts.outfit(fontSize: 12, color: Colors.white60)),
+          Text('Identifying food items and calculating macros', style: GoogleFonts.outfit(fontSize: 13, color: Colors.white.withValues(alpha: 0.85))),
         ],
       ),
     );
@@ -149,8 +149,8 @@ class _ScannerPageState extends State<ScannerPage> {
             style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Meal Category',
-              labelStyle: const TextStyle(color: Colors.white60),
-              enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white12), borderRadius: BorderRadius.circular(16)),
+              labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white24), borderRadius: BorderRadius.circular(16)),
               focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Color(0xFF50C19D)), borderRadius: BorderRadius.circular(16)),
             ),
             items: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
@@ -174,7 +174,7 @@ class _ScannerPageState extends State<ScannerPage> {
           const SizedBox(height: 12),
           TextButton(
             onPressed: scannerProvider.reset,
-            child: Text('Retake Photo / Scan Again', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13)),
+            child: Text('Retake Photo / Scan Again', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
