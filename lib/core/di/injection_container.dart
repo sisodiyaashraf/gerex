@@ -27,6 +27,10 @@ import '../../features/profile/presentation/providers/profile_provider.dart';
 import '../../features/profile/presentation/providers/progress_photos_provider.dart';
 import '../../features/metrics/presentation/providers/sleep_provider.dart';
 import '../../features/nutrition/presentation/providers/meal_provider.dart';
+import '../../features/nutrition/domain/repositories/food_scanner_repository.dart';
+import '../../features/nutrition/data/repositories/food_scanner_repository_impl.dart';
+import '../../features/nutrition/domain/usecases/analyze_food_image_usecase.dart';
+import '../../features/nutrition/presentation/providers/scanner_provider.dart';
 import '../network/network_info.dart';
 import '../../features/metrics/presentation/providers/heart_rate_provider.dart';
 import '../providers/activity_provider.dart';
@@ -110,6 +114,11 @@ Future<void> init() async {
   // Features - Sleep & Nutrition Metrics
   sl.registerLazySingleton<SleepProvider>(() => SleepProvider(sl(), sl()));
   sl.registerLazySingleton<MealProvider>(() => MealProvider(sl()));
+
+  // AI Food Scanner
+  sl.registerLazySingleton<FoodScannerRepository>(() => FoodScannerRepositoryImpl());
+  sl.registerLazySingleton<AnalyzeFoodImageUseCase>(() => AnalyzeFoodImageUseCase(sl()));
+  sl.registerLazySingleton<ScannerProvider>(() => ScannerProvider(sl()));
 
   // Core tracking & notifications
   sl.registerLazySingleton<VoiceCoachService>(() => VoiceCoachService());
