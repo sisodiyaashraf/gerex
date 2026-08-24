@@ -67,7 +67,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                 padding: EdgeInsets.zero,
                 type: GlassContainerType.slate,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF0B1220), size: 20),
                   onPressed: () => context.pop(),
                 ),
               ),
@@ -115,20 +115,44 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                       ),
                     ),
                   ),
-                  // Floating transparent exercise illustration
+                  // Floating circular medallion wrapping the exercise illustration
                   Positioned(
                     right: 24,
                     bottom: 24,
                     top: 64,
-                    width: 150,
-                    child: Image.asset(
-                      illustrationAsset,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Center(
-                        child: FaIcon(
-                          FontAwesomeIcons.award,
-                          size: 48,
-                          color: Color(0xFF10B981),
+                    width: 175,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 1.0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: difficultyColor.withValues(alpha: 0.35),
+                              width: 2.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Image.asset(
+                            illustrationAsset,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => const Center(
+                              child: FaIcon(
+                                FontAwesomeIcons.award,
+                                size: 48,
+                                color: Color(0xFF10B981),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
