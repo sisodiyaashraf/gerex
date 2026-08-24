@@ -19,6 +19,7 @@ import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
+import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
@@ -105,6 +106,26 @@ class ProfileScreen extends StatelessWidget {
 
     // Convert values if Unit preference is Lb
     final displayUnit = profileProvider.units;
+
+    // Fetch weight logs if empty
+    if (metricsProvider.weightLogs.isEmpty && !metricsProvider.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        metricsProvider.fetchWeightLogs();
+      });
+    }
+
+    final List<GerexLineChartPoint> weightChartPoints = metricsProvider.weightLogs.map((log) {
+      final dt = log.loggedAt;
+      double val = log.value;
+      if (displayUnit == 'lb') {
+        val = val * 2.20462;
+      }
+      return GerexLineChartPoint(
+        label: '${dt.month}/${dt.day}',
+        value: double.parse(val.toStringAsFixed(1)),
+      );
+    }).toList();
+
     String formatWeight(double? kgs) {
       if (kgs == null) return '--';
       if (displayUnit == 'lb') {
@@ -316,15 +337,24 @@ class ProfileScreen extends StatelessWidget {
                       Row(
                         children: [
                           Expanded(
-                            child: BigStatNumber(
-                              number: formatWeight(currentWeight),
-                              label: 'Current Weight • Trend: $trendText',
-                              isDarkCard: false,
+                            child: InkWell(
+                              onTap: () => _showLogWeightDialog(context, metricsProvider, displayUnit),
+                              borderRadius: BorderRadius.circular(12),
+                              child: BigStatNumber(
+                                number: formatWeight(currentWeight),
+                                label: 'Current Weight (Tap to Log) • Trend: $trendText',
+                                isDarkCard: false,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const FaIcon(FontAwesomeIcons.shareFromSquare, color: AppColors.textLightHeading, size: 20),
+                            icon: const FaIcon(FontAwesomeIcons.plus, color: AppColors.textLightHeading, size: 18),
+                            tooltip: 'Log Weight',
+                            onPressed: () => _showLogWeightDialog(context, metricsProvider, displayUnit),
+                          ),
+                          IconButton(
+                            icon: const FaIcon(FontAwesomeIcons.shareFromSquare, color: AppColors.textLightHeading, size: 18),
                             tooltip: 'Share Training Card',
                             onPressed: () {
                               _showShareCardDialog(
@@ -344,7 +374,46 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
+
+                // Weight Trend Analytics Card
+                Text(
+                  'Body Weight Analytics',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDarkHeading,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                PastelGradientCard(
+                  type: PastelCardType.indigo,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      if (weightChartPoints.isEmpty)
+                        SizedBox(
+                          height: 160,
+                          child: Center(
+                            child: Text(
+                              'No weight logs available. Log your weight to see trends!',
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        GerexLineChart(
+                          data: weightChartPoints,
+                          unit: displayUnit,
+                          height: 160,
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
 
                 // Stats Dashboard Row
                 Row(
@@ -1871,6 +1940,92 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _showLogWeightDialog(BuildContext context, MetricsProvider provider, String unit) {
+    final lastLog = provider.weightLogs.isNotEmpty ? provider.weightLogs.last.value : 70.0;
+    double initialVal = unit == 'lb' ? lastLog * 2.20462 : lastLog;
+    final controller = TextEditingController(text: initialVal.toStringAsFixed(1));
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.transparent,
+        contentPadding: EdgeInsets.zero,
+        content: GlassContainer(
+          borderRadius: 24,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Log Body Weight',
+                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF0B1220)),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Enter weight in $unit:',
+                style: GoogleFonts.outfit(fontSize: 13, color: const Color(0xFF475569)),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF0B1220)),
+                decoration: InputDecoration(
+                  suffixText: unit,
+                  suffixStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF64748B)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () async {
+                      final input = double.tryParse(controller.text);
+                      if (input != null && input > 0) {
+                        double logVal = input;
+                        if (unit == 'lb') {
+                          logVal = input / 2.20462;
+                        }
+                        final success = await provider.logWeight(logVal);
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                          if (!success) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(content: Text('Failed to log weight. Please try again.')),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    child: Text('Log', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
