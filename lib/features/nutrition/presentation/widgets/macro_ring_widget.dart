@@ -69,7 +69,7 @@ class MacroRingWidget extends StatelessWidget {
                       unit,
                       style: GoogleFonts.outfit(
                         fontSize: 10,
-                        color: Colors.white70,
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -82,7 +82,7 @@ class MacroRingWidget extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.white70,
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ],
