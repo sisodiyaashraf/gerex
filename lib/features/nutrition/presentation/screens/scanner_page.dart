@@ -144,7 +144,7 @@ class _ScannerPageState extends State<ScannerPage> {
           ScanResultCard(result: scannerProvider.scanResult!),
           const SizedBox(height: 20),
           DropdownButtonFormField<String>(
-            value: _selectedMealType,
+            initialValue: _selectedMealType,
             dropdownColor: const Color(0xFF151729),
             style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
