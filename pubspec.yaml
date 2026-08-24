@@ -65,3 +65,4 @@ flutter:
     - assets/svg icons/
     - assets/exercise/
     - assets/data/exercises.json
+    - assets/videos/
