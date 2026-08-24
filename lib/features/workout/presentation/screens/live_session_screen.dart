@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -113,6 +114,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
         frontCam,
         ResolutionPreset.medium,
         enableAudio: false,
+        imageFormatGroup: defaultTargetPlatform == TargetPlatform.android
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
       );
 
       await _cameraController!.initialize();
@@ -166,13 +170,35 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       isProcessing = true;
 
       try {
+        final WriteBuffer allBytes = WriteBuffer();
+        for (final Plane plane in image.planes) {
+          allBytes.putUint8List(plane.bytes);
+        }
+        final bytes = allBytes.done().buffer.asUint8List();
+
+        final InputImageFormat format = defaultTargetPlatform == TargetPlatform.android
+            ? InputImageFormat.nv21
+            : InputImageFormat.bgra8888;
+
+        final int sensorOrientation = _cameraController?.description.sensorOrientation ?? 270;
+        InputImageRotation rotation;
+        if (sensorOrientation == 90) {
+          rotation = InputImageRotation.rotation90deg;
+        } else if (sensorOrientation == 180) {
+          rotation = InputImageRotation.rotation180deg;
+        } else if (sensorOrientation == 270) {
+          rotation = InputImageRotation.rotation270deg;
+        } else {
+          rotation = InputImageRotation.rotation0deg;
+        }
+
         final poses = await _poseDetectorService.processImage(
           InputImage.fromBytes(
-            bytes: image.planes[0].bytes,
+            bytes: bytes,
             metadata: InputImageMetadata(
               size: Size(image.width.toDouble(), image.height.toDouble()),
-              rotation: InputImageRotation.rotation270deg,
-              format: InputImageFormat.nv21,
+              rotation: rotation,
+              format: format,
               bytesPerRow: image.planes[0].bytesPerRow,
             ),
           ),
