@@ -19,6 +19,10 @@ class MacroRingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF0B1220);
+    final subtitleColor = isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF1E293B);
+
     final cleanPercent = percentage.clamp(0.0, 1.0);
 
     return TweenAnimationBuilder<double>(
@@ -62,14 +66,14 @@ class MacroRingWidget extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: textColor,
                       ),
                     ),
                     Text(
                       unit,
                       style: GoogleFonts.outfit(
                         fontSize: 10,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: subtitleColor,
                       ),
                     ),
                   ],
@@ -82,7 +86,7 @@ class MacroRingWidget extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.9),
+                color: subtitleColor,
               ),
             ),
           ],

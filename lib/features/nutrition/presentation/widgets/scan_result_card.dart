@@ -15,6 +15,13 @@ class ScanResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final mealProvider = Provider.of<MealProvider>(context);
     final scannerProvider = Provider.of<ScannerProvider>(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final textColor = isDark ? Colors.white : const Color(0xFF0B1220);
+    final subtitleColor = isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF1E293B);
+    final calorieColor = isDark ? const Color(0xFF50C19D) : const Color(0xFF178C6D);
+
     final today = DateTime.now();
     final todayMeals = mealProvider.mealPlan.where((m) =>
         m.date.day == today.day && m.date.month == today.month && m.date.year == today.year).toList();
@@ -39,35 +46,35 @@ class ScanResultCard extends StatelessWidget {
                   children: [
                     Text(
                       result.foodName,
-                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Portion Size: ${result.portionSize.toInt()}g',
-                      style: GoogleFonts.outfit(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
+                      style: GoogleFonts.outfit(fontSize: 14, color: subtitleColor),
                     ),
                   ],
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.edit_rounded, color: Color(0xFF50C19D), size: 24),
-                onPressed: () => _showEditDialog(context, scannerProvider),
+                onPressed: () => _showEditDialog(context, scannerProvider, isDark),
               ),
             ],
           ),
-          const Divider(color: Colors.white24, height: 24),
+          Divider(color: isDark ? Colors.white24 : Colors.black12, height: 24),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 '${result.calories.toInt()} kcal',
-                style: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.w900, color: const Color(0xFF50C19D)),
+                style: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.w900, color: calorieColor),
               ),
               Text(
                 'Estimated Calories',
-                style: GoogleFonts.outfit(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontSize: 13, color: subtitleColor, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -83,19 +90,19 @@ class ScanResultCard extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'Daily Goal Impact',
-            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
           ),
           const SizedBox(height: 12),
-          _buildImpactBar('Calories', loggedCals, result.calories, 2500, 'kcal', const Color(0xFF50C19D)),
-          _buildImpactBar('Protein', loggedP, result.protein, 150, 'g', Colors.greenAccent),
-          _buildImpactBar('Carbs', loggedC, result.carbs, 300, 'g', Colors.blueAccent),
-          _buildImpactBar('Fats', loggedF, result.fat, 80, 'g', Colors.pinkAccent),
+          _buildImpactBar('Calories', loggedCals, result.calories, 2500, 'kcal', calorieColor, subtitleColor, isDark),
+          _buildImpactBar('Protein', loggedP, result.protein, 150, 'g', Colors.greenAccent, subtitleColor, isDark),
+          _buildImpactBar('Carbs', loggedC, result.carbs, 300, 'g', Colors.blueAccent, subtitleColor, isDark),
+          _buildImpactBar('Fats', loggedF, result.fat, 80, 'g', Colors.pinkAccent, subtitleColor, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildImpactBar(String label, double current, double added, double target, String unit, Color color) {
+  Widget _buildImpactBar(String label, double current, double added, double target, String unit, Color color, Color textCol, bool isDark) {
     double total = current + added;
     double currentRatio = (current / target).clamp(0.0, 1.0);
     double addedRatio = (added / target).clamp(0.0, 1.0);
@@ -114,7 +121,7 @@ class ScanResultCard extends StatelessWidget {
             children: [
               Text(
                 '$label: ${total.toInt()}/${target.toInt()} $unit',
-                style: GoogleFonts.outfit(fontSize: 12, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontSize: 12, color: textCol, fontWeight: FontWeight.w500),
               ),
               Text(
                 '+${added.toInt()} $unit',
@@ -129,9 +136,9 @@ class ScanResultCard extends StatelessWidget {
               height: 6,
               child: Row(
                 children: [
-                  if (currentFlex > 0) Expanded(flex: currentFlex, child: Container(color: Colors.white30)),
+                  if (currentFlex > 0) Expanded(flex: currentFlex, child: Container(color: isDark ? Colors.white30 : Colors.black26)),
                   if (addedFlex > 0) Expanded(flex: addedFlex, child: Container(color: color)),
-                  if (remainingFlex > 0) Expanded(flex: remainingFlex, child: Container(color: Colors.white10)),
+                  if (remainingFlex > 0) Expanded(flex: remainingFlex, child: Container(color: isDark ? Colors.white10 : Colors.black12)),
                 ],
               ),
             ),
@@ -141,7 +148,7 @@ class ScanResultCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, ScannerProvider provider) {
+  void _showEditDialog(BuildContext context, ScannerProvider provider, bool isDark) {
     final formKey = GlobalKey<FormState>();
     final portionCtrl = TextEditingController(text: result.portionSize.toInt().toString());
     final calsCtrl = TextEditingController(text: result.calories.toInt().toString());
