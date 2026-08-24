@@ -38,6 +38,7 @@ import '../../features/exercise/domain/entities/exercise.dart';
 import '../../features/nutrition/presentation/screens/meal_schedule_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_browse_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_barcode_scanner_screen.dart';
+import '../../features/nutrition/presentation/screens/scanner_page.dart';
 import '../../features/profile/presentation/screens/guided_photo_capture_screen.dart';
 import '../../features/metrics/presentation/screens/heart_rate_connection_screen.dart';
 import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
@@ -277,6 +278,10 @@ class AppRouter {
       GoRoute(
         path: '/meal-barcode-scanner',
         builder: (context, state) => const MealBarcodeScannerScreen(),
+      ),
+      GoRoute(
+        path: '/meal-food-scanner',
+        builder: (context, state) => const ScannerPage(),
       ),
       GoRoute(
         path: '/analytics',
