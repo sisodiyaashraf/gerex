@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
@@ -61,6 +63,9 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         frontCam,
         ResolutionPreset.medium,
         enableAudio: false,
+        imageFormatGroup: defaultTargetPlatform == TargetPlatform.android
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
       );
 
       await _cameraController!.initialize();
@@ -126,16 +131,35 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
       isProcessing = true;
 
       try {
-        // Build InputImage from CameraImage (stubbed for offline/simulator robustness)
-        // Auto-calculates largest angle delta on active frame poses
-        // In real execution, we process landmarks and track the selected joint
+        final WriteBuffer allBytes = WriteBuffer();
+        for (final Plane plane in image.planes) {
+          allBytes.putUint8List(plane.bytes);
+        }
+        final bytes = allBytes.done().buffer.asUint8List();
+
+        final InputImageFormat format = defaultTargetPlatform == TargetPlatform.android
+            ? InputImageFormat.nv21
+            : InputImageFormat.bgra8888;
+
+        final int sensorOrientation = _cameraController?.description.sensorOrientation ?? 270;
+        InputImageRotation rotation;
+        if (sensorOrientation == 90) {
+          rotation = InputImageRotation.rotation90deg;
+        } else if (sensorOrientation == 180) {
+          rotation = InputImageRotation.rotation180deg;
+        } else if (sensorOrientation == 270) {
+          rotation = InputImageRotation.rotation270deg;
+        } else {
+          rotation = InputImageRotation.rotation0deg;
+        }
+
         final poses = await _poseDetectorService.processImage(
           InputImage.fromBytes(
-            bytes: image.planes[0].bytes,
+            bytes: bytes,
             metadata: InputImageMetadata(
               size: Size(image.width.toDouble(), image.height.toDouble()),
-              rotation: InputImageRotation.rotation270deg,
-              format: InputImageFormat.nv21,
+              rotation: rotation,
+              format: format,
               bytesPerRow: image.planes[0].bytesPerRow,
             ),
           ),
