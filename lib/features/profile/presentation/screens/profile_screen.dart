@@ -25,7 +25,7 @@ import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/notifications/notification_models.dart';
 import 'package:gerex/core/notifications/content_packs.dart';
-import '../../../../core/presentation/providers/theme_provider.dart';
+
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
 
@@ -1019,40 +1019,7 @@ class ProfileScreen extends StatelessWidget {
                       child: const Text('Test'),
                     ),
                   ),
-                  const SizedBox(height: 8),
 
-                  // Theme Selection settings item
-                   _buildSettingsRow(
-                     icon: FontAwesomeIcons.circleHalfStroke,
-                     title: 'App Theme',
-                     trailing: DropdownButton<String>(
-                       value: profileProvider.themeMode,
-                       underline: const SizedBox.shrink(),
-                       dropdownColor: theme.cardColor,
-                       style: const TextStyle(
-                         color: Color(0xFF14181F),
-                         fontWeight: FontWeight.bold,
-                         fontSize: 13,
-                       ),
-                       items: [
-                         DropdownMenuItem(value: 'system', child: Text('System', style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F)))),
-                         DropdownMenuItem(value: 'light', child: Text('Light', style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F)))),
-                         DropdownMenuItem(value: 'dark', child: Text('Dark', style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F)))),
-                       ],
-                       onChanged: (String? val) {
-                         if (val != null) {
-                           profileProvider.setThemeMode(val);
-                           final mode = val == 'dark'
-                               ? ThemeMode.dark
-                               : val == 'light'
-                                   ? ThemeMode.light
-                                   : ThemeMode.system;
-                           Provider.of<ThemeProvider>(context, listen: false).setThemeMode(mode);
-                         }
-                       },
-                     ),
-                   ),
-                  const SizedBox(height: 8),
 
                   // Offline-Only AI toggle settings item
                   Consumer<AIProvider>(
