@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
@@ -801,39 +802,7 @@ class ProfileScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 8),
-                  _buildSettingsRow(
-                    icon: FontAwesomeIcons.calendarCheck,
-                    title: 'Activity History Log',
-                    trailing: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      size: 14,
-                    ),
-                    onTap: () => context.push('/activity-tracker'),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildSettingsRow(
-                    icon: FontAwesomeIcons.chartLine,
-                    title: 'Workout Progress Chart',
-                    trailing: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      size: 14,
-                    ),
-                    onTap: () => context.push('/workout-tracker'),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildSettingsRow(
-                    icon: FontAwesomeIcons.images,
-                    title: 'Progress Photos Gallery',
-                    trailing: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      size: 14,
-                    ),
-                    onTap: () => context.push('/progress-photos'),
-                  ),
+
 
                   const SizedBox(height: 24),
 
@@ -1082,7 +1051,7 @@ class ProfileScreen extends StatelessWidget {
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                       size: 14,
                     ),
-                    onTap: () => context.push('/select-plan'),
+                    onTap: () => _showSubscriptionBottomSheet(context, theme, isDark),
                   ),
                   const SizedBox(height: 8),
 
@@ -1581,6 +1550,324 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSubscriptionBottomSheet(BuildContext context, ThemeData theme, bool isDark) {
+    bool isAnnual = true;
+    const double monthlyPrice = 9.99;
+    const double annualPrice = 89.99;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.85,
+              maxChildSize: 0.9,
+              minChildSize: 0.5,
+              builder: (_, scrollController) {
+                return GlassContainer(
+                  borderRadius: 24,
+                  padding: const EdgeInsets.all(24),
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Choose Your Plan',
+                        style: GoogleFonts.outfit(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0B1220),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Unlock your ultimate athletic aesthetic with Gerex Premium',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: const Color(0xFF475569),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Toggle Switch
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => setLocalState(() => isAnnual = false),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 250),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: !isAnnual ? const Color(0xFF10B981) : Colors.transparent,
+                                  ),
+                                  child: Text(
+                                    'Monthly',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: !isAnnual ? Colors.white : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => setLocalState(() => isAnnual = true),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 250),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: isAnnual ? const Color(0xFF10B981) : Colors.transparent,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Annual',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: isAnnual ? Colors.white : const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF0F1319),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Text(
+                                          'Save 25%',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w900,
+                                            color: Color(0xFF10B981),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Plan card
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              isAnnual ? 'ANNUAL MEMBERSHIP' : 'MONTHLY MEMBERSHIP',
+                              style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF10B981),
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              isAnnual
+                                  ? '\$${annualPrice.toStringAsFixed(2)}/yr'
+                                  : '\$${monthlyPrice.toStringAsFixed(2)}/mo',
+                              style: GoogleFonts.outfit(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF0B1220),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isAnnual
+                                  ? 'Billed once at \$${annualPrice.toStringAsFixed(2)}, renews unless cancelled'
+                                  : 'Billed once at \$${monthlyPrice.toStringAsFixed(2)}, renews unless cancelled',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                            if (isAnnual) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Best Value: \$7.50 / month',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF10B981),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Feature checklist
+                      Text(
+                        'All Unlocked Features',
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0B1220),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildFeatureRowItem('Unlimited Live Workout Logging'),
+                            const SizedBox(height: 10),
+                            _buildFeatureRowItem('Realtime Pose-Check AI coach feedback'),
+                            const SizedBox(height: 10),
+                            _buildFeatureRowItem('Personalized dynamic routine blueprints'),
+                            const SizedBox(height: 10),
+                            _buildFeatureRowItem('Detailed analytics history charts'),
+                            const SizedBox(height: 10),
+                            _buildFeatureRowItem('Weekly progress photos tracking'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      GerexButton(
+                        text: 'Activate Subscription',
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showComingSoonSubscriptionDialog(context);
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatureRowItem(String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF1E293B)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showComingSoonSubscriptionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.transparent,
+          content: GlassContainer(
+            padding: const EdgeInsets.all(24),
+            borderRadius: 24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.payments_outlined,
+                    color: Color(0xFF10B981),
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Coming Soon!',
+                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF0B1220)),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Premium subscription plans are currently under development. Real payment integration will be wired up in a future update.',
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    color: const Color(0xFF475569),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                GerexButton(
+                  text: 'Got it',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
           ),
         );
       },

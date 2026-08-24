@@ -11,7 +11,6 @@ import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/challenges/presentation/screens/select_challenge_screen.dart';
 import '../../features/challenges/presentation/screens/challenge_detail_screen.dart';
 import '../../features/challenges/domain/entities/challenge.dart';
-import '../../features/profile/presentation/screens/select_plan_screen.dart';
 import '../../features/metrics/presentation/screens/metrics_dashboard_screen.dart';
 import '../../features/workout/presentation/screens/live_session_screen.dart';
 import '../../features/workout/presentation/screens/workout_builder_screen.dart';
@@ -299,10 +298,6 @@ class AppRouter {
         path: '/challenge-detail',
         builder: (context, state) =>
             ChallengeDetailScreen(challenge: state.extra as Challenge),
-      ),
-      GoRoute(
-        path: '/select-plan',
-        builder: (context, state) => const SelectPlanScreen(),
       ),
     ],
   );
