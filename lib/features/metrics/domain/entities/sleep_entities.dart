@@ -3,12 +3,14 @@ class SleepLog {
   final DateTime date;
   final double hours;
   final double quality; // sleep quality from 0.0 to 100.0
+  final String? wakeUpMood; // e.g., 'Energized', 'Rested', 'Tired', 'Sore'
 
   const SleepLog({
     required this.id,
     required this.date,
     required this.hours,
     required this.quality,
+    this.wakeUpMood,
   });
 
   factory SleepLog.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class SleepLog {
       date: json['date'] != null ? DateTime.parse(json['date'] as String) : DateTime.now(),
       hours: (json['hours'] as num).toDouble(),
       quality: (json['quality'] as num).toDouble(),
+      wakeUpMood: json['wake_up_mood'] as String?,
     );
   }
 
@@ -26,6 +29,7 @@ class SleepLog {
       'date': date.toIso8601String(),
       'hours': hours,
       'quality': quality,
+      'wake_up_mood': wakeUpMood,
     };
   }
 }

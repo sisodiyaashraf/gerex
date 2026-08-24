@@ -13,6 +13,7 @@ class SleepProvider extends ChangeNotifier {
   String _lastFiredMinute = '';
 
   SleepProvider(this._prefs, this._notifications) {
+    _loadSleepGoal();
     _loadSleepLogs();
     _loadAlarms();
     _startAlarmCheckLoop();
@@ -24,8 +25,18 @@ class SleepProvider extends ChangeNotifier {
   List<SleepAlarm> _alarms = [];
   List<SleepAlarm> get alarms => _alarms;
 
-  final double _sleepGoalHours = 8.0;
+  double _sleepGoalHours = 8.0;
   double get sleepGoalHours => _sleepGoalHours;
+
+  void _loadSleepGoal() {
+    _sleepGoalHours = _prefs.getDouble('sleep_goal_hours') ?? 8.0;
+  }
+
+  Future<void> updateSleepGoal(double newGoal) async {
+    _sleepGoalHours = newGoal;
+    await _prefs.setDouble('sleep_goal_hours', newGoal);
+    notifyListeners();
+  }
 
   @override
   void dispose() {
@@ -60,6 +71,7 @@ class SleepProvider extends ChangeNotifier {
             date: DateTime.parse(parts[1]),
             hours: double.parse(parts[2]),
             quality: double.parse(parts[3]),
+            wakeUpMood: parts.length > 4 ? (parts[4].isEmpty ? null : parts[4]) : null,
           );
         }).toList();
         _sleepLogs.sort((a, b) => a.date.compareTo(b.date));
@@ -71,7 +83,7 @@ class SleepProvider extends ChangeNotifier {
   }
 
   Future<void> _saveSleepLogs() async {
-    final list = _sleepLogs.map((log) => '${log.id}:::${log.date.toIso8601String()}:::${log.hours}:::${log.quality}').toList();
+    final list = _sleepLogs.map((log) => '${log.id}:::${log.date.toIso8601String()}:::${log.hours}:::${log.quality}:::${log.wakeUpMood ?? ""}').toList();
     await _prefs.setStringList('cached_sleep_logs', list);
   }
 
@@ -230,12 +242,13 @@ class SleepProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> addSleepLog(DateTime date, double hours, double quality) async {
+  Future<void> addSleepLog(DateTime date, double hours, double quality, [String? mood]) async {
     final newLog = SleepLog(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       date: date,
       hours: hours,
       quality: quality,
+      wakeUpMood: mood,
     );
     _sleepLogs.add(newLog);
     // Keep max 30 entries
