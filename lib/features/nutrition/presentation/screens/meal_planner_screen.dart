@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
+import '../widgets/concentric_macro_rings.dart';
 import 'package:gerex/core/utils/logger.dart';
 
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
@@ -141,6 +142,16 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         m.date.year == today.year &&
         m.mealType == selectedCategory).toList();
 
+    final todayAllMeals = mealProvider.mealPlan.where((m) =>
+        m.date.day == today.day &&
+        m.date.month == today.month &&
+        m.date.year == today.year).toList();
+
+    final totalCaloriesToday = todayAllMeals.fold<double>(0.0, (val, item) => val + item.calories);
+    final totalProteinToday = todayAllMeals.fold<double>(0.0, (val, item) => val + item.protein);
+    final totalCarbsToday = todayAllMeals.fold<double>(0.0, (val, item) => val + item.carbs);
+    final totalFatToday = todayAllMeals.fold<double>(0.0, (val, item) => val + item.fat);
+
     const List<GerexLineChartPoint> calorieTrendPoints = [
       GerexLineChartPoint(label: 'Mon', value: 1850),
       GerexLineChartPoint(label: 'Tue', value: 2100),
@@ -243,48 +254,18 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
             padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Signature Hero Mint Header Card
+                // Concentric Macro Rings Header Card
                 HeroMintCard(
                   margin: const EdgeInsets.only(bottom: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Daily Calorie Target',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textLightBody.withValues(alpha: 0.7),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.badgeDarkNavy,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              'Target: 2,200 kcal',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.accentEmeraldLight,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const BigStatNumber(
-                        number: '1,850',
-                        label: 'Calories Consumed Today',
-                        unit: 'KCAL',
-                        isDarkCard: false,
-                      ),
-                    ],
+                  child: ConcentricMacroRings(
+                    calories: totalCaloriesToday,
+                    caloriesGoal: 2200.0,
+                    protein: totalProteinToday,
+                    proteinGoal: 150.0,
+                    carbs: totalCarbsToday,
+                    carbsGoal: 300.0,
+                    fat: totalFatToday,
+                    fatGoal: 80.0,
                   ),
                 ),
 
