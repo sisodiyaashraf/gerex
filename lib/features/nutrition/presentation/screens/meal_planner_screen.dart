@@ -587,12 +587,25 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                     'Log Custom Meal',
                     style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface, fontSize: 18),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.accentEmeraldLight),
-                    tooltip: 'Scan Barcode',
-                    onPressed: isSearching
-                        ? null
-                        : () async {
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.photo_camera_rounded, color: AppColors.accentEmeraldLight),
+                        tooltip: 'Snap a Meal',
+                        onPressed: isSearching
+                            ? null
+                            : () {
+                                Navigator.pop(context);
+                                context.push('/meal-food-scanner');
+                              },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.accentEmeraldLight),
+                        tooltip: 'Scan Barcode',
+                        onPressed: isSearching
+                            ? null
+                            : () async {
                             final barcode = await context.push('/meal-barcode-scanner');
                             if (barcode != null && barcode is String) {
                               setState(() {
@@ -624,6 +637,8 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                               });
                             }
                           },
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
 import '../../domain/entities/meal_entities.dart';
+import '../widgets/concentric_macro_rings.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
@@ -354,6 +355,19 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             children: [
+                              ConcentricMacroRings(
+                                calories: totalCalories,
+                                caloriesGoal: 2500.0,
+                                protein: totalProtein,
+                                proteinGoal: 150.0,
+                                carbs: totalCarbs,
+                                carbsGoal: 300.0,
+                                fat: totalFat,
+                                fatGoal: 80.0,
+                              ),
+                              const SizedBox(height: 20),
+                              Divider(color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                              const SizedBox(height: 12),
                               _buildNutrientProgressBar(theme, 'Calories', totalCalories, 2500, 'kcal', Colors.orangeAccent),
                               const SizedBox(height: 12),
                               _buildNutrientProgressBar(theme, 'Protein', totalProtein, 150, 'g', Colors.greenAccent),
