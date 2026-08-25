@@ -44,7 +44,7 @@ class ConcentricMacroRingsPainter extends CustomPainter {
     
     // Background track
     final trackPaint = Paint()
-      ..color = color.withOpacity(0.12)
+      ..color = color.withValues(alpha: 0.12)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
     canvas.drawCircle(center, radius, trackPaint);
@@ -227,7 +227,7 @@ class ConcentricMacroRings extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: goal > 0 ? (value / goal).clamp(0.0, 1.0) : 0.0,
                   minHeight: 3,
-                  backgroundColor: color.withOpacity(0.12),
+                  backgroundColor: color.withValues(alpha: 0.12),
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
               ),
