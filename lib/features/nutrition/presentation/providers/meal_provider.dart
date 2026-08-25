@@ -219,6 +219,7 @@ class MealProvider extends ChangeNotifier {
             carbs: double.parse(parts[7]),
             fat: double.parse(parts[8]),
             notificationEnabled: parts.length > 9 ? parts[9] == '1' : true,
+            imagePath: (parts.length > 10 && parts[10].isNotEmpty) ? parts[10] : null,
           );
         }).toList();
       } catch (e) {
@@ -229,7 +230,7 @@ class MealProvider extends ChangeNotifier {
   }
 
   Future<void> _saveMealPlan() async {
-    final list = _mealPlan.map((m) => '${m.id}:::${m.recipeId}:::${m.recipeName}:::${m.date.toIso8601String()}:::${m.mealType}:::${m.calories}:::${m.protein}:::${m.carbs}:::${m.fat}:::${m.notificationEnabled ? '1' : '0'}').toList();
+    final list = _mealPlan.map((m) => '${m.id}:::${m.recipeId}:::${m.recipeName}:::${m.date.toIso8601String()}:::${m.mealType}:::${m.calories}:::${m.protein}:::${m.carbs}:::${m.fat}:::${m.notificationEnabled ? '1' : '0'}:::${m.imagePath ?? ''}').toList();
     await _prefs.setStringList('cached_meal_plan', list);
   }
 
@@ -268,6 +269,7 @@ class MealProvider extends ChangeNotifier {
     required double carbs,
     required double fat,
     required DateTime date,
+    String? imagePath,
   }) {
     final newEntry = MealPlanEntry(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -279,6 +281,7 @@ class MealProvider extends ChangeNotifier {
       protein: protein,
       carbs: carbs,
       fat: fat,
+      imagePath: imagePath,
     );
     _mealPlan.add(newEntry);
     _saveMealPlan();
