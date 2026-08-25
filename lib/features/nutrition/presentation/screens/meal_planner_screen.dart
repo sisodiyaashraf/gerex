@@ -10,7 +10,6 @@ import 'package:gerex/core/utils/logger.dart';
 
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
-import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/presentation/widgets/segmented_pill_nav.dart';
 import 'package:gerex/core/theme/app_theme.dart';

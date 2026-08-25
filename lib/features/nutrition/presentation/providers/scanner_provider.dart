@@ -292,6 +292,7 @@ class ScannerProvider extends ChangeNotifier {
         imagePath: savedPath,
       );
 
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Logged "$combinedName" to $mealType!'),
@@ -302,12 +303,14 @@ class ScannerProvider extends ChangeNotifier {
       reset();
     } catch (e) {
       SecureLogger.logError('ScannerProvider: Confirm meal logging failed', e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString().replaceAll('Exception:', '').trim()}'),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString().replaceAll('Exception:', '').trim()}'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
     }
   }
 

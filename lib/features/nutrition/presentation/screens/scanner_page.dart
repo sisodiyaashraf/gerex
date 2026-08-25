@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../domain/entities/draft_meal.dart';
 import '../providers/scanner_provider.dart';
 import '../providers/meal_provider.dart';
 import 'scanner_camera_view.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
-import 'package:gerex/core/theme/app_theme.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
