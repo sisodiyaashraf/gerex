@@ -368,7 +368,7 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                                 fatGoal: 80.0,
                               ),
                               const SizedBox(height: 20),
-                              Divider(color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                              Divider(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
                               const SizedBox(height: 12),
                               _buildNutrientProgressBar(theme, 'Calories', totalCalories, 2500, 'kcal', Colors.orangeAccent),
                               const SizedBox(height: 12),
