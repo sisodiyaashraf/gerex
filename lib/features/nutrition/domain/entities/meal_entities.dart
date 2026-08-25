@@ -78,6 +78,7 @@ class MealPlanEntry {
   final double carbs;
   final double fat;
   bool notificationEnabled;
+  final String? imagePath;
 
   MealPlanEntry({
     required this.id,
@@ -90,6 +91,7 @@ class MealPlanEntry {
     required this.carbs,
     required this.fat,
     this.notificationEnabled = true,
+    this.imagePath,
   });
 
   factory MealPlanEntry.fromJson(Map<String, dynamic> json) {
@@ -104,6 +106,7 @@ class MealPlanEntry {
       carbs: (json['carbs'] as num).toDouble(),
       fat: (json['fat'] as num).toDouble(),
       notificationEnabled: json['notification_enabled'] as bool? ?? true,
+      imagePath: json['image_path'] as String?,
     );
   }
 
@@ -119,6 +122,7 @@ class MealPlanEntry {
       'carbs': carbs,
       'fat': fat,
       'notification_enabled': notificationEnabled,
+      'image_path': imagePath,
     };
   }
 }
