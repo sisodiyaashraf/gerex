@@ -400,7 +400,10 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                                 children: [
                                   CircleAvatar(
                                     backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
-                                    child: const Icon(Icons.restaurant_menu_rounded, color: Color(0xFF14181F), size: 18),
+                                    backgroundImage: entry.imagePath != null ? FileImage(File(entry.imagePath!)) : null,
+                                    child: entry.imagePath == null
+                                        ? const Icon(Icons.restaurant_menu_rounded, color: Color(0xFF14181F), size: 18)
+                                        : null,
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(

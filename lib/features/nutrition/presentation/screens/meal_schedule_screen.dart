@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -292,7 +293,8 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                                             children: [
                                               CircleAvatar(
                                                 backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
-                                                child: typeName == 'Breakfast'
+                                                backgroundImage: meal.imagePath != null ? FileImage(File(meal.imagePath!)) : null,
+                                                child: meal.imagePath != null ? null : (typeName == 'Breakfast'
                                                     ? Image.asset('assets/images/breakfast_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
                                                     : typeName == 'Dinner'
                                                         ? Image.asset('assets/images/dinner_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
@@ -300,7 +302,7 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
                                                             ? Image.asset('assets/images/lunch_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
                                                             : typeName == 'Snack'
                                                                 ? Image.asset('assets/images/snack_icon.png', color: const Color(0xFF14181F), width: 22, height: 22)
-                                                                : FaIcon(iconData as FaIconData, color: const Color(0xFF14181F), size: 16),
+                                                                : FaIcon(iconData as FaIconData, color: const Color(0xFF14181F), size: 16)),
                                               ),
                                               const SizedBox(width: 16),
                                               Expanded(
