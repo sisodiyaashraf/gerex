@@ -577,6 +577,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
           builder: (context, setState) {
             final theme = Theme.of(context);
             return AlertDialog(
+              scrollable: true,
               backgroundColor: theme.cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
@@ -661,10 +662,9 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                         ),
                       ),
                     )
-                  : SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                           TextField(
                             controller: nameController,
                             style: TextStyle(color: theme.colorScheme.onSurface),
@@ -799,7 +799,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                           ),
                         ],
                       ),
-                    ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),

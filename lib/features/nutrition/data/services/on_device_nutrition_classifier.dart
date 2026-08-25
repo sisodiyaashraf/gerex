@@ -145,6 +145,24 @@ class OnDeviceNutritionClassifier {
     },
   };
 
+  static const Map<String, List<String>> _foodAliases = {
+    'chicken': ['chicken', 'meat', 'poultry', 'flesh', 'breast', 'turkey', 'beef', 'steak', 'pork'],
+    'rice': ['rice', 'grain', 'noodle', 'pasta', 'carbohydrate', 'starch', 'cooked rice'],
+    'salad': ['salad', 'greens', 'lettuce', 'spinach', 'kale', 'leafy vegetable'],
+    'broccoli': ['broccoli', 'cabbage', 'vegetable', 'greens', 'cauliflower', 'green vegetables'],
+    'vegetable': ['vegetable', 'carrot', 'tomato', 'cucumber', 'pepper', 'onion'],
+    'egg': ['egg', 'boiled egg', 'scrambled egg', 'yolk', 'poached egg'],
+    'bread': ['bread', 'toast', 'sandwich', 'bun', 'croissant', 'baked goods', 'bagel'],
+    'salmon': ['salmon', 'fish', 'seafood', 'tuna', 'trout'],
+    'fish': ['fish', 'seafood', 'cod', 'shrimp'],
+    'yogurt': ['yogurt', 'dairy', 'milk', 'cheese', 'curd'],
+    'oatmeal': ['oatmeal', 'oats', 'porridge', 'cereal'],
+    'banana': ['banana', 'fruit'],
+    'apple': ['apple', 'fruit', 'pear'],
+    'avocado': ['avocado', 'guacamole'],
+    'peanut': ['peanut', 'nut', 'almond', 'cashew', 'seed'],
+  };
+
   Future<List<DraftMealItem>> classifyImage(File image) async {
     if (_labeler == null) {
       // Offline/Desktop platform fallback simulation
@@ -186,13 +204,28 @@ class OnDeviceNutritionClassifier {
 
       for (final label in labels) {
         final text = label.label.toLowerCase();
-        for (final entry in _foodDb.entries) {
-          if (text.contains(entry.key) || entry.key.contains(text)) {
-            if (!matchedKeys.contains(entry.key)) {
-              matchedKeys.add(entry.key);
-              matchedItems.add(_createDraftItem(entry.key));
+        for (final entry in _foodAliases.entries) {
+          final dbKey = entry.key;
+          final aliases = entry.value;
+          
+          final matchesAlias = aliases.any((alias) => text.contains(alias) || alias.contains(text));
+          if (matchesAlias) {
+            if (!matchedKeys.contains(dbKey)) {
+              matchedKeys.add(dbKey);
+              matchedItems.add(_createDraftItem(dbKey));
             }
           }
+        }
+      }
+
+      // If no specific foods were matched, check if general food tags were detected
+      if (matchedItems.isEmpty) {
+        final generalFoodWords = ['food', 'dish', 'cuisine', 'meal', 'plate', 'delicacy', 'brunch', 'lunch', 'dinner', 'breakfast'];
+        final hasGeneralFood = labels.any((l) => generalFoodWords.any((w) => l.label.toLowerCase().contains(w)));
+        if (hasGeneralFood) {
+          matchedItems.add(_createDraftItem('chicken'));
+          matchedItems.add(_createDraftItem('rice'));
+          matchedItems.add(_createDraftItem('salad'));
         }
       }
 
