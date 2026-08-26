@@ -614,8 +614,36 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
     final proteinController = TextEditingController();
     final carbsController = TextEditingController();
     final fatController = TextEditingController();
-    String selectedMealType = _categories[_selectedFilterIdx];
+    final quantityController = TextEditingController(text: '1.0');
+    
+    // Time based default category
+    final int currentHour = DateTime.now().hour;
+    String selectedMealType = 'Breakfast';
+    if (currentHour >= 6 && currentHour < 11) {
+      selectedMealType = 'Breakfast';
+    } else if (currentHour >= 11 && currentHour < 16) {
+      selectedMealType = 'Lunch';
+    } else if (currentHour >= 16 && currentHour < 21) {
+      selectedMealType = 'Dinner';
+    } else {
+      selectedMealType = 'Snack';
+    }
+
     bool isSearching = false;
+    List<Map<String, dynamic>> localFoods = [];
+    bool isLocalFoodsLoaded = false;
+    List<Map<String, dynamic>> suggestions = [];
+    bool isOnlineSearching = false;
+    String onlineQuery = "";
+    Timer? debounceTimer;
+    
+    // Keep track of base macros for calculations when multiplier changes
+    double baseCalories = 0.0;
+    double baseProtein = 0.0;
+    double baseCarbs = 0.0;
+    double baseFat = 0.0;
+    double quantityMultiplier = 1.0;
+    String? suggestedMealTime;
 
     showDialog(
       context: context,
@@ -623,6 +651,70 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             final theme = Theme.of(context);
+
+            if (!isLocalFoodsLoaded) {
+              isLocalFoodsLoaded = true;
+              _loadLocalFoods().then((foods) {
+                setState(() {
+                  localFoods = foods;
+                });
+              });
+            }
+
+            void onQueryChanged(String query) {
+              if (debounceTimer?.isActive ?? false) debounceTimer!.cancel();
+              debounceTimer = Timer(const Duration(milliseconds: 150), () {
+                if (query.trim().isEmpty) {
+                  setState(() {
+                    suggestions = [];
+                    onlineQuery = "";
+                  });
+                  return;
+                }
+                final queryLower = query.toLowerCase().trim();
+                final filtered = localFoods.where((food) {
+                  final nameLower = food['name'].toString().toLowerCase();
+                  return nameLower.startsWith(queryLower) || nameLower.contains(queryLower);
+                }).toList();
+
+                setState(() {
+                  suggestions = filtered;
+                  onlineQuery = query;
+                });
+              });
+            }
+
+            void selectFood(Map<String, dynamic> food) {
+              setState(() {
+                nameController.text = food['name'];
+                baseCalories = (food['calories'] as num).toDouble();
+                baseProtein = (food['protein'] as num).toDouble();
+                baseCarbs = (food['carbs'] as num).toDouble();
+                baseFat = (food['fat'] as num).toDouble();
+                quantityMultiplier = 1.0;
+                quantityController.text = '1.0';
+                
+                caloriesController.text = baseCalories.toStringAsFixed(0);
+                proteinController.text = baseProtein.toStringAsFixed(1);
+                carbsController.text = baseCarbs.toStringAsFixed(1);
+                fatController.text = baseFat.toStringAsFixed(1);
+
+                suggestedMealTime = food['commonMealTime'];
+                suggestions = [];
+              });
+            }
+
+            void recalculateMacros(String value) {
+              final double mult = double.tryParse(value) ?? 1.0;
+              setState(() {
+                quantityMultiplier = mult;
+                caloriesController.text = (baseCalories * mult).toStringAsFixed(0);
+                proteinController.text = (baseProtein * mult).toStringAsFixed(1);
+                carbsController.text = (baseCarbs * mult).toStringAsFixed(1);
+                fatController.text = (baseFat * mult).toStringAsFixed(1);
+              });
+            }
+
             return AlertDialog(
               scrollable: true,
               backgroundColor: theme.cardColor,
@@ -666,10 +758,19 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                                 isSearching = false;
                                 if (product != null) {
                                   nameController.text = product['name'];
-                                  caloriesController.text = product['calories'].toStringAsFixed(0);
-                                  proteinController.text = product['protein'].toStringAsFixed(1);
-                                  carbsController.text = product['carbs'].toStringAsFixed(1);
-                                  fatController.text = product['fat'].toStringAsFixed(1);
+                                  baseCalories = product['calories'];
+                                  baseProtein = product['protein'];
+                                  baseCarbs = product['carbs'];
+                                  baseFat = product['fat'];
+                                  quantityMultiplier = 1.0;
+                                  quantityController.text = '1.0';
+
+                                  caloriesController.text = baseCalories.toStringAsFixed(0);
+                                  proteinController.text = baseProtein.toStringAsFixed(1);
+                                  carbsController.text = baseCarbs.toStringAsFixed(1);
+                                  fatController.text = baseFat.toStringAsFixed(1);
+                                  suggestedMealTime = null;
+                                  
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text('Auto-filled: ${product['name']}'),
@@ -709,159 +810,328 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                         ),
                       ),
                     )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                      TextField(
-                        controller: nameController,
-                        style: TextStyle(color: theme.colorScheme.onSurface),
-                        decoration: InputDecoration(
-                          labelText: 'Meal Name',
-                          labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                          prefixIcon: Icon(Icons.restaurant_rounded, color: theme.colorScheme.primary),
-                          filled: true,
-                          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedMealType,
-                        dropdownColor: theme.cardColor,
-                        style: TextStyle(color: theme.colorScheme.onSurface),
-                        decoration: InputDecoration(
-                          labelText: 'Meal Category',
-                          labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                          prefixIcon: Icon(Icons.category_rounded, color: theme.colorScheme.primary),
-                          filled: true,
-                          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-                          ),
-                        ),
-                        items: _categories.map((c) {
-                          return DropdownMenuItem(value: c, child: Text(c));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            selectedMealType = val;
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: caloriesController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: theme.colorScheme.onSurface),
-                        decoration: InputDecoration(
-                          labelText: 'Calories (kcal)',
-                          labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                          prefixIcon: const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent),
-                          filled: true,
-                          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: Colors.orangeAccent, width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: proteinController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
-                              decoration: InputDecoration(
-                                labelText: 'Protein',
-                                suffixText: 'g',
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
-                                filled: true,
-                                fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Colors.greenAccent, width: 2),
-                                ),
-                              ),
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Recent custom meals row
+                        if (provider.recentCustomMeals.isNotEmpty && suggestions.isEmpty) ...[
+                          Text(
+                            'Recently Logged:',
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: carbsController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
-                              decoration: InputDecoration(
-                                labelText: 'Carbs',
-                                suffixText: 'g',
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
-                                filled: true,
-                                fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
-                                ),
-                              ),
+                          const SizedBox(height: 6),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: provider.recentCustomMeals.map((entry) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 6.0),
+                                  child: ActionChip(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    label: Text(entry.recipeName, style: const TextStyle(fontSize: 11)),
+                                    backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                    onPressed: () {
+                                      setState(() {
+                                        nameController.text = entry.recipeName;
+                                        baseCalories = entry.calories;
+                                        baseProtein = entry.protein;
+                                        baseCarbs = entry.carbs;
+                                        baseFat = entry.fat;
+                                        quantityMultiplier = 1.0;
+                                        quantityController.text = '1.0';
+                                        
+                                        caloriesController.text = baseCalories.toStringAsFixed(0);
+                                        proteinController.text = baseProtein.toStringAsFixed(1);
+                                        carbsController.text = baseCarbs.toStringAsFixed(1);
+                                        fatController.text = baseFat.toStringAsFixed(1);
+                                        
+                                        selectedMealType = entry.mealType;
+                                        suggestedMealTime = null;
+                                      });
+                                    },
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: fatController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
-                              decoration: InputDecoration(
-                                labelText: 'Fat',
-                                suffixText: 'g',
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
-                                filled: true,
-                                fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                          const SizedBox(height: 12),
+                        ],
+
+                        // Autocomplete Search Name TextField
+                        TextField(
+                          controller: nameController,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
+                          onChanged: onQueryChanged,
+                          decoration: InputDecoration(
+                            labelText: 'Meal Name',
+                            labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                            prefixIcon: Icon(Icons.restaurant_rounded, color: theme.colorScheme.primary),
+                            filled: true,
+                            fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                            ),
+                          ),
+                        ),
+                        
+                        // Dropdown autocomplete list
+                        if (suggestions.isNotEmpty || (onlineQuery.isNotEmpty && !isOnlineSearching)) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            constraints: const BoxConstraints(maxHeight: 160),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.08)),
+                            ),
+                            child: ListView(
+                              shrinkWrap: true,
+                              physics: const BouncingScrollPhysics(),
+                              children: [
+                                ...suggestions.map((food) {
+                                  return ListTile(
+                                    dense: true,
+                                    visualDensity: VisualDensity.compact,
+                                    title: Text(food['name'], style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 13)),
+                                    subtitle: Text(
+                                      '${food['servingSize']}${food['servingUnit']} • ${(food['calories'] as num).toInt()} kcal',
+                                      style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
+                                    ),
+                                    trailing: Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.primary, size: 18),
+                                    onTap: () => selectFood(food),
+                                  );
+                                }),
+                                if (onlineQuery.isNotEmpty)
+                                  ListTile(
+                                    dense: true,
+                                    visualDensity: VisualDensity.compact,
+                                    leading: isOnlineSearching
+                                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentEmeraldLight))
+                                        : const Icon(Icons.cloud_download_rounded, color: AppColors.accentEmeraldLight, size: 16),
+                                    title: Text('Search online for "$onlineQuery"...', style: const TextStyle(color: AppColors.accentEmeraldLight, fontSize: 12, fontWeight: FontWeight.bold)),
+                                    onTap: isOnlineSearching
+                                        ? null
+                                        : () async {
+                                            setState(() {
+                                              isOnlineSearching = true;
+                                            });
+                                            final onlineResults = await _searchOpenFoodFactsOnline(onlineQuery);
+                                            setState(() {
+                                              isOnlineSearching = false;
+                                              suggestions = onlineResults;
+                                            });
+                                          },
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 10),
+
+                        // Suggested alternative category chip
+                        if (suggestedMealTime != null && suggestedMealTime != selectedMealType) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: InputChip(
+                                label: Text(
+                                  'Commonly logged at $suggestedMealTime. Switch?',
+                                  style: TextStyle(color: theme.colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w600),
                                 ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Colors.pinkAccent, width: 2),
-                                ),
+                                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                deleteIcon: const Icon(Icons.swap_horiz_rounded, size: 14),
+                                onPressed: () {
+                                  setState(() {
+                                    selectedMealType = suggestedMealTime!;
+                                  });
+                                },
                               ),
                             ),
                           ),
                         ],
-                      ),
-                    ],
-                  ),
+
+                        // Meal category dropdown
+                        DropdownButtonFormField<String>(
+                          value: selectedMealType,
+                          dropdownColor: theme.cardColor,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
+                          decoration: InputDecoration(
+                            labelText: 'Meal Category',
+                            labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                            prefixIcon: Icon(Icons.category_rounded, color: theme.colorScheme.primary),
+                            filled: true,
+                            fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                            ),
+                          ),
+                          items: _categories.map((c) {
+                            return DropdownMenuItem(value: c, child: Text(c));
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                selectedMealType = val;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Quantity Multiplier and Calories
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                controller: quantityController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                style: TextStyle(color: theme.colorScheme.onSurface),
+                                onChanged: recalculateMacros,
+                                decoration: InputDecoration(
+                                  labelText: 'Serving Qty',
+                                  prefixIcon: Icon(Icons.scale_rounded, color: theme.colorScheme.primary, size: 18),
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13),
+                                  filled: true,
+                                  fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 3,
+                              child: TextField(
+                                controller: caloriesController,
+                                keyboardType: TextInputType.number,
+                                style: TextStyle(color: theme.colorScheme.onSurface),
+                                decoration: InputDecoration(
+                                  labelText: 'Calories (kcal)',
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                  prefixIcon: const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent),
+                                  filled: true,
+                                  fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(color: Colors.orangeAccent, width: 2),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Macros row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: proteinController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+                                decoration: InputDecoration(
+                                  labelText: 'Protein',
+                                  suffixText: 'g',
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
+                                  filled: true,
+                                  fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Colors.greenAccent, width: 2),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                controller: carbsController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+                                decoration: InputDecoration(
+                                  labelText: 'Carbs',
+                                  suffixText: 'g',
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
+                                  filled: true,
+                                  fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                controller: fatController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+                                decoration: InputDecoration(
+                                  labelText: 'Fat',
+                                  suffixText: 'g',
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
+                                  filled: true,
+                                  fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Colors.pinkAccent, width: 2),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -882,10 +1152,24 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                             );
                             return;
                           }
-                          final calories = double.tryParse(caloriesController.text) ?? 0.0;
-                          final protein = double.tryParse(proteinController.text) ?? 0.0;
-                          final carbs = double.tryParse(carbsController.text) ?? 0.0;
-                          final fat = double.tryParse(fatController.text) ?? 0.0;
+                          final double calories = double.tryParse(caloriesController.text) ?? -1.0;
+                          final double protein = double.tryParse(proteinController.text) ?? -1.0;
+                          final double carbs = double.tryParse(carbsController.text) ?? -1.0;
+                          final double fat = double.tryParse(fatController.text) ?? -1.0;
+
+                          if (calories < 0 || protein < 0 || carbs < 0 || fat < 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter valid, non-negative numbers for nutrition values.')),
+                            );
+                            return;
+                          }
+
+                          if (calories > 10000 || protein > 1000 || carbs > 1000 || fat > 1000) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Nutrition values exceed sane bounds.')),
+                            );
+                            return;
+                          }
 
                           provider.addCustomMealEntry(
                             name: name,
