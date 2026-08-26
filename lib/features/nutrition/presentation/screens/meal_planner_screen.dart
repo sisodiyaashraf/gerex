@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -217,31 +219,45 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
       appBar: AppBar(
         title: Text(
           'Meal Planner',
-          style: theme.textTheme.titleLarge?.copyWith(
+          style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.onSurface,
+            fontSize: 20,
           ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.6),
         elevation: 0,
+        scrolledUnderElevation: 0,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              color: Colors.transparent,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.photo_camera_rounded, color: theme.colorScheme.onSurface),
+            icon: Icon(Icons.photo_camera_rounded, color: theme.colorScheme.onSurface, size: 22),
             tooltip: 'AI Food Scanner',
             onPressed: () => context.push('/meal-food-scanner'),
           ),
           IconButton(
-            icon: Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.onSurface),
+            icon: Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.onSurface, size: 22),
+            tooltip: 'Log Custom Meal',
             onPressed: () => _showLogMealDialog(context, mealProvider),
           ),
           IconButton(
-            icon: Icon(Icons.calendar_month_rounded, color: theme.colorScheme.onSurface),
+            icon: Icon(Icons.calendar_month_rounded, color: theme.colorScheme.onSurface, size: 22),
+            tooltip: 'Schedule',
             onPressed: () => context.push('/meal-schedule'),
           ),
           IconButton(
-            icon: Icon(Icons.search_rounded, color: theme.colorScheme.onSurface),
+            icon: Icon(Icons.search_rounded, color: theme.colorScheme.onSurface, size: 22),
+            tooltip: 'Browse',
             onPressed: () => context.push('/meal-browse'),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Container(
@@ -296,8 +312,13 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
             CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    16.0,
+                    MediaQuery.of(context).padding.top + AppBar().preferredSize.height + 12.0,
+                    16.0,
+                    100.0,
+                  ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Concentric Macro Rings Header Card
