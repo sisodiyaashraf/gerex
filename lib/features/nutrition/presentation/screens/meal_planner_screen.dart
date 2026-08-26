@@ -661,159 +661,160 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                           ],
                         ),
                       ),
-                              : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                          TextField(
-                            controller: nameController,
-                            style: TextStyle(color: theme.colorScheme.onSurface),
-                            decoration: InputDecoration(
-                              labelText: 'Meal Name',
-                              labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                              prefixIcon: Icon(Icons.restaurant_rounded, color: theme.colorScheme.primary),
-                              filled: true,
-                              fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                    )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                      TextField(
+                        controller: nameController,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration: InputDecoration(
+                          labelText: 'Meal Name',
+                          labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                          prefixIcon: Icon(Icons.restaurant_rounded, color: theme.colorScheme.primary),
+                          filled: true,
+                          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedMealType,
+                        dropdownColor: theme.cardColor,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration: InputDecoration(
+                          labelText: 'Meal Category',
+                          labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                          prefixIcon: Icon(Icons.category_rounded, color: theme.colorScheme.primary),
+                          filled: true,
+                          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                          ),
+                        ),
+                        items: _categories.map((c) {
+                          return DropdownMenuItem(value: c, child: Text(c));
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            selectedMealType = val;
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: caloriesController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration: InputDecoration(
+                          labelText: 'Calories (kcal)',
+                          labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                          prefixIcon: const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent),
+                          filled: true,
+                          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Colors.orangeAccent, width: 2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: proteinController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+                              decoration: InputDecoration(
+                                labelText: 'Protein',
+                                suffixText: 'g',
+                                labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
+                                filled: true,
+                                fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Colors.greenAccent, width: 2),
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          DropdownButtonFormField<String>(
-                            initialValue: selectedMealType,
-                            dropdownColor: theme.cardColor,
-                            style: TextStyle(color: theme.colorScheme.onSurface),
-                            decoration: InputDecoration(
-                              labelText: 'Meal Category',
-                              labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                              prefixIcon: Icon(Icons.category_rounded, color: theme.colorScheme.primary),
-                              filled: true,
-                              fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: carbsController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+                              decoration: InputDecoration(
+                                labelText: 'Carbs',
+                                suffixText: 'g',
+                                labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
+                                filled: true,
+                                fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-                              ),
-                            ),
-                            items: _categories.map((c) {
-                              return DropdownMenuItem(value: c, child: Text(c));
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                selectedMealType = val;
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: caloriesController,
-                            keyboardType: TextInputType.number,
-                            style: TextStyle(color: theme.colorScheme.onSurface),
-                            decoration: InputDecoration(
-                              labelText: 'Calories (kcal)',
-                              labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                              prefixIcon: const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent),
-                              filled: true,
-                              fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: const BorderSide(color: Colors.orangeAccent, width: 2),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: proteinController,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
-                                  decoration: InputDecoration(
-                                    labelText: 'Protein',
-                                    suffixText: 'g',
-                                    labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
-                                    filled: true,
-                                    fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Colors.greenAccent, width: 2),
-                                    ),
-                                  ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: fatController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+                              decoration: InputDecoration(
+                                labelText: 'Fat',
+                                suffixText: 'g',
+                                labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
+                                filled: true,
+                                fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Colors.pinkAccent, width: 2),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextField(
-                                  controller: carbsController,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
-                                  decoration: InputDecoration(
-                                    labelText: 'Carbs',
-                                    suffixText: 'g',
-                                    labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
-                                    filled: true,
-                                    fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextField(
-                                  controller: fatController,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
-                                  decoration: InputDecoration(
-                                    labelText: 'Fat',
-                                    suffixText: 'g',
-                                    labelStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 11),
-                                    filled: true,
-                                    fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Colors.pinkAccent, width: 2),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ],
-                      ),        ),
+                      ),
+                    ],
+                  ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
