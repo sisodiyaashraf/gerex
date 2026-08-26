@@ -78,15 +78,7 @@ class FoodScannerRepositoryImpl implements FoodScannerRepository {
         portionSize: (jsonMap['portionSize'] as num?)?.toDouble() ?? 100.0,
       );
     } catch (e) {
-      return const ScanResult(
-        foodName: 'Analysis Failed (Using Fallback)',
-        calories: 380.0,
-        protein: 28.0,
-        carbs: 42.0,
-        fat: 12.0,
-        portionSize: 200.0,
-        isFood: true,
-      );
+      rethrow;
     }
   }
 }
