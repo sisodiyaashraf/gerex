@@ -426,9 +426,9 @@ class _ScannerPageState extends State<ScannerPage> {
             child: CircularProgressIndicator(color: Color(0xFF50C19D), strokeWidth: 5),
           ),
           const SizedBox(height: 32),
-          Text('Running On-Device AI...', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text('Running Gerex AI Scanner...', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 8),
-          Text('Identifying foods and matching ingredient database', style: GoogleFonts.outfit(fontSize: 13, color: Colors.white60)),
+          Text('Identifying food items and estimating nutrition details...', style: GoogleFonts.outfit(fontSize: 13, color: Colors.white60)),
         ],
       ),
     );

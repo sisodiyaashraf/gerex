@@ -53,7 +53,7 @@ class ScannerProvider extends ChangeNotifier {
     _draftItems = [];
     _errorMessage = null;
     notifyListeners();
-    runOnDeviceLabeling();
+    analyzeWithGemini();
   }
 
   Future<void> pickImageFromGallery() async {
@@ -81,46 +81,30 @@ class ScannerProvider extends ChangeNotifier {
   }
 
   Future<void> runOnDeviceLabeling() async {
+    // Deprecated in favor of direct Gemini AI analysis
+    await analyzeWithGemini();
+  }
+
+  Future<void> analyzeWithGemini() async {
     if (_image == null) return;
 
     _isAnalyzing = true;
     _errorMessage = null;
     _draftItems = [];
-    notifyListeners();
-
-    try {
-      _draftItems = await _classifier.classifyImage(_image!);
-      if (_draftItems.isEmpty) {
-        _errorMessage = 'No recognizable food items found. Tap refine or enter manually.';
-      }
-    } catch (e) {
-      SecureLogger.logError('ScannerProvider: image labeling failed', e);
-      _errorMessage = 'Failed to analyze photo locally. Try refining with Gerex AI.';
-    } finally {
-      _isAnalyzing = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> escalateToCloudFallback() async {
-    if (_image == null) return;
-
-    _isCloudRunning = true;
-    _errorMessage = null;
+    _scanResult = null;
     notifyListeners();
 
     try {
       // Rate limiting: 10 calls per hour
       final allowed = await _checkAndRecordCloudCall();
       if (!allowed) {
-        _errorMessage = 'Cloud refinement limit reached (10 requests per hour). Adjust estimate manually.';
+        _errorMessage = 'Cloud scan limit reached (10 requests per hour). Adjust estimate manually.';
         return;
       }
 
       final result = await _analyzeFoodImageUseCase(_image!);
+      _scanResult = result;
       if (result.isFood) {
-        _scanResult = result;
-        // Convert single AI prediction into an editable draft item
         _draftItems = [
           DraftMealItem(
             name: result.foodName,
@@ -132,15 +116,19 @@ class ScannerProvider extends ChangeNotifier {
           )
         ];
       } else {
-        _errorMessage = 'Gerex AI identified a non-food item: ${result.foodName}.';
+        _errorMessage = 'Gerex AI identified a non-food item: "${result.foodName}".';
       }
     } catch (e) {
-      SecureLogger.logError('ScannerProvider: Cloud refinement failed', e);
-      _errorMessage = 'Cloud refinement failed. Please check connection and try again.';
+      SecureLogger.logError('ScannerProvider: Gemini analysis failed', e);
+      _errorMessage = 'Failed to analyze photo. Please check connection and try again.';
     } finally {
-      _isCloudRunning = false;
+      _isAnalyzing = false;
       notifyListeners();
     }
+  }
+
+  Future<void> escalateToCloudFallback() async {
+    await analyzeWithGemini();
   }
 
   Future<bool> _checkAndRecordCloudCall() async {
