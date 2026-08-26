@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -25,6 +27,51 @@ class MealPlannerScreen extends StatefulWidget {
 class _MealPlannerScreenState extends State<MealPlannerScreen> {
   int _selectedFilterIdx = 0;
   final List<String> _categories = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+
+  Future<List<Map<String, dynamic>>> _loadLocalFoods() async {
+    try {
+      final jsonString = await rootBundle.loadString('assets/data/foods.json');
+      final List<dynamic> list = json.decode(jsonString);
+      return list.map((item) => Map<String, dynamic>.from(item)).toList();
+    } catch (e) {
+      SecureLogger.logError('MealPlanner: failed to load local foods', e);
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _searchOpenFoodFactsOnline(String query) async {
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 5);
+      final encodedQuery = Uri.encodeComponent(query);
+      final uri = Uri.parse('https://world.openfoodfacts.org/cgi/search.pl?search_terms=$encodedQuery&search_simple=1&action=process&json=1&page_size=5');
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        final bodyStr = await response.transform(utf8.decoder).join();
+        final Map<String, dynamic> data = json.decode(bodyStr) as Map<String, dynamic>;
+        final List<dynamic> products = data['products'] ?? [];
+        return products.map((prod) {
+          final nut = prod['nutriments'] ?? {};
+          final name = prod['product_name'] ?? 'Unknown Online Food';
+          return {
+            'name': name,
+            'servingSize': 100.0,
+            'servingUnit': 'g',
+            'calories': (nut['energy-kcal_100g'] as num?)?.toDouble() ?? 0.0,
+            'protein': (nut['proteins_100g'] as num?)?.toDouble() ?? 0.0,
+            'carbs': (nut['carbohydrates_100g'] as num?)?.toDouble() ?? 0.0,
+            'fat': (nut['fat_100g'] as num?)?.toDouble() ?? 0.0,
+            'commonMealTime': 'Lunch',
+            'category': 'Lunch',
+          };
+        }).toList();
+      }
+    } catch (e) {
+      SecureLogger.logError('MealPlanner: online search failed', e);
+    }
+    return [];
+  }
 
   void _openFoodBrowser(BuildContext context, String category, MealProvider provider) {
     final filtered = provider.recipes.where((r) => r.category == category).toList();
