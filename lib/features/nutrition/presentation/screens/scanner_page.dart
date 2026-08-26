@@ -506,12 +506,10 @@ class _ScannerPageState extends State<ScannerPage> {
               ),
             ),
             const SizedBox(height: 24),
-            GregexButtonWrapper(
-              child: GerexButton(
-                text: 'Retake Photo / Scan Again',
-                icon: Icons.camera_alt_rounded,
-                onPressed: scannerProvider.reset,
-              ),
+            GerexButton(
+              text: 'Retake Photo / Scan Again',
+              icon: Icons.camera_alt_rounded,
+              onPressed: scannerProvider.reset,
             ),
           ] else ...[
             Text(
