@@ -333,4 +333,22 @@ class MealProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  List<MealPlanEntry> get recentCustomMeals {
+    final Set<String> seen = {};
+    final List<MealPlanEntry> list = [];
+    for (final entry in _mealPlan.reversed) {
+      final nameLower = entry.recipeName.toLowerCase().trim();
+      if (entry.recipeId == 'custom' &&
+          nameLower.isNotEmpty &&
+          !nameLower.contains('fallback') &&
+          !nameLower.contains('mock') &&
+          !seen.contains(nameLower)) {
+        seen.add(nameLower);
+        list.add(entry);
+      }
+      if (list.length >= 5) break;
+    }
+    return list;
+  }
 }
