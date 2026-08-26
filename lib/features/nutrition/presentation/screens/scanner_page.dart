@@ -460,6 +460,7 @@ class _ScannerPageState extends State<ScannerPage> {
     final double totalFat = scannerProvider.draftItems.fold(0.0, (sum, i) => sum + i.fat);
 
     final itemNames = scannerProvider.draftItems.map((item) => item.name).join(' + ');
+    final bool isNotFood = scannerProvider.scanResult != null && !scannerProvider.scanResult!.isFood;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -479,157 +480,178 @@ class _ScannerPageState extends State<ScannerPage> {
             ),
           const SizedBox(height: 16),
           
-          Text(
-            'Looks like:',
-            style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            itemNames.isNotEmpty ? itemNames : 'Unrecognized Food Plate',
-            style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-
-          GlassContainer(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Meal Draft Breakdown', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF50C19D)),
-                      onPressed: () => _showAddItemDialog(context, scannerProvider),
-                    ),
-                  ],
-                ),
-                const Divider(color: Colors.white24),
-                if (scannerProvider.draftItems.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Center(
-                      child: Text(
-                        scannerProvider.errorMessage ?? 'No food items in list. Add some manually.',
-                        style: const TextStyle(color: Colors.white60, fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: scannerProvider.draftItems.length,
-                    itemBuilder: (context, index) {
-                      final item = scannerProvider.draftItems[index];
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(item.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                        subtitle: Text(
-                          '${item.portionGrams.toInt()}g • ${item.calories.toInt()} kcal (P: ${item.protein.toInt()}g C: ${item.carbs.toInt()}g F: ${item.fat.toInt()}g)',
-                          style: const TextStyle(color: Colors.white70, fontSize: 11),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_rounded, color: Colors.white70, size: 18),
-                              onPressed: () => _showEditItemDialog(context, scannerProvider, index, item),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline_rounded, color: Colors.pinkAccent, size: 18),
-                              onPressed: () => scannerProvider.removeDraftItem(index),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                const Divider(color: Colors.white24),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Total Estimated Macros:', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
-                    Text('${totalCals.toInt()} kcal', style: GoogleFonts.outfit(color: Colors.orangeAccent, fontSize: 15, fontWeight: FontWeight.w900)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Protein: ${totalProtein.toStringAsFixed(1)}g', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
-                    Text('Carbs: ${totalCarbs.toStringAsFixed(1)}g', style: const TextStyle(color: Colors.blueAccent, fontSize: 11)),
-                    Text('Fat: ${totalFat.toStringAsFixed(1)}g', style: const TextStyle(color: Colors.pinkAccent, fontSize: 11)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          if (scannerProvider.isCloudRunning)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: CircularProgressIndicator(color: Color(0xFF50C19D)),
+          if (isNotFood) ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5), width: 1.5),
               ),
-            )
-          else ...[
-            TextButton.icon(
-              onPressed: scannerProvider.escalateToCloudFallback,
-              icon: const Icon(Icons.cloud_upload_rounded, color: Color(0xFF50C19D), size: 18),
-              label: Text('Refine with Gerex AI (Cloud Fallback)', style: GoogleFonts.outfit(color: const Color(0xFF50C19D), fontSize: 12, fontWeight: FontWeight.bold)),
+              child: Column(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 48),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Not a Food Item',
+                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Gerex AI identified this as: "${scannerProvider.scanResult!.foodName}". Please capture or select a valid food item or meal.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 24),
+            GregexButtonWrapper(
+              child: GerexButton(
+                text: 'Retake Photo / Scan Again',
+                icon: Icons.camera_alt_rounded,
+                onPressed: scannerProvider.reset,
+              ),
+            ),
+          ] else ...[
+            Text(
+              'Looks like:',
+              style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              itemNames.isNotEmpty ? itemNames : 'Unrecognized Food Plate',
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            GlassContainer(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Meal Draft Breakdown', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF50C19D)),
+                        onPressed: () => _showAddItemDialog(context, scannerProvider),
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Colors.white24),
+                  if (scannerProvider.draftItems.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: Text(
+                          scannerProvider.errorMessage ?? 'No food items in list. Add some manually.',
+                          style: const TextStyle(color: Colors.white60, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: scannerProvider.draftItems.length,
+                      itemBuilder: (context, index) {
+                        final item = scannerProvider.draftItems[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(item.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          subtitle: Text(
+                            '${item.portionGrams.toInt()}g • ${item.calories.toInt()} kcal (P: ${item.protein.toInt()}g C: ${item.carbs.toInt()}g F: ${item.fat.toInt()}g)',
+                            style: const TextStyle(color: Colors.white70, fontSize: 11),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_rounded, color: Colors.white70, size: 18),
+                                onPressed: () => _showEditItemDialog(context, scannerProvider, index, item),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline_rounded, color: Colors.pinkAccent, size: 18),
+                                onPressed: () => scannerProvider.removeDraftItem(index),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  const Divider(color: Colors.white24),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total Estimated Macros:', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('${totalCals.toInt()} kcal', style: GoogleFonts.outfit(color: Colors.orangeAccent, fontSize: 15, fontWeight: FontWeight.w900)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Protein: ${totalProtein.toStringAsFixed(1)}g', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
+                      Text('Carbs: ${totalCarbs.toStringAsFixed(1)}g', style: const TextStyle(color: Colors.blueAccent, fontSize: 11)),
+                      Text('Fat: ${totalFat.toStringAsFixed(1)}g', style: const TextStyle(color: Colors.pinkAccent, fontSize: 11)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
             if (scannerProvider.errorMessage != null)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
                 child: Text(
                   scannerProvider.errorMessage!,
                   style: const TextStyle(color: Colors.orangeAccent, fontSize: 11, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
               ),
-          ],
-          
-          const SizedBox(height: 20),
-          
-          DropdownButtonFormField<String>(
-            initialValue: _selectedMealType,
-            dropdownColor: const Color(0xFF151729),
-            style: GoogleFonts.outfit(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Meal Category',
-              labelStyle: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
-              enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white24), borderRadius: BorderRadius.circular(16)),
-              focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Color(0xFF50C19D)), borderRadius: BorderRadius.circular(16)),
+            
+            const SizedBox(height: 20),
+            
+            DropdownButtonFormField<String>(
+              initialValue: _selectedMealType,
+              dropdownColor: const Color(0xFF151729),
+              style: GoogleFonts.outfit(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Meal Category',
+                labelStyle: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white24), borderRadius: BorderRadius.circular(16)),
+                focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Color(0xFF50C19D)), borderRadius: BorderRadius.circular(16)),
+              ),
+              items: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
+                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                  .toList(),
+              onChanged: (val) => setState(() => _selectedMealType = val ?? 'Breakfast'),
             ),
-            items: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
-                .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-                .toList(),
-            onChanged: (val) => setState(() => _selectedMealType = val ?? 'Breakfast'),
-          ),
-          const SizedBox(height: 24),
-          GerexButton(
-            text: 'Confirm & Log Meal',
-            icon: Icons.check_circle_outline_rounded,
-            onPressed: () async {
-              await scannerProvider.confirmAndLogMeal(
-                context: context,
-                mealProvider: mealProvider,
-                mealType: _selectedMealType,
-              );
-              if (mounted) Navigator.pop(context);
-            },
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: scannerProvider.reset,
-            child: Text('Retake Photo / Scan Again', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500)),
-          ),
+            const SizedBox(height: 24),
+            GerexButton(
+              text: 'Confirm & Log Meal',
+              icon: Icons.check_circle_outline_rounded,
+              onPressed: () async {
+                await scannerProvider.confirmAndLogMeal(
+                  context: context,
+                  mealProvider: mealProvider,
+                  mealType: _selectedMealType,
+                );
+                if (mounted) Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: scannerProvider.reset,
+              child: Text('Retake Photo / Scan Again', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500)),
+            ),
+          ],
         ],
       ),
     );
