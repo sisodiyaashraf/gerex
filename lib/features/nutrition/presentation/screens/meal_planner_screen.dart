@@ -642,7 +642,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
     double baseProtein = 0.0;
     double baseCarbs = 0.0;
     double baseFat = 0.0;
-    double quantityMultiplier = 1.0;
     String? suggestedMealTime;
 
     showDialog(
@@ -691,7 +690,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 baseProtein = (food['protein'] as num).toDouble();
                 baseCarbs = (food['carbs'] as num).toDouble();
                 baseFat = (food['fat'] as num).toDouble();
-                quantityMultiplier = 1.0;
                 quantityController.text = '1.0';
                 
                 caloriesController.text = baseCalories.toStringAsFixed(0);
@@ -707,7 +705,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
             void recalculateMacros(String value) {
               final double mult = double.tryParse(value) ?? 1.0;
               setState(() {
-                quantityMultiplier = mult;
                 caloriesController.text = (baseCalories * mult).toStringAsFixed(0);
                 proteinController.text = (baseProtein * mult).toStringAsFixed(1);
                 carbsController.text = (baseCarbs * mult).toStringAsFixed(1);
@@ -762,7 +759,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                                   baseProtein = product['protein'];
                                   baseCarbs = product['carbs'];
                                   baseFat = product['fat'];
-                                  quantityMultiplier = 1.0;
                                   quantityController.text = '1.0';
 
                                   caloriesController.text = baseCalories.toStringAsFixed(0);
@@ -843,7 +839,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                                         baseProtein = entry.protein;
                                         baseCarbs = entry.carbs;
                                         baseFat = entry.fat;
-                                        quantityMultiplier = 1.0;
                                         quantityController.text = '1.0';
                                         
                                         caloriesController.text = baseCalories.toStringAsFixed(0);
@@ -965,7 +960,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
 
                         // Meal category dropdown
                         DropdownButtonFormField<String>(
-                          value: selectedMealType,
+                          initialValue: selectedMealType,
                           dropdownColor: theme.cardColor,
                           style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: InputDecoration(
