@@ -556,6 +556,7 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
                   ),
+                  const SizedBox(height: 8),
                   _buildSettingsRow(
                     icon: FontAwesomeIcons.volumeHigh,
                     title: 'Voice Coaching',
@@ -692,7 +693,7 @@ class ProfileScreen extends StatelessWidget {
                       child: const Text('Test'),
                     ),
                   ),
-
+                  const SizedBox(height: 8),
 
                   // Offline-Only AI toggle settings item
                   Consumer<AIProvider>(
