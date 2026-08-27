@@ -10,6 +10,16 @@ class MockNotificationProvider extends Fake implements NotificationProvider {
   Future<void> scheduleNotification(NotificationPayload payload) async {}
 
   @override
+  Future<void> scheduleMealReminder({
+    required String entryId,
+    required String recipeId,
+    required String mealName,
+    required String mealType,
+    required DateTime day,
+    double? calories,
+  }) async {}
+
+  @override
   Future<void> cancelNotification(String id) async {}
 }
 
