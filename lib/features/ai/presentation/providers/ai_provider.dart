@@ -75,6 +75,11 @@ class AIProvider extends ChangeNotifier {
   bool _isSummaryLoading = false;
   String? _summaryError;
 
+  // Sleep Insight state
+  String? _sleepInsight;
+  bool _isSleepInsightLoading = false;
+  String? _sleepInsightError;
+
   // Getters
   String? get generatedWorkoutPlan => _generatedWorkoutPlan;
   bool get isPlanLoading => _isPlanLoading;
@@ -91,6 +96,10 @@ class AIProvider extends ChangeNotifier {
   String? get progressSummary => _progressSummary;
   bool get isSummaryLoading => _isSummaryLoading;
   String? get summaryError => _summaryError;
+
+  String? get sleepInsight => _sleepInsight;
+  bool get isSleepInsightLoading => _isSleepInsightLoading;
+  String? get sleepInsightError => _sleepInsightError;
 
   // ----------------------------------------------------
   // Workout Plan Generator
@@ -327,6 +336,56 @@ class AIProvider extends ChangeNotifier {
         _insightError = SecureLogger.sanitizeException(failure.message);
         _isInsightLoading = false;
         _dailyInsight = 'Fuel your body with proper nutrition, prioritize recovery sleep, and target progressive overload for today\'s training session!';
+      },
+    );
+    notifyListeners();
+  }
+
+  Future<void> loadSleepInsight({bool forceRefresh = false}) async {
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      final cachedDate = prefs.getString('sleep_insight_date');
+      final cachedText = prefs.getString('sleep_insight_text');
+      
+      if (cachedDate == todayStr && cachedText != null && !forceRefresh) {
+        _sleepInsight = cachedText;
+        notifyListeners();
+        return;
+      }
+    } catch (_) {}
+
+    _isSleepInsightLoading = true;
+    _sleepInsightError = null;
+    notifyListeners();
+
+    final allowed = await _checkAndRecordAiCall();
+    if (!allowed) {
+      _sleepInsightError = 'AI quota reached for this hour.';
+      _isSleepInsightLoading = false;
+      _sleepInsight = 'Prioritize consistent sleep schedules! Aim to go to bed at the same time every day to maximize recovery and daytime energy.';
+      notifyListeners();
+      return;
+    }
+
+    final result = await _aiRepository.getSleepInsight();
+
+    result.fold(
+      onSuccess: (insight) {
+        _sleepInsight = insight;
+        _isSleepInsightLoading = false;
+        try {
+          final prefs = di.sl<SharedPreferences>();
+          prefs.setString('sleep_insight_date', todayStr);
+          prefs.setString('sleep_insight_text', insight);
+        } catch (_) {}
+      },
+      onFailure: (failure) {
+        SecureLogger.logError('loadSleepInsight failed', failure.message);
+        _sleepInsightError = SecureLogger.sanitizeException(failure.message);
+        _isSleepInsightLoading = false;
+        _sleepInsight = 'Consistent bedtime schedules improve sleep score and deep recovery stages. Try setting a bedtime reminder.';
       },
     );
     notifyListeners();
