@@ -19,8 +19,6 @@ import 'package:gerex/features/ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
-import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
-import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -237,7 +235,12 @@ class ProfileScreen extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               slivers: [
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: EdgeInsets.fromLTRB(
+              16.0,
+              MediaQuery.of(context).padding.top + AppBar().preferredSize.height + 12.0,
+              16.0,
+              12.0,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Signature Hero Mint Card Profile Summary
@@ -414,137 +417,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),                // Body Weight Metrics Card
-                GestureDetector(
-                  onTap: () => context.push('/analytics'),
-                  child: PastelGradientCard(
-                    type: PastelCardType.rose,
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        const FaIcon(FontAwesomeIcons.scaleUnbalanced, color: AppColors.accentEmeraldLight, size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Weight Tracker Analytics',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkHeading),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                'Height: ${activity.userHeight.toInt()} cm • Weight: ${formatWeight(currentWeight)}',
-                                style: TextStyle(fontSize: 12, color: AppColors.textDarkMuted),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.accentEmeraldLight),
-                      ],
-                    ),
-                  ),
-                ),    const SizedBox(height: 16),
-
-                  // Stats Dashboard Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: PastelGradientCard(
-                          type: PastelCardType.mint,
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                          child: Column(
-                            children: [
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  '$workoutsCount',
-                                  style: theme.textTheme.headlineMedium?.copyWith(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w900,
-                                    color: theme.colorScheme.primary,
-                                    fontSize: context.sp(28),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'Workouts',
-                                  style: TextStyle(fontSize: context.sp(12)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: PastelGradientCard(
-                          type: PastelCardType.sunset,
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                          child: Column(
-                            children: [
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  '$streak d',
-                                  style: theme.textTheme.headlineMedium?.copyWith(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.orangeAccent,
-                                    fontSize: context.sp(28),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'Streak',
-                                  style: TextStyle(fontSize: context.sp(12)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: PastelGradientCard(
-                          type: PastelCardType.indigo,
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                          child: Column(
-                            children: [
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  formatVolume(totalVolume),
-                                  style: theme.textTheme.headlineMedium?.copyWith(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF818CF8),
-                                    fontSize: context.sp(28),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'Volume',
-                                  style: TextStyle(fontSize: context.sp(12)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 24),
 
                   // Badge Achievements Grid Title
@@ -633,73 +505,7 @@ class ProfileScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 8),
-                  _buildSettingsRow(
-                    icon: FontAwesomeIcons.award,
-                    title: 'Achievements Badges',
-                    trailing: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      size: 14,
-                    ),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (c) => Dialog(
-                          backgroundColor: Colors.transparent,
-                          child: GlassContainer(
-                            padding: const EdgeInsets.all(20),
-                            borderRadius: 24,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  'My Achievements Badges',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                _buildBadgeRow(
-                                  theme,
-                                  title: 'Consistency Champion',
-                                  description: 'Keep a workout streak of 3+ days.',
-                                  unlocked: streak >= 3,
-                                  icon: FontAwesomeIcons.fire,
-                                  color: Colors.orangeAccent,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildBadgeRow(
-                                  theme,
-                                  title: 'Iron Initiate',
-                                  description: 'Log 5+ completed workouts in total.',
-                                  unlocked: workoutsCount >= 5,
-                                  icon: FontAwesomeIcons.dumbbell,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(height: 12),
-                                 _buildBadgeRow(
-                                   theme,
-                                   title: 'AI Disciple',
-                                   description: 'Leverage AI Coach or Plan Generation.',
-                                   unlocked: true,
-                                   icon: FontAwesomeIcons.wandMagicSparkles,
-                                   color: const Color(0xFF818CF8),
-                                 ),
-                                const SizedBox(height: 20),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(c),
-                                  child: const Text('Awesome'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+
 
 
                   const SizedBox(height: 24),
@@ -1079,72 +885,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBadgeRow(
-    ThemeData theme, {
-    required String title,
-    required String description,
-    required bool unlocked,
-    required dynamic icon,
-    required Color color,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: (unlocked ? color : Colors.grey).withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: unlocked ? color : Colors.grey.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: FaIcon(
-                icon,
-                color: unlocked ? color : Colors.grey,
-                size: 16,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: unlocked ? null : Colors.grey,
-                  ),
-                ),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            unlocked ? 'Unlocked' : 'Locked',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: unlocked ? theme.colorScheme.primary : Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildBadgeCard(
     ThemeData theme, {
