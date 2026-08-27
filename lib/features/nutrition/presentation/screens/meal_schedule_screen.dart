@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/meal_provider.dart';
 import '../../domain/entities/meal_entities.dart';
@@ -73,6 +74,22 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Meal Schedule',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.textDarkHeading,
+            fontSize: 18,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppColors.textDarkHeading),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       floatingActionButton: Container(
         decoration: BoxDecoration(
           gradient: GerexGradients.primaryCTA,
@@ -105,29 +122,28 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
         child: Column(
           children: [
             // Custom Month Header Toolbar
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                      onPressed: () => _changeMonth(-1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.chevron_left_rounded, color: isDark ? Colors.white70 : Colors.black87),
+                    onPressed: () => _changeMonth(-1),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    '${_months[_selectedDate.month - 1]} ${_selectedDate.year}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    Text(
-                      '${_months[_selectedDate.month - 1]} ${_selectedDate.year}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios_rounded),
-                      onPressed: () => _changeMonth(1),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white70 : Colors.black87),
+                    onPressed: () => _changeMonth(1),
+                  ),
+                ],
               ),
             ),
 
