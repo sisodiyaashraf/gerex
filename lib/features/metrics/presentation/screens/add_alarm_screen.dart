@@ -214,6 +214,78 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Smart Alarm Config Card
+                  GlassContainer(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.sensors_rounded, size: 18, color: Colors.emerald),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Smart Alarm Mode',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            Switch.adaptive(
+                              activeColor: Colors.emerald,
+                              value: _isSmartAlarm,
+                              onChanged: (val) => setState(() => _isSmartAlarm = val),
+                            ),
+                          ],
+                        ),
+                        if (_isSmartAlarm) ...[
+                          const SizedBox(height: 16),
+                          const Divider(height: 1, color: Colors.black12),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Wake Window Start Time',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => _selectWindowStart(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _smartAlarmWindowStart.format(context),
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Outfit'),
+                                  ),
+                                  const Icon(Icons.edit, size: 16, color: Colors.emerald),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Wake Window: ${_smartAlarmWindowStart.format(context)} to ${_wakeTime.format(context)}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.emerald),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Smart Alarm tracking requires placing the phone on the bed, screen-side up, near your pillow. Accuracy depends on placement and case thickness.',
+                            style: TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Vibrate toggle
                   GlassContainer(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -246,6 +318,8 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                         wake: _formatTime(_wakeTime),
                         repeatDays: _repeatDays,
                         vibrate: _vibrate,
+                        isSmartAlarm: _isSmartAlarm,
+                        smartAlarmWindowStart: _isSmartAlarm ? _formatTime(_smartAlarmWindowStart) : null,
                       );
 
                       if (context.mounted) {
