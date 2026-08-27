@@ -8,7 +8,6 @@ import '../../domain/entities/meal_entities.dart';
 import '../widgets/concentric_macro_rings.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
-import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
 class MealScheduleScreen extends StatefulWidget {
@@ -40,6 +39,7 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final mealProvider = Provider.of<MealProvider>(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Filter meals for the selected date
     final dateMeals = mealProvider.mealPlan.where((m) =>
@@ -92,7 +92,16 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
           child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
-      body: LiquidBackground(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF070B19), const Color(0xFF0F172A)]
+                : [const Color(0xFFEEF2F6), const Color(0xFFE2E8F0)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Column(
           children: [
             // Custom Month Header Toolbar
