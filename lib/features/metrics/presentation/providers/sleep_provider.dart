@@ -760,7 +760,7 @@ class SleepProvider extends ChangeNotifier {
     notifyListeners();
 
     _accelerometerSubscription?.cancel();
-    _accelerometerSubscription = userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+    _accelerometerSubscription = userAccelerometerEventStream().listen((UserAccelerometerEvent event) {
       final double magnitude = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
       _accelerometerMagnitudes.add(magnitude);
       

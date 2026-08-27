@@ -94,7 +94,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDarkHeading),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -543,7 +543,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> {
           const SizedBox(height: 16),
           const Divider(height: 1, color: Colors.black12),
           const SizedBox(height: 12),
-          _buildBreakdownRow('Duration Goal Factor', breakdown.durationScore, 50, Colors.emerald),
+          _buildBreakdownRow('Duration Goal Factor', breakdown.durationScore, 50, const Color(0xFF10B981)),
           const SizedBox(height: 8),
           _buildBreakdownRow('Bedtime Consistency', breakdown.consistencyScore, 30, Colors.indigo),
           const SizedBox(height: 8),
