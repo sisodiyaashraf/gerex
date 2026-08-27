@@ -113,4 +113,16 @@ class AIRepositoryImpl implements AIRepository {
       onFailure: (fail) => FailureResult(fail),
     );
   }
+
+  @override
+  Future<Result<String, Failure>> getSleepInsight() async {
+    const prompt =
+        'Based on the user\'s sleep logs and sleep score history provided in the context, generate one short, highly personalized sleep recovery insight or hygiene tip (maximum 2 sentences). Re-assess their consistency, sleep goal gaps, or bedtime schedules and offer a friendly, actionable suggestion. Avoid generic templates.';
+
+    final res = await _aiRouter.routeQuery(prompt: prompt);
+    return res.fold(
+      onSuccess: (result) => Success(result.text.trim()),
+      onFailure: (fail) => FailureResult(fail),
+    );
+  }
 }
