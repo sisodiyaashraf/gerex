@@ -28,6 +28,7 @@ import '../../features/profile/presentation/screens/progress_photos_screen.dart'
 import '../../features/metrics/presentation/screens/sleep_tracker_screen.dart';
 import '../../features/metrics/presentation/screens/sleep_schedule_screen.dart';
 import '../../features/metrics/presentation/screens/add_alarm_screen.dart';
+import '../../features/metrics/presentation/screens/wind_down_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_planner_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_details_screen.dart';
 import '../../features/nutrition/domain/entities/meal_entities.dart';
