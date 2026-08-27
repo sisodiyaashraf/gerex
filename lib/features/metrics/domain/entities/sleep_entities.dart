@@ -1,3 +1,35 @@
+enum SleepConnectionState {
+  connect,
+  live,
+  disconnected,
+}
+
+enum SleepSource {
+  none,
+  health,
+  manual,
+}
+
+class SyncedSleepData {
+  final double totalHours;
+  final double deepHours;
+  final double remHours;
+  final double lightHours;
+  final double awakeHours;
+  final bool hasStages;
+  final DateTime wakeTime;
+
+  const SyncedSleepData({
+    required this.totalHours,
+    required this.deepHours,
+    required this.remHours,
+    required this.lightHours,
+    required this.awakeHours,
+    required this.hasStages,
+    required this.wakeTime,
+  });
+}
+
 class SleepLog {
   final String id;
   final DateTime date;
@@ -37,10 +69,12 @@ class SleepLog {
 class SleepAlarm {
   final String id;
   final String bedtimeHour; // e.g. "22:30"
-  final String wakeHour; // e.g. "06:30"
+  final String wakeHour; // e.g. "06:30" (For smart alarm, this represents the end of the wake window)
   final List<int> repeatDays; // Monday=1, Sunday=7
   final bool isEnabled;
   final bool vibrate;
+  final bool isSmartAlarm;
+  final String? smartAlarmWindowStart; // e.g. "06:00"
 
   const SleepAlarm({
     required this.id,
@@ -49,6 +83,8 @@ class SleepAlarm {
     required this.repeatDays,
     required this.isEnabled,
     required this.vibrate,
+    this.isSmartAlarm = false,
+    this.smartAlarmWindowStart,
   });
 
   factory SleepAlarm.fromJson(Map<String, dynamic> json) {
@@ -59,6 +95,8 @@ class SleepAlarm {
       repeatDays: List<int>.from(json['repeat_days'] ?? []),
       isEnabled: json['is_enabled'] as bool? ?? true,
       vibrate: json['vibrate'] as bool? ?? true,
+      isSmartAlarm: json['is_smart_alarm'] as bool? ?? false,
+      smartAlarmWindowStart: json['smart_alarm_window_start'] as String?,
     );
   }
 
@@ -70,6 +108,9 @@ class SleepAlarm {
       'repeat_days': repeatDays,
       'is_enabled': isEnabled,
       'vibrate': vibrate,
+      'is_smart_alarm': isSmartAlarm,
+      'smart_alarm_window_start': smartAlarmWindowStart,
     };
   }
 }
+
