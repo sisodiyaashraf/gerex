@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/sleep_provider.dart';
 import '../../domain/entities/sleep_entities.dart';
+import '../../../ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
@@ -13,13 +14,30 @@ import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
-class SleepTrackerScreen extends StatelessWidget {
+class SleepTrackerScreen extends StatefulWidget {
   const SleepTrackerScreen({super.key});
+
+  @override
+  State<SleepTrackerScreen> createState() => _SleepTrackerScreenState();
+}
+
+class _SleepTrackerScreenState extends State<SleepTrackerScreen> {
+  bool _showDurationChart = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SleepProvider>().fetchLatestSleepData();
+      context.read<AIProvider>().loadSleepInsight();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final sleepProvider = Provider.of<SleepProvider>(context);
+    final aiProvider = Provider.of<AIProvider>(context);
 
     final lastLog = sleepProvider.sleepLogs.isNotEmpty ? sleepProvider.sleepLogs.last : null;
     final averageSleep = sleepProvider.sleepLogs.isNotEmpty
@@ -30,18 +48,38 @@ class SleepTrackerScreen extends StatelessWidget {
       final dt = log.date;
       return GerexLineChartPoint(
         label: '${dt.month}/${dt.day}',
-        value: log.hours,
+        value: _showDurationChart ? log.hours : log.quality,
       );
     }).toList();
 
-    // Sleep Stage Proportions based on Log Quality
-    final deepPct = lastLog != null ? (lastLog.quality / 100 * 0.08 + 0.12).clamp(0.10, 0.22) : 0.0;
-    final remPct = lastLog != null ? (lastLog.quality / 100 * 0.07 + 0.15).clamp(0.12, 0.25) : 0.0;
-    final lightPct = lastLog != null ? 1.0 - deepPct - remPct : 0.0;
+    // Sleep Stage Proportions
+    double deepPct = 0.0;
+    double remPct = 0.0;
+    double lightPct = 0.0;
+    double awakePct = 0.0;
+    bool hasStages = false;
 
-    final deepHours = lastLog != null ? lastLog.hours * deepPct : 0.0;
-    final remHours = lastLog != null ? lastLog.hours * remPct : 0.0;
-    final lightHours = lastLog != null ? lastLog.hours * lightPct : 0.0;
+    if (sleepProvider.activeSource == SleepSource.health && sleepProvider.syncedSleepData != null) {
+      final synced = sleepProvider.syncedSleepData!;
+      if (synced.hasStages && synced.totalHours > 0) {
+        hasStages = true;
+        deepPct = synced.deepHours / synced.totalHours;
+        remPct = synced.remHours / synced.totalHours;
+        lightPct = synced.lightHours / synced.totalHours;
+        awakePct = synced.awakeHours / synced.totalHours;
+      }
+    } else if (lastLog != null) {
+      // Estimated proportions fallback
+      deepPct = (lastLog.quality / 100 * 0.08 + 0.12).clamp(0.10, 0.22);
+      remPct = (lastLog.quality / 100 * 0.07 + 0.15).clamp(0.12, 0.25);
+      lightPct = 1.0 - deepPct - remPct;
+    }
+
+    final double totalHours = lastLog != null ? lastLog.hours : 0.0;
+    final deepHours = totalHours * deepPct;
+    final remHours = totalHours * remPct;
+    final lightHours = totalHours * lightPct;
+    final awakeHours = totalHours * awakePct;
 
     return GerexScaffold(
       appBar: AppBar(
@@ -55,15 +93,23 @@ class SleepTrackerScreen extends StatelessWidget {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDarkHeading),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 100.0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Summary Hero Mint Card
+                // 1. Wind-Down Sanctuary Entry Card
+                _buildWindDownCard(context),
+                const SizedBox(height: 16),
+
+                // 2. Last Night Sleep Hero Mint Card
                 HeroMintCard(
                   margin: const EdgeInsets.only(bottom: 20),
                   child: Column(
@@ -73,7 +119,9 @@ class SleepTrackerScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Last Night Sleep',
+                            sleepProvider.activeSource == SleepSource.health
+                                ? 'Last Night Sleep (OS Synced)'
+                                : 'Last Night Sleep',
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -112,7 +160,7 @@ class SleepTrackerScreen extends StatelessWidget {
                       BigStatNumber(
                         number: lastLog != null ? '${lastLog.hours}' : '0.0',
                         label: lastLog != null
-                            ? 'Sleep Quality: ${lastLog.quality.toInt()}%'
+                            ? 'Sleep Score: ${lastLog.quality.toInt()}%'
                             : 'No logs recorded',
                         unit: 'HOURS',
                         isDarkCard: false,
@@ -135,77 +183,102 @@ class SleepTrackerScreen extends StatelessWidget {
                           ),
                         ),
                       ],
-                      if (lastLog != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          'Estimated Sleep Cycle Stages',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF334155),
+                      const SizedBox(height: 16),
+                      Text(
+                        hasStages ? 'Actual Sleep Stages' : 'Estimated Sleep Stages',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF334155),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: SizedBox(
+                          height: 10,
+                          width: double.infinity,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: (deepPct * 100).round().clamp(1, 100),
+                                child: Container(color: const Color(0xFF3B82F6)),
+                              ),
+                              Expanded(
+                                flex: (remPct * 100).round().clamp(1, 100),
+                                child: Container(color: const Color(0xFF06B6D4)),
+                              ),
+                              Expanded(
+                                flex: (lightPct * 100).round().clamp(1, 100),
+                                child: Container(color: const Color(0xFFA855F7)),
+                              ),
+                              if (awakePct > 0)
+                                Expanded(
+                                  flex: (awakePct * 100).round().clamp(1, 100),
+                                  child: Container(color: const Color(0xFFF59E0B)),
+                                ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: SizedBox(
-                            height: 10,
-                            width: double.infinity,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: (deepPct * 100).toInt(),
-                                  child: Container(color: const Color(0xFF3B82F6)), // Deep - Blue
-                                ),
-                                Expanded(
-                                  flex: (remPct * 100).toInt(),
-                                  child: Container(color: const Color(0xFF06B6D4)), // REM - Cyan
-                                ),
-                                Expanded(
-                                  flex: (lightPct * 100).toInt(),
-                                  child: Container(color: const Color(0xFFA855F7)), // Light - Purple
-                                ),
-                              ],
-                            ),
-                          ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildLegendItem('Deep', '${deepHours.toStringAsFixed(1)}h', const Color(0xFF3B82F6)),
+                          _buildLegendItem('REM', '${remHours.toStringAsFixed(1)}h', const Color(0xFF06B6D4)),
+                          _buildLegendItem('Light', '${lightHours.toStringAsFixed(1)}h', const Color(0xFFA855F7)),
+                          if (awakePct > 0)
+                            _buildLegendItem('Awake', '${awakeHours.toStringAsFixed(1)}h', const Color(0xFFF59E0B)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Smartwatch estimates are best-effort measurements, not clinical-grade medical diagnosis.',
+                        style: GoogleFonts.outfit(
+                          fontSize: 9,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black54,
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildLegendItem('Deep', '${deepHours.toStringAsFixed(1)}h', const Color(0xFF3B82F6)),
-                            _buildLegendItem('REM', '${remHours.toStringAsFixed(1)}h', const Color(0xFF06B6D4)),
-                            _buildLegendItem('Light', '${lightHours.toStringAsFixed(1)}h', const Color(0xFFA855F7)),
-                          ],
-                        ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
 
-                // Insights panel
-                if (sleepProvider.sleepLogs.isNotEmpty) ...[
-                  Text(
-                    'Sleep Recovery Insights',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDarkHeading,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildInsightsCard(averageSleep, lastLog),
-                  const SizedBox(height: 24),
+                // 3. Sleep Score Breakdown Card
+                if (lastLog != null) ...[
+                  _buildSleepScoreBreakdownCard(sleepProvider, lastLog),
+                  const SizedBox(height: 20),
                 ],
 
-                // Chart
-                Text(
-                  'Sleep Analytics (Last 7 Days)',
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDarkHeading,
-                    fontSize: 16,
-                  ),
+                // 4. AI Sleep Insights Card
+                _buildAiSleepInsightCard(aiProvider),
+                const SizedBox(height: 20),
+
+                // 5. OS Health Sync Settings Card
+                _buildHealthSyncCard(context, sleepProvider),
+                const SizedBox(height: 20),
+
+                // 6. Sleep Analytics Section (Chart)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Sleep Analytics',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDarkHeading,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        _buildChartToggleButton('Duration', _showDurationChart),
+                        const SizedBox(width: 8),
+                        _buildChartToggleButton('Score', !_showDurationChart),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 PastelGradientCard(
@@ -226,7 +299,7 @@ class SleepTrackerScreen extends StatelessWidget {
                       else
                         GerexLineChart(
                           data: sleepChartPoints,
-                          unit: 'hrs',
+                          unit: _showDurationChart ? 'hrs' : 'pts',
                           height: 180,
                         ),
                       const SizedBox(height: 12),
@@ -256,7 +329,7 @@ class SleepTrackerScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Alarms
+                // 7. Bedtime & Alarms Alerters Section
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -296,7 +369,10 @@ class SleepTrackerScreen extends StatelessWidget {
                             children: [
                               CircleAvatar(
                                 backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                child: Icon(Icons.alarm_rounded, color: theme.colorScheme.primary),
+                                child: Icon(
+                                  alarm.isSmartAlarm ? Icons.sensors_rounded : Icons.alarm_rounded,
+                                  color: theme.colorScheme.primary,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -304,7 +380,9 @@ class SleepTrackerScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Wake up at: ${alarm.wakeHour}',
+                                      alarm.isSmartAlarm
+                                          ? 'Smart Window: ${alarm.smartAlarmWindowStart} - ${alarm.wakeHour}'
+                                          : 'Wake up at: ${alarm.wakeHour}',
                                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                     ),
                                     const SizedBox(height: 2),
@@ -320,14 +398,14 @@ class SleepTrackerScreen extends StatelessWidget {
                               ),
                               Switch.adaptive(
                                 value: alarm.isEnabled,
-                                onChanged: (val) {
-                                  sleepProvider.toggleAlarm(alarm.id, val);
-                                },
-                              ),
-                            ],
+                                  onChanged: (val) {
+                                    sleepProvider.toggleAlarm(alarm.id, val);
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      )),
+                        )),
 
                 const SizedBox(height: 24),
                 Row(
@@ -341,17 +419,303 @@ class SleepTrackerScreen extends StatelessWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         icon: const FaIcon(FontAwesomeIcons.clock, size: 14),
-                        label: Text('Log Sleep', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                        label: Text('Log Sleep Manually', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                         onPressed: () => _showLogSleepDialog(context, sleepProvider),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 60),
               ]),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildWindDownCard(BuildContext context) {
+    return PastelGradientCard(
+      type: PastelCardType.indigo,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.indigo.shade50,
+            child: const Icon(Icons.spa_rounded, color: Colors.indigoAccent),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Wind-Down Sanctuary',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Ambient sound loops and box-breathing guided exercises to relax your mind.',
+                  style: TextStyle(fontSize: 11, color: Colors.black87),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+            onPressed: () => context.push('/wind-down'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSleepScoreBreakdownCard(SleepProvider sleepProvider, SleepLog lastLog) {
+    final breakdown = sleepProvider.calculateScoreBreakdown(lastLog);
+    final score = breakdown.totalScore;
+
+    String scoreStatus = 'Poor';
+    Color scoreColor = Colors.redAccent;
+    if (score >= 90) {
+      scoreStatus = 'Excellent 🏆';
+      scoreColor = AppColors.accentEmeraldLight;
+    } else if (score >= 80) {
+      scoreStatus = 'Good 🧘';
+      scoreColor = Colors.indigoAccent;
+    } else if (score >= 60) {
+      scoreStatus = 'Fair 😴';
+      scoreColor = Colors.orangeAccent;
+    }
+
+    return PastelGradientCard(
+      type: PastelCardType.mint,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                height: 64,
+                width: 64,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: score / 100.0,
+                      strokeWidth: 6,
+                      color: scoreColor,
+                      backgroundColor: Colors.black.withValues(alpha: 0.05),
+                    ),
+                    Text(
+                      '${score.toInt()}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Sleep Recovery Score',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Quality Status: $scoreStatus',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: scoreColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: Colors.black12),
+          const SizedBox(height: 12),
+          _buildBreakdownRow('Duration Goal Factor', breakdown.durationScore, 50, Colors.emerald),
+          const SizedBox(height: 8),
+          _buildBreakdownRow('Bedtime Consistency', breakdown.consistencyScore, 30, Colors.indigo),
+          const SizedBox(height: 8),
+          _buildBreakdownRow('Sleep Stage Quality', breakdown.qualityScore, 20, Colors.purple),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBreakdownRow(String label, double score, double maxScore, Color color) {
+    final progress = score / maxScore;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black54)),
+            Text('${score.toInt()}/${maxScore.toInt()} pts', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress.clamp(0.0, 1.0),
+            minHeight: 4,
+            color: color,
+            backgroundColor: Colors.black.withValues(alpha: 0.05),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAiSleepInsightCard(AIProvider aiProvider) {
+    if (aiProvider.isSleepInsightLoading) {
+      return const PastelGradientCard(
+        type: PastelCardType.slate,
+        padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.indigoAccent),
+            ),
+            SizedBox(width: 16),
+            Text('AI Coach analyzing sleep data...'),
+          ],
+        ),
+      );
+    }
+
+    if (aiProvider.sleepInsight != null) {
+      return PastelGradientCard(
+        type: PastelCardType.rose,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.insights_rounded, color: Colors.redAccent, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  'Gerex AI Sleep Insights',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent, fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              aiProvider.sleepInsight!,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF14181F), height: 1.4),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildHealthSyncCard(BuildContext context, SleepProvider provider) {
+    final isHealthActive = provider.connectionState == SleepConnectionState.live &&
+        provider.activeSource == SleepSource.health;
+
+    return GlassContainer(
+      borderRadius: 16,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.sync_rounded, color: Colors.blueAccent, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'OS Health Sync Integration',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Sync sleep session duration & stages automatically from Android Health Connect or iOS HealthKit.',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          if (provider.healthConnectError != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              provider.healthConnectError!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+            ),
+            const SizedBox(height: 8),
+            if (!provider.isHealthConnectInstalled)
+              ElevatedButton(
+                onPressed: () => provider.installHealthConnect(),
+                child: const Text('Install Health Connect'),
+              )
+            else if (provider.isHealthConnectDeniedPermanently)
+              ElevatedButton(
+                onPressed: () => provider.openHealthConnectPermissions(),
+                child: const Text('Configure Health Connect Settings'),
+              ),
+          ],
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isHealthActive ? Colors.indigoAccent.withValues(alpha: 0.1) : Colors.indigoAccent,
+                foregroundColor: isHealthActive ? Colors.indigoAccent : Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: Icon(isHealthActive ? Icons.check_circle_rounded : Icons.sync_rounded, size: 16),
+              label: Text(isHealthActive ? 'Active OS Syncing' : 'Enable OS Health Sync'),
+              onPressed: isHealthActive
+                  ? () => provider.disconnectHealthSync()
+                  : () => provider.startHealthConnectPolling(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartToggleButton(String label, bool active) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _showDurationChart = label == 'Duration';
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? Colors.indigoAccent : Colors.grey.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: active ? Colors.white : Colors.grey.shade600,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -390,86 +754,6 @@ class SleepTrackerScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildInsightsCard(double averageSleep, SleepLog? lastLog) {
-    String recoveryMsg = 'Averages indicate good sleep duration.';
-    IconData recoveryIcon = Icons.check_circle_outline_rounded;
-    Color iconColor = const Color(0xFF10B981);
-
-    if (averageSleep < 7.0) {
-      recoveryMsg = 'Your average sleep is under 7.0h. Muscle repair, recovery, and strength gains might be hindered.';
-      recoveryIcon = Icons.warning_amber_rounded;
-      iconColor = Colors.orange;
-    } else if (averageSleep >= 7.5) {
-      recoveryMsg = 'Great average duration! Your muscles are receiving optimal protein synthesis and recovery windows.';
-      recoveryIcon = Icons.stars_rounded;
-      iconColor = Colors.amber;
-    }
-
-    String hygieneMsg = 'Maintain wind-down routines for better deep sleep stages.';
-    if (lastLog != null && lastLog.quality < 75.0) {
-      hygieneMsg = 'Last night\'s quality was low (${lastLog.quality.toInt()}%). Avoid blue screens 1h before bed.';
-    }
-
-    return GlassContainer(
-      type: GlassContainerType.normal,
-      padding: const EdgeInsets.all(16),
-      borderRadius: 16,
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(recoveryIcon, color: iconColor, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Muscle & Recovery',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF0B1220)),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      recoveryMsg,
-                      style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF475569), height: 1.4),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Divider(color: Colors.black12, height: 1),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.wb_sunny_outlined, color: Colors.blueAccent, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sleep Hygiene Advice',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF0B1220)),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      hygieneMsg,
-                      style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF475569), height: 1.4),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
