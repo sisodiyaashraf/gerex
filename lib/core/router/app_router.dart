@@ -199,6 +199,10 @@ class AppRouter {
         builder: (context, state) => const AddAlarmScreen(),
       ),
       GoRoute(
+        path: '/wind-down',
+        builder: (context, state) => const WindDownScreen(),
+      ),
+      GoRoute(
         path: '/meal-planner',
         builder: (context, state) => const MealPlannerScreen(),
       ),
@@ -323,6 +327,9 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
+    final sleepProvider = Provider.of<SleepProvider>(context);
+    final activeAlarm = sleepProvider.activeFiringAlarm;
+
     return Scaffold(
       extendBody: true, // Allows body stack to bleed behind navigation overlay
       body: Stack(
@@ -362,6 +369,83 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
               ],
             ),
           ),
+
+          if (activeAlarm != null)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.85),
+                child: Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1B4B), // Premium dark indigo background
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.indigoAccent.withValues(alpha: 0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.indigoAccent.withValues(alpha: 0.2),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.alarm_on_rounded,
+                          color: Colors.orangeAccent,
+                          size: 72,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          activeAlarm.isSmartAlarm ? 'Smart Alarm ⏰' : 'Wake Up Alarm ⏰',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          activeAlarm.isSmartAlarm
+                              ? 'Movement patterns indicate you are in lighter sleep. Good morning!'
+                              : 'Time to rise and shine!',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981), // Emerald Green
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: () {
+                              sleepProvider.dismissActiveAlarm();
+                            },
+                            child: const Text(
+                              'Dismiss Alarm',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
