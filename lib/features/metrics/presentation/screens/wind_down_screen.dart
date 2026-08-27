@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -32,7 +32,7 @@ class _WindDownScreenState extends State<WindDownScreen> {
   };
 
   final Map<String, IconData> _soundIcons = {
-    'Rain': Icons.cloud_rain_rounded,
+    'Rain': Icons.umbrella_rounded,
     'Ocean': Icons.water_rounded,
     'White Noise': Icons.waves_rounded,
     'Fan': Icons.wind_power_rounded,
