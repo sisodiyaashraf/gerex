@@ -272,6 +272,7 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
+                          isExpanded: true,
                           value: _selectedCuisine,
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                           dropdownColor: theme.cardColor,
@@ -302,6 +303,7 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
+                          isExpanded: true,
                           value: _sortBy,
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                           dropdownColor: theme.cardColor,
@@ -562,20 +564,24 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                             ],
                                           ),
                                         ),
-                                        IconButton(
-                                          icon: Icon(
-                                            recipe.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                            color: recipe.isFavorite ? Colors.redAccent : const Color(0xFF14181F).withValues(alpha: 0.4),
-                                            size: 18,
-                                          ),
-                                          onPressed: () {
+                                        GestureDetector(
+                                          onTap: () {
                                             mealProvider.toggleFavoriteRecipe(recipe.id);
                                           },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                            child: Icon(
+                                              recipe.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                              color: recipe.isFavorite ? Colors.redAccent : const Color(0xFF14181F).withValues(alpha: 0.4),
+                                              size: 18,
+                                            ),
+                                          ),
                                         ),
                                         const SizedBox(width: 4),
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
                                             visualDensity: VisualDensity.compact,
+                                            padding: const EdgeInsets.symmetric(horizontal: 12),
                                           ),
                                           onPressed: () => context.push(
                                             '/meal-details',
