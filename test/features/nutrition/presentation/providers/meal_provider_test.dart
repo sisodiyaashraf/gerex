@@ -3,13 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gerex/features/nutrition/presentation/providers/meal_provider.dart';
 import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:gerex/core/providers/notification_provider.dart';
+import 'package:gerex/core/notifications/notification_models.dart';
 
 class MockNotificationProvider extends Fake implements NotificationProvider {
   @override
-  Future<void> scheduleNotification(int id, String title, String body, DateTime scheduledTime, {String? route}) async {}
+  Future<void> scheduleNotification(NotificationPayload payload) async {}
 
   @override
-  Future<void> cancelNotification(int id) async {}
+  Future<void> cancelNotification(String id) async {}
 }
 
 void main() {
