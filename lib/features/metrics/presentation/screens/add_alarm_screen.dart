@@ -225,7 +225,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                           children: [
                             const Row(
                               children: [
-                                Icon(Icons.sensors_rounded, size: 18, color: Colors.emerald),
+                                Icon(Icons.sensors_rounded, size: 18, color: const Color(0xFF10B981)),
                                 SizedBox(width: 12),
                                 Text(
                                   'Smart Alarm Mode',
@@ -234,7 +234,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                               ],
                             ),
                             Switch.adaptive(
-                              activeColor: Colors.emerald,
+                              activeColor: const Color(0xFF10B981),
                               value: _isSmartAlarm,
                               onChanged: (val) => setState(() => _isSmartAlarm = val),
                             ),
@@ -265,7 +265,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                                     _smartAlarmWindowStart.format(context),
                                     style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Outfit'),
                                   ),
-                                  const Icon(Icons.edit, size: 16, color: Colors.emerald),
+                                  const Icon(Icons.edit, size: 16, color: const Color(0xFF10B981)),
                                 ],
                               ),
                             ),
@@ -273,7 +273,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                           const SizedBox(height: 12),
                           Text(
                             'Wake Window: ${_smartAlarmWindowStart.format(context)} to ${_wakeTime.format(context)}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.emerald),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
                           ),
                           const SizedBox(height: 8),
                           const Text(
