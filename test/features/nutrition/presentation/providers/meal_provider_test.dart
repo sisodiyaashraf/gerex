@@ -1,6 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gerex/features/nutrition/presentation/providers/meal_provider.dart';
+import 'package:gerex/core/di/injection_container.dart' as di;
+import 'package:gerex/core/providers/notification_provider.dart';
+
+class MockNotificationProvider extends Fake implements NotificationProvider {
+  @override
+  Future<void> scheduleNotification(int id, String title, String body, DateTime scheduledTime, {String? route}) async {}
+
+  @override
+  Future<void> cancelNotification(int id) async {}
+}
 
 void main() {
   group('MealProvider Tests', () {
@@ -10,6 +20,9 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
+      if (!di.sl.isRegistered<NotificationProvider>()) {
+        di.sl.registerLazySingleton<NotificationProvider>(() => MockNotificationProvider());
+      }
       provider = MealProvider(prefs);
     });
 

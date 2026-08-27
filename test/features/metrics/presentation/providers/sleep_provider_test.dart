@@ -9,6 +9,12 @@ class MockNotificationProvider extends Fake implements NotificationProvider {
   Future<void> sendNotification(String title, String description) async {
     sendNotificationCalled = true;
   }
+
+  @override
+  Future<void> scheduleNotification(int id, String title, String body, DateTime scheduledTime, {String? route}) async {}
+
+  @override
+  Future<void> cancelNotification(int id) async {}
 }
 
 void main() {
