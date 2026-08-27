@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/meal_provider.dart';
 import '../../domain/entities/meal_entities.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -150,61 +151,98 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     centerTitle: true,
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: headerGradient,
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                categoryColor.withValues(alpha: 0.3),
-                                categoryColor.withValues(alpha: 0.05),
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: categoryColor.withValues(alpha: 0.2),
-                                blurRadius: 20,
-                                spreadRadius: 5,
+                    background: currentRecipe.imageUrl != null
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl: currentRecipe.imageUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: categoryColor.withValues(alpha: 0.1),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: categoryColor,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: categoryColor.withValues(alpha: 0.15),
+                                  child: const Center(
+                                    child: Icon(Icons.error_outline_rounded, size: 36),
+                                  ),
+                                ),
+                              ),
+                              // Shadow/fade overlay so the title text and buttons stand out clearly
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF14181F).withValues(alpha: 0.6),
-                                border: Border.all(
-                                  color: categoryColor.withValues(alpha: 0.4),
-                                  width: 1.5,
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              gradient: headerGradient,
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      categoryColor.withValues(alpha: 0.3),
+                                      categoryColor.withValues(alpha: 0.05),
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: categoryColor.withValues(alpha: 0.2),
+                                      blurRadius: 20,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              child: Center(
-                                child: Image.asset(
-                                  currentRecipe.category == 'Breakfast'
-                                      ? 'assets/images/breakfast_icon.png'
-                                      : currentRecipe.category == 'Lunch'
-                                          ? 'assets/images/lunch_icon.png'
-                                          : currentRecipe.category == 'Dinner'
-                                              ? 'assets/images/dinner_icon.png'
-                                              : 'assets/images/snack_icon.png',
-                                  width: 44,
-                                  height: 44,
-                                  color: categoryColor,
+                                child: Center(
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                      border: Border.all(
+                                        color: categoryColor.withValues(alpha: 0.4),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Image.asset(
+                                        currentRecipe.category == 'Breakfast'
+                                            ? 'assets/images/breakfast_icon.png'
+                                            : currentRecipe.category == 'Lunch'
+                                                ? 'assets/images/lunch_icon.png'
+                                                : currentRecipe.category == 'Dinner'
+                                                    ? 'assets/images/dinner_icon.png'
+                                                    : 'assets/images/snack_icon.png',
+                                        width: 44,
+                                        height: 44,
+                                        color: categoryColor,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
                   ),
                   actions: [
                     IconButton(

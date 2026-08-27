@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/meal_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
@@ -16,6 +18,9 @@ class MealBrowseScreen extends StatefulWidget {
 class _MealBrowseScreenState extends State<MealBrowseScreen> {
   String _searchQuery = '';
   String _selectedCategory = 'All';
+  String _selectedDietTag = 'All';
+  String _selectedCuisine = 'All';
+  String _sortBy = 'Alphabetical';
 
   @override
   Widget build(BuildContext context) {
@@ -30,17 +35,37 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
 
     // Filtering recipes
     final filteredRecipes = mealProvider.recipes.where((recipe) {
-      final matchesSearch = recipe.name.toLowerCase().contains(
-        _searchQuery.toLowerCase(),
-      );
-      final matchesCategory =
-          _selectedCategory == 'All' || recipe.category == _selectedCategory;
-      return matchesSearch && matchesCategory;
+      final matchesSearch = recipe.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          recipe.ingredients.any((ing) => ing.toLowerCase().contains(_searchQuery.toLowerCase()));
+      
+      final matchesCategory = _selectedCategory == 'All' || recipe.category == _selectedCategory;
+      
+      final matchesTag = _selectedDietTag == 'All' ||
+          (_selectedDietTag == 'Vegetarian' && !(recipe.tags ?? []).contains('meat') && !(recipe.tags ?? []).contains('fish')) ||
+          (_selectedDietTag == 'High Protein' && recipe.protein >= 25.0) ||
+          (_selectedDietTag == 'Low Carb' && recipe.carbs <= 20.0) ||
+          (_selectedDietTag == 'Favorites' && recipe.isFavorite);
+
+      final matchesCuisine = _selectedCuisine == 'All' ||
+          (recipe.tags ?? []).contains(_selectedCuisine.toLowerCase());
+
+      return matchesSearch && matchesCategory && matchesTag && matchesCuisine;
     }).toList();
+
+    // Sorting
+    if (_sortBy == 'Calories: Low to High') {
+      filteredRecipes.sort((a, b) => a.calories.compareTo(b.calories));
+    } else if (_sortBy == 'Calories: High to Low') {
+      filteredRecipes.sort((a, b) => b.calories.compareTo(a.calories));
+    } else if (_sortBy == 'Protein: High to Low') {
+      filteredRecipes.sort((a, b) => b.protein.compareTo(a.protein));
+    } else if (_sortBy == 'Alphabetical') {
+      filteredRecipes.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    }
 
     // Recommendations (let's show high-protein category items or first 3)
     final recommended = mealProvider.recipes
-        .where((r) => r.protein >= 25)
+        .where((r) => r.protein >= 25.0)
         .toList();
 
     return GerexScaffold(
@@ -166,6 +191,140 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Diet Tags Scroll chips
+            SizedBox(
+              height: 38,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: const ['All', 'Favorites', 'Vegetarian', 'High Protein', 'Low Carb'].length,
+                itemBuilder: (context, index) {
+                  final tags = const ['All', 'Favorites', 'Vegetarian', 'High Protein', 'Low Carb'];
+                  final tag = tags[index];
+                  final isSelected = tag == _selectedDietTag;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedDietTag = tag;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (tag == 'Favorites') ...[
+                              Icon(
+                                isSelected ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                size: 12,
+                                color: isSelected ? Colors.redAccent : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Text(
+                              tag,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Dropdowns Row (Cuisine & Sort By)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  // Cuisine Dropdown
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.08)),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedCuisine,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                          dropdownColor: theme.cardColor,
+                          icon: const Icon(Icons.arrow_drop_down_rounded),
+                          items: const [
+                            'All', 'American', 'British', 'Canadian', 'Chinese', 'French', 'Indian', 'Italian', 'Mexican', 'Jamaican', 'Japanese'
+                          ].map((c) => DropdownMenuItem(value: c, child: Text('$c Cuisine'))).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedCuisine = val;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Sort Dropdown
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.08)),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _sortBy,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                          dropdownColor: theme.cardColor,
+                          icon: const Icon(Icons.sort_rounded),
+                          items: const [
+                            'Alphabetical', 'Calories: Low to High', 'Calories: High to Low', 'Protein: High to Low'
+                          ].map((s) => DropdownMenuItem(value: s, child: Text('Sort: $s'))).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _sortBy = val;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
             Expanded(
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -177,6 +336,8 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                         // Recommendation Row
                         if (_selectedCategory == 'All' &&
                             _searchQuery.isEmpty &&
+                            _selectedDietTag == 'All' &&
+                            _selectedCuisine == 'All' &&
                             recommended.isNotEmpty) ...[
                           Text(
                             'Recommendations for Diet',
@@ -201,15 +362,23 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                     padding: const EdgeInsets.all(12),
                                     borderRadius: 16,
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
+                                            CircleAvatar(
+                                              radius: 12,
+                                              backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
+                                              backgroundImage: recipe.imageUrl != null
+                                                  ? CachedNetworkImageProvider(recipe.imageUrl!)
+                                                  : null,
+                                              child: recipe.imageUrl == null
+                                                  ? const Icon(Icons.restaurant_menu_rounded, size: 8, color: Color(0xFF14181F))
+                                                  : null,
+                                            ),
+                                            const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
                                                 recipe.name,
@@ -242,8 +411,7 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                         ),
                                         const Spacer(),
                                         Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Container(
                                               padding:
@@ -267,23 +435,42 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                                                 ),
                                               ),
                                             ),
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                visualDensity:
-                                                    VisualDensity.compact,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                    ),
-                                              ),
-                                              onPressed: () => context.push(
-                                                '/meal-details',
-                                                extra: recipe,
-                                              ),
-                                              child: const Text(
-                                                'View',
-                                                style: TextStyle(fontSize: 11),
-                                              ),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                IconButton(
+                                                  visualDensity: VisualDensity.compact,
+                                                  padding: EdgeInsets.zero,
+                                                  constraints: const BoxConstraints(),
+                                                  icon: Icon(
+                                                    recipe.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                                    color: recipe.isFavorite ? Colors.redAccent : const Color(0xFF14181F).withValues(alpha: 0.5),
+                                                    size: 16,
+                                                  ),
+                                                  onPressed: () {
+                                                    mealProvider.toggleFavoriteRecipe(recipe.id);
+                                                  },
+                                                ),
+                                                const SizedBox(width: 8),
+                                                ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    visualDensity:
+                                                        VisualDensity.compact,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 12,
+                                                        ),
+                                                  ),
+                                                  onPressed: () => context.push(
+                                                    '/meal-details',
+                                                    extra: recipe,
+                                                  ),
+                                                  child: const Text(
+                                                    'View',
+                                                    style: TextStyle(fontSize: 11),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
@@ -305,90 +492,111 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        if (filteredRecipes.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 40),
-                            child: Center(
-                              child: Text(
-                                'No recipes match search criteria.',
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.4,
+                      ]),
+                    ),
+                  ),
+
+                  // Virtualized list of recipe cards
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    sliver: filteredRecipes.isEmpty
+                        ? SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 40),
+                              child: Center(
+                                child: Text(
+                                  'No recipes match search criteria.',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                                   ),
                                 ),
                               ),
                             ),
                           )
-                        else
-                          ...filteredRecipes.map(
-                            (recipe) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: PastelGradientCard(
-                                type: PastelCardType.sunset,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: const Color(
-                                        0xFF14181F,
-                                      ).withValues(alpha: 0.08),
-                                      child: const Icon(
-                                        Icons.restaurant_menu_rounded,
-                                        color: Color(0xFF14181F),
-                                        size: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            recipe.name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              color: Color(0xFF14181F),
-                                            ),
+                        : SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final recipe = filteredRecipes[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12.0),
+                                  child: PastelGradientCard(
+                                    type: PastelCardType.sunset,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: const Color(0xFF14181F).withValues(alpha: 0.08),
+                                          backgroundImage: recipe.imageUrl != null
+                                              ? CachedNetworkImageProvider(recipe.imageUrl!)
+                                              : null,
+                                          child: recipe.imageUrl == null
+                                              ? const Icon(
+                                                  Icons.restaurant_menu_rounded,
+                                                  color: Color(0xFF14181F),
+                                                  size: 16,
+                                                )
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                recipe.name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                  color: Color(0xFF14181F),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '${recipe.calories.toInt()} kcal • P: ${recipe.protein.toInt()}g • F: ${recipe.fat.toInt()}g',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            '${recipe.calories.toInt()} kcal • P: ${recipe.protein.toInt()}g • F: ${recipe.fat.toInt()}g',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: const Color(
-                                                0xFF14181F,
-                                              ).withValues(alpha: 0.6),
-                                            ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            recipe.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                            color: recipe.isFavorite ? Colors.redAccent : const Color(0xFF14181F).withValues(alpha: 0.4),
+                                            size: 18,
                                           ),
-                                        ],
-                                      ),
+                                          onPressed: () {
+                                            mealProvider.toggleFavoriteRecipe(recipe.id);
+                                          },
+                                        ),
+                                        const SizedBox(width: 4),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            visualDensity: VisualDensity.compact,
+                                          ),
+                                          onPressed: () => context.push(
+                                            '/meal-details',
+                                            extra: recipe,
+                                          ),
+                                          child: const Text(
+                                            'View',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
-                                      ),
-                                      onPressed: () => context.push(
-                                        '/meal-details',
-                                        extra: recipe,
-                                      ),
-                                      child: const Text(
-                                        'View',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              },
+                              childCount: filteredRecipes.length,
                             ),
                           ),
-                        const SizedBox(height: 100),
-                      ]),
-                    ),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 100),
                   ),
                 ],
               ),

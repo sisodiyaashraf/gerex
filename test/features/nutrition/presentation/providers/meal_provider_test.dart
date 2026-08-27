@@ -38,8 +38,8 @@ void main() {
     });
 
     test('Initial recipes list is seeded correctly', () {
-      expect(provider.recipes.length, 6);
-      expect(provider.recipes.first.name, 'Avocado Toast & Eggs');
+      expect(provider.recipes.length, 56);
+      expect(provider.recipes.first.name, 'Air Fryer Egg Rolls');
     });
 
     test('Initial meal plan is populated with seed defaults', () {
@@ -52,7 +52,7 @@ void main() {
       provider.addMealPlanEntry(recipe, 'Snack', DateTime.now());
 
       expect(provider.mealPlan.length, initialCount + 1);
-      expect(provider.mealPlan.last.recipeName, 'Avocado Toast & Eggs');
+      expect(provider.mealPlan.last.recipeName, 'Air Fryer Egg Rolls');
     });
 
     test('deleteMealPlanEntry deletes entry successfully', () {
@@ -64,15 +64,22 @@ void main() {
       expect(provider.mealPlan.any((m) => m.id == entryId), false);
     });
 
-    test('toggleFavoriteRecipe updates favorite state', () {
+    test('toggleFavoriteRecipe updates favorite state and persists to SharedPreferences', () {
       final recipeId = provider.recipes.first.id;
       expect(provider.recipes.first.isFavorite, false);
 
       provider.toggleFavoriteRecipe(recipeId);
       expect(provider.recipes.first.isFavorite, true);
 
-      provider.toggleFavoriteRecipe(recipeId);
-      expect(provider.recipes.first.isFavorite, false);
+      // Create a new provider with the same mock shared preferences instance
+      final newProvider = MealProvider(prefs);
+      expect(newProvider.recipes.first.isFavorite, true);
+
+      newProvider.toggleFavoriteRecipe(recipeId);
+      expect(newProvider.recipes.first.isFavorite, false);
+
+      final freshProvider = MealProvider(prefs);
+      expect(freshProvider.recipes.first.isFavorite, false);
     });
   });
 }

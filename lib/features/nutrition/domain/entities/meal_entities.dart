@@ -13,6 +13,7 @@ class Recipe {
   final double fat; // grams
   bool isFavorite;
   final List<String>? tags;
+  final String? imageUrl;
 
   Recipe({
     required this.id,
@@ -28,6 +29,7 @@ class Recipe {
     required this.fat,
     this.isFavorite = false,
     this.tags = const [],
+    this.imageUrl,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class Recipe {
       fat: (json['fat'] as num? ?? 0.0).toDouble(),
       isFavorite: json['is_favorite'] as bool? ?? false,
       tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
+      imageUrl: json['image_url'] as String?,
     );
   }
 
@@ -63,6 +66,7 @@ class Recipe {
       'fat': fat,
       'is_favorite': isFavorite,
       'tags': tags,
+      'image_url': imageUrl,
     };
   }
 }
