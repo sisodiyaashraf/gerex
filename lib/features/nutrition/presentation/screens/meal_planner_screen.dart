@@ -741,12 +741,14 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                 side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
               ),
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Log Custom Meal',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface, fontSize: 18),
+                  Expanded(
+                    child: Text(
+                      'Log Custom Meal',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface, fontSize: 18),
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
