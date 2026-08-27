@@ -20,6 +20,8 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   TimeOfDay _wakeTime = const TimeOfDay(hour: 6, minute: 30);
   final List<int> _repeatDays = [1, 2, 3, 4, 5];
   bool _vibrate = true;
+  bool _isSmartAlarm = false;
+  TimeOfDay _smartAlarmWindowStart = const TimeOfDay(hour: 6, minute: 0);
 
   Future<void> _selectBedtime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -41,6 +43,18 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
     if (picked != null && picked != _wakeTime) {
       setState(() {
         _wakeTime = picked;
+      });
+    }
+  }
+
+  Future<void> _selectWindowStart(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _smartAlarmWindowStart,
+    );
+    if (picked != null && picked != _smartAlarmWindowStart) {
+      setState(() {
+        _smartAlarmWindowStart = picked;
       });
     }
   }
