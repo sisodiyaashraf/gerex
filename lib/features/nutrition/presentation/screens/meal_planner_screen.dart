@@ -521,7 +521,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
                   ),
                   const SizedBox(height: 12),
                   _buildCategoryRow(context, mealProvider),
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 20),
                 ]),
               ),
             ),
@@ -542,6 +542,7 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
     ];
 
     return GridView.builder(
+      padding: EdgeInsets.zero,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
