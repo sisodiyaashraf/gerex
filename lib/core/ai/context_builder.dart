@@ -4,6 +4,7 @@ import '../../features/metrics/presentation/providers/metrics_provider.dart';
 import '../../core/providers/activity_provider.dart';
 import '../../features/nutrition/presentation/providers/meal_provider.dart';
 import '../../features/exercise/presentation/providers/exercise_provider.dart';
+import '../../features/metrics/presentation/providers/sleep_provider.dart';
 
 class ContextBuilder {
   ContextBuilder._();
@@ -16,6 +17,7 @@ class ContextBuilder {
       final activityProvider = di.sl<ActivityProvider>();
       final mealProvider = di.sl<MealProvider>();
       final exerciseProvider = di.sl<ExerciseProvider>();
+      final sleepProvider = di.sl<SleepProvider>();
 
       // 1. Static features summary
       const featuresSummary = 
@@ -60,6 +62,12 @@ class ContextBuilder {
         consumedFat += entry.fat;
       }
 
+      final sleepLogsStr = sleepProvider.sleepLogs.isNotEmpty
+          ? sleepProvider.sleepLogs.take(7).map((log) =>
+              '- Date: ${log.date.toIso8601String().substring(0, 10)}, Sleep: ${log.hours} hrs, Quality/Score: ${log.quality.toInt()}%, Mood: ${log.wakeUpMood ?? "N/A"}')
+              .join('\n')
+          : '- No recent sleep logs available.';
+
       final userState = 
           'User Fitness Stats Snapshot:\n'
           '- Current Streak: $streak days\n'
@@ -68,7 +76,8 @@ class ContextBuilder {
           '- Today\'s Activity: $steps / $stepsTarget steps, $caloriesBurn / $caloriesTarget kcal burned\n'
           '- Today\'s Nutrition: ${consumedKcal.toInt()} kcal consumed (P: ${consumedProt.toInt()}g, C: ${consumedCarb.toInt()}g, F: ${consumedFat.toInt()}g)\n'
           '- Today\'s Hydration: $water / $waterTarget ml water\n'
-          '- Sleep logged: $sleep hours\n';
+          '- Sleep logged: $sleep hours\n'
+          'Recent Sleep History (Last 7 Logs):\n$sleepLogsStr\n';
 
       // 3. Database samples (cap to 5 items to keep it light)
       final exerciseSamples = exerciseProvider.exercises.take(5).map((e) => e.name).join(', ');
