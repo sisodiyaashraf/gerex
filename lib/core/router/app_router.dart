@@ -25,6 +25,7 @@ import '../../features/workout/presentation/screens/workout_details_screen.dart'
 import '../../features/metrics/presentation/screens/activity_tracker_screen.dart';
 import '../../features/profile/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/screens/progress_photos_screen.dart';
+import '../../features/metrics/presentation/providers/sleep_provider.dart';
 import '../../features/metrics/presentation/screens/sleep_tracker_screen.dart';
 import '../../features/metrics/presentation/screens/sleep_schedule_screen.dart';
 import '../../features/metrics/presentation/screens/add_alarm_screen.dart';

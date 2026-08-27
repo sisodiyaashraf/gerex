@@ -71,6 +71,11 @@ class MockAIRepository implements AIRepository {
   }) async {
     return const Success('Weekly Story: Consistency is key.');
   }
+
+  @override
+  Future<Result<String, Failure>> getSleepInsight() async {
+    return const Success('Sleep Insight: Try maintaining a consistent sleep schedule.');
+  }
 }
 
 void main() {
