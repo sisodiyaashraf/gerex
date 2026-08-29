@@ -9,6 +9,8 @@ import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import 'package:gerex/core/services/voice_coach_service.dart';
+import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
@@ -59,6 +61,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
   String _aiFeedbackMessage = 'Position body in frame';
   bool _aiIsGoodForm = true;
   double _aiProgress = 0.0;
+  String _lastSpokenFeedback = '';
+  DateTime _lastSpokenFeedbackTime = DateTime.now().subtract(const Duration(seconds: 10));
 
   @override
   void initState() {
@@ -285,6 +289,15 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
             _aiIsGoodForm = feedback.isGoodForm;
             _aiProgress = feedback.progress;
           });
+
+          final now = DateTime.now();
+          if (feedback.message.isNotEmpty &&
+              feedback.message != _lastSpokenFeedback &&
+              now.difference(_lastSpokenFeedbackTime).inSeconds >= 4) {
+            _lastSpokenFeedback = feedback.message;
+            _lastSpokenFeedbackTime = now;
+            di.sl<VoiceCoachService>().speak(feedback.message);
+          }
         }
       } catch (_) {} finally {
         isProcessing = false;
