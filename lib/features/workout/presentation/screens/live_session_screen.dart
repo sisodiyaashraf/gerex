@@ -865,6 +865,83 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                                 onConfirm: () async {
                                   final done = await provider.finishWorkoutSession();
                                   if (done && context.mounted) {
+                                    final surpriseUnlocked = provider.checkAndRollSurpriseBadge();
+                                    if (surpriseUnlocked != null && context.mounted) {
+                                      String badgeTitle = '';
+                                      String badgeDesc = '';
+                                      IconData badgeIcon = Icons.card_giftcard;
+                                      Color badgeColor = Colors.orangeAccent;
+                                      
+                                      if (surpriseUnlocked == 'surprise_great_session') {
+                                        badgeTitle = 'Great Session!';
+                                        badgeDesc = 'A surprise recognition for finishing your workout session. You brought your A-game!';
+                                        badgeIcon = Icons.celebration;
+                                        badgeColor = Colors.amber;
+                                      } else if (surpriseUnlocked == 'surprise_energy_spark') {
+                                        badgeTitle = 'Spark of Energy';
+                                        badgeDesc = 'Consistency is a spark! Unlocked randomly as a pleasant surprise.';
+                                        badgeIcon = Icons.offline_bolt_rounded;
+                                        badgeColor = const Color(0xFF10B981);
+                                      } else if (surpriseUnlocked == 'surprise_momentum') {
+                                        badgeTitle = 'Mindful Momentum';
+                                        badgeDesc = 'A surprise nod for taking action and keeping your habit loop alive!';
+                                        badgeIcon = Icons.spa_rounded;
+                                        badgeColor = const Color(0xFF38BDF8);
+                                      }
+
+                                      await showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (c) => AlertDialog(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                          title: const Column(
+                                            children: [
+                                              Icon(Icons.auto_awesome, color: Colors.amber, size: 40),
+                                              SizedBox(height: 8),
+                                              Text(
+                                                'Surprise Reward! 🎁',
+                                                style: TextStyle(fontWeight: FontWeight.bold),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 36,
+                                                backgroundColor: badgeColor.withValues(alpha: 0.15),
+                                                child: Icon(badgeIcon, color: badgeColor, size: 36),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                badgeTitle,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                badgeDesc,
+                                                style: const TextStyle(fontSize: 12),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              const Text(
+                                                'This surprise badge has been added to your profile.',
+                                                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Colors.grey),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(c),
+                                              child: const Text('Awesome!'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text('Workout complete! Saved to logs.'),
