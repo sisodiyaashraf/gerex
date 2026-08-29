@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gerex/core/di/injection_container.dart' as di;
 import '../../domain/entities/challenge.dart';
 import '../../domain/entities/challenge_progress.dart';
 import '../../domain/repositories/challenge_repository.dart';
@@ -12,11 +14,13 @@ class ChallengeProvider extends ChangeNotifier {
   final Map<String, ChallengeProgress> _progressMap = {};
   bool _isLoading = false;
   String? _errorMessage;
+  List<ChallengeProgress> _friendsProgress = [];
 
   List<Challenge> get challenges => _challenges;
   Map<String, ChallengeProgress> get progressMap => _progressMap;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  List<ChallengeProgress> get friendsProgress => _friendsProgress;
 
   Future<void> fetchChallenges() async {
     _isLoading = true;
@@ -104,5 +108,43 @@ class ChallengeProvider extends ChangeNotifier {
 
   bool isJoined(String challengeId) {
     return _progressMap.containsKey(challengeId);
+  }
+
+  Future<void> fetchFriendsProgress(String challengeId) async {
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      final friendCodes = prefs.getStringList('linked_friends_user_ids') ?? [];
+      if (friendCodes.isEmpty) {
+        _friendsProgress = [];
+        notifyListeners();
+        return;
+      }
+      final result = await _challengeRepository.getFriendsProgress(challengeId, friendCodes);
+      result.fold(
+        onSuccess: (data) {
+          _friendsProgress = data;
+        },
+        onFailure: (failure) {
+          // Suppress
+        },
+      );
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<bool> linkFriend(String friendCode) async {
+    final cleanCode = friendCode.trim();
+    if (cleanCode.isEmpty) return false;
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      final friendCodes = prefs.getStringList('linked_friends_user_ids') ?? [];
+      if (!friendCodes.contains(cleanCode)) {
+        friendCodes.add(cleanCode);
+        await prefs.setStringList('linked_friends_user_ids', friendCodes);
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {}
+    return false;
   }
 }
