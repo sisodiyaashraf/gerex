@@ -885,6 +885,34 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () => context.push('/quick-win'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.shield_rounded, color: Color(0xFF10B981), size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'Low Motivation? Try a 2-Min Quick Win',
+                              style: TextStyle(
+                                color: Color(0xFF047857),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(

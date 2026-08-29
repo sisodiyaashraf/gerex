@@ -8,4 +8,5 @@ abstract class ChallengeRepository {
   Future<Result<List<ChallengeProgress>, Failure>> getUserProgress();
   Future<Result<ChallengeProgress, Failure>> joinChallenge(String challengeId);
   Future<Result<ChallengeProgress, Failure>> updateProgress(String challengeId, int additionalMinutes);
+  Future<Result<List<ChallengeProgress>, Failure>> getFriendsProgress(String challengeId, List<String> friendUserIds);
 }
