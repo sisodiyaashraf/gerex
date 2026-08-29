@@ -473,6 +473,52 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
+                  // Surprise Badges Grid Title
+                  Text(
+                    'Surprise Recognition Rewards',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Grid of Surprise Badges
+                  GridView.count(
+                    padding: EdgeInsets.zero,
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.25,
+                    children: [
+                      _buildBadgeCard(
+                        theme,
+                        title: 'Great Session!',
+                        description: 'A surprise reward for finishing a session.',
+                        unlocked: workoutProvider.unlockedSurpriseBadges.contains('surprise_great_session'),
+                        icon: FontAwesomeIcons.gift,
+                        color: Colors.amber,
+                      ),
+                      _buildBadgeCard(
+                        theme,
+                        title: 'Spark of Energy',
+                        description: 'A surprise nod for taking consistency action.',
+                        unlocked: workoutProvider.unlockedSurpriseBadges.contains('surprise_energy_spark'),
+                        icon: FontAwesomeIcons.bolt,
+                        color: const Color(0xFF10B981),
+                      ),
+                      _buildBadgeCard(
+                        theme,
+                        title: 'Mindful Momentum',
+                        description: 'A surprise reward for keeping habit loop alive.',
+                        unlocked: workoutProvider.unlockedSurpriseBadges.contains('surprise_momentum'),
+                        icon: FontAwesomeIcons.circleCheck,
+                        color: const Color(0xFF38BDF8),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
                   // Account Section
                   Text(
                     'Account details',
