@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,6 +25,21 @@ class ChallengeDetailScreen extends StatefulWidget {
 
 class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   int _minutesToLog = 15;
+  final TextEditingController _friendCodeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ChallengeProvider>().fetchFriendsProgress(widget.challenge.id);
+    });
+  }
+
+  @override
+  void dispose() {
+    _friendCodeController.dispose();
+    super.dispose();
+  }
 
   String _getIllustrationAsset(String badgeIcon) {
     switch (badgeIcon) {
@@ -424,6 +440,17 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                       }
                     },
                   ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Social Accountability (Opt-in)',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF0B1220),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSocialCard(context, challengeProvider),
                 ] else ...[
                   const SizedBox(height: 28),
                   SlideToConfirmButton(
@@ -445,6 +472,156 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
               ]),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialCard(BuildContext context, ChallengeProvider provider) {
+    final myEmail = "ATHLETE-${widget.challenge.id.hashCode.abs() % 1000}";
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      borderRadius: 16,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Share Progress Code',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Let friends track together.',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: myEmail));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Code copied to clipboard!')),
+                  );
+                },
+                icon: const Icon(Icons.copy, size: 12),
+                label: Text(myEmail, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const Divider(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _friendCodeController,
+                  decoration: const InputDecoration(
+                    hintText: "Enter Friend's Code",
+                    hintStyle: TextStyle(fontSize: 12),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                  ),
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () async {
+                  final code = _friendCodeController.text.trim();
+                  if (code.isNotEmpty) {
+                    final linked = await provider.linkFriend(code);
+                    if (linked) {
+                      await provider.fetchFriendsProgress(widget.challenge.id);
+                      _friendCodeController.clear();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Friend linked successfully!')),
+                        );
+                      }
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Link', style: TextStyle(fontSize: 13)),
+              ),
+            ],
+          ),
+          if (provider.friendsProgress.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const Text(
+              'Linked Friends Progress:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: provider.friendsProgress.length,
+              itemBuilder: (context, index) {
+                final prog = provider.friendsProgress[index];
+                final percent = (prog.progressMinutes / widget.challenge.totalMinutesGoal).clamp(0.0, 1.0);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        child: Text(
+                          prog.userId.isNotEmpty ? prog.userId[0].toUpperCase() : 'F',
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  prog.userId,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  '${prog.progressMinutes} / ${widget.challenge.totalMinutesGoal} min',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF10B981)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: percent,
+                                color: const Color(0xFF10B981),
+                                backgroundColor: Colors.grey.withValues(alpha: 0.1),
+                                minHeight: 6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
