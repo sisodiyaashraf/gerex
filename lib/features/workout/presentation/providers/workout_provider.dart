@@ -228,6 +228,9 @@ class WorkoutProvider extends ChangeNotifier {
 
     _startDurationTimer();
     notifyListeners();
+    try {
+      di.sl<VoiceCoachService>().speakTrigger('start');
+    } catch (_) {}
   }
 
   void startEmptyWorkoutSession() {
@@ -243,6 +246,9 @@ class WorkoutProvider extends ChangeNotifier {
 
     _startDurationTimer();
     notifyListeners();
+    try {
+      di.sl<VoiceCoachService>().speakTrigger('start');
+    } catch (_) {}
   }
 
   void addExerciseToSession(Exercise exercise) {
@@ -336,7 +342,7 @@ class WorkoutProvider extends ChangeNotifier {
         }
       }
       if (reps == targetReps) {
-        di.sl<VoiceCoachService>().speak("Target reached!");
+        di.sl<VoiceCoachService>().speakTrigger('milestone', params: {'rep': reps.toString()});
       } else if (reps == targetReps - 3) {
         di.sl<VoiceCoachService>().speak("Three reps left");
       } else if (reps == targetReps - 1) {
@@ -367,7 +373,7 @@ class WorkoutProvider extends ChangeNotifier {
 
     // If completed, trigger rest timer
     if (nextState) {
-      di.sl<VoiceCoachService>().speak("Set complete, nice work");
+      di.sl<VoiceCoachService>().speakTrigger('set_complete');
       _triggerRestTimerForExercise(exerciseId);
 
       // Check for New Personal Record
@@ -431,7 +437,7 @@ class WorkoutProvider extends ChangeNotifier {
     _isRestActive = true;
     notifyListeners();
 
-    di.sl<VoiceCoachService>().speak("Rest $duration seconds");
+    di.sl<VoiceCoachService>().speakTrigger('rest_countdown', params: {'seconds': duration.toString()});
 
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_restTimeRemaining > 0) {
@@ -441,7 +447,7 @@ class WorkoutProvider extends ChangeNotifier {
         _isRestActive = false;
         _restTimer?.cancel();
         notifyListeners();
-        di.sl<VoiceCoachService>().speak("Rest complete, prepare for next set");
+        di.sl<VoiceCoachService>().speakTrigger('rest_complete');
       }
     });
   }
@@ -501,7 +507,7 @@ class WorkoutProvider extends ChangeNotifier {
           di.sl<NotificationProvider>().scheduleReengagementReminder();
         } catch (_) {}
         try {
-          di.sl<VoiceCoachService>().speak("Workout complete, nice work!");
+          di.sl<VoiceCoachService>().speakTrigger('finish');
         } catch (_) {}
         return true;
       },
