@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gerex/features/exercise/domain/entities/exercise.dart';
 import 'package:gerex/features/workout/domain/entities/workout_entities.dart';
 import 'package:gerex/features/workout/domain/repositories/workout_repository.dart';
@@ -19,12 +20,17 @@ class PrCelebrationEvent {
 class WorkoutProvider extends ChangeNotifier {
   final WorkoutRepository _workoutRepository;
 
-  WorkoutProvider(this._workoutRepository);
+  WorkoutProvider(this._workoutRepository) {
+    loadSurpriseBadges();
+  }
 
   List<Workout> _workouts = [];
   List<WorkoutSession> _sessions = [];
   bool _isLoading = false;
   String? _errorMessage;
+
+  Set<String> _unlockedSurpriseBadges = {};
+  Set<String> get unlockedSurpriseBadges => _unlockedSurpriseBadges;
 
   // Active Live Session State
   Workout? _activeTemplate;
@@ -499,6 +505,76 @@ class WorkoutProvider extends ChangeNotifier {
       onFailure: (failure) {
         SecureLogger.logError('saveWorkoutSession failed', failure.message);
         _errorMessage = SecureLogger.sanitizeException(failure.message);
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+    );
+  }
+
+  void loadSurpriseBadges() {
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      final list = prefs.getStringList('unlocked_surprise_badges') ?? [];
+      _unlockedSurpriseBadges = list.toSet();
+    } catch (_) {}
+  }
+
+  String? checkAndRollSurpriseBadge() {
+    loadSurpriseBadges();
+    final allSurprises = ['surprise_great_session', 'surprise_energy_spark', 'surprise_momentum'];
+    final locks = allSurprises.where((b) => !_unlockedSurpriseBadges.contains(b)).toList();
+    if (locks.isEmpty) return null;
+
+    // 25% chance of rolling a surprise badge
+    final roll = DateTime.now().millisecond % 4 == 0;
+    if (roll) {
+      final badge = locks[DateTime.now().millisecond % locks.length];
+      _unlockedSurpriseBadges.add(badge);
+      try {
+        final prefs = di.sl<SharedPreferences>();
+        prefs.setStringList('unlocked_surprise_badges', _unlockedSurpriseBadges.toList());
+      } catch (_) {}
+      notifyListeners();
+      return badge;
+    }
+    return null;
+  }
+
+  Future<bool> logCustomWorkoutSession(String name, int durationSeconds, List<LoggedSet> sets) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final session = WorkoutSession(
+      id: '',
+      workoutId: null,
+      name: name,
+      startedAt: DateTime.now().subtract(Duration(seconds: durationSeconds)),
+      completedAt: DateTime.now(),
+      durationSeconds: durationSeconds,
+      loggedSets: const [],
+    );
+
+    final result = await _workoutRepository.saveWorkoutSession(session, sets);
+
+    return result.fold(
+      onSuccess: (savedSession) {
+        _sessions.insert(0, savedSession);
+        _isLoading = false;
+        notifyListeners();
+        try {
+          di.sl<MetricsProvider>().computeStreaks(_sessions);
+        } catch (_) {}
+        try {
+          di.sl<NotificationProvider>().sendNotification(
+            'Workout Completed!',
+            'Fantastic! You completed "${savedSession.name}" in ${savedSession.durationSeconds ~/ 60} minutes.',
+          );
+        } catch (_) {}
+        return true;
+      },
+      onFailure: (failure) {
+        _errorMessage = failure.message;
         _isLoading = false;
         notifyListeners();
         return false;
