@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/workout_provider.dart';
-import '../../../challenges/presentation/providers/challenge_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import '../../../ai/presentation/providers/ai_provider.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';

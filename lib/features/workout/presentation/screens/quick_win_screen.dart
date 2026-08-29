@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
@@ -92,14 +91,14 @@ class _QuickWinScreenState extends State<QuickWinScreen> {
 
     final provider = context.read<WorkoutProvider>();
     final loggedSets = <LoggedSet>[
-      LoggedSet(
+      const LoggedSet(
         id: 'qw_set1',
-        workoutId: '',
+        sessionId: '',
         exerciseId: 'ex_quick_win',
+        setNumber: 1,
         reps: 1,
         weight: 0.0,
         isCompleted: true,
-        sequenceOrder: 0,
       )
     ];
 
