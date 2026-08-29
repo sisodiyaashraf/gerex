@@ -17,6 +17,12 @@ class ProfileProvider extends ChangeNotifier {
   bool _confettiEnabled = true;
   bool _ghostTrainerEnabled = false;
 
+  String _voiceCoachLanguage = 'english';
+  String _voiceCoachPersona = 'motivator';
+  double _voiceCoachRate = 0.5;
+  double _voiceCoachPitch = 1.0;
+  bool _voiceCoachHinglishClean = true;
+
   String get units => _units;
   bool get notificationsEnabled => _notificationsEnabled;
   String get themeMode => _themeMode;
@@ -25,6 +31,12 @@ class ProfileProvider extends ChangeNotifier {
   bool get streakFlameEnabled => _streakFlameEnabled;
   bool get confettiEnabled => _confettiEnabled;
   bool get ghostTrainerEnabled => _ghostTrainerEnabled;
+
+  String get voiceCoachLanguage => _voiceCoachLanguage;
+  String get voiceCoachPersona => _voiceCoachPersona;
+  double get voiceCoachRate => _voiceCoachRate;
+  double get voiceCoachPitch => _voiceCoachPitch;
+  bool get voiceCoachHinglishClean => _voiceCoachHinglishClean;
 
   void _loadPreferences() {
     _units = _prefs.getString('units_preference') ?? 'kg';
@@ -35,6 +47,12 @@ class ProfileProvider extends ChangeNotifier {
     _streakFlameEnabled = _prefs.getBool('streak_flame_enabled') ?? true;
     _confettiEnabled = _prefs.getBool('confetti_enabled') ?? true;
     _ghostTrainerEnabled = _prefs.getBool('ghost_trainer_enabled') ?? false;
+
+    _voiceCoachLanguage = _prefs.getString('voice_coach_language') ?? 'english';
+    _voiceCoachPersona = _prefs.getString('voice_coach_persona') ?? 'motivator';
+    _voiceCoachRate = _prefs.getDouble('voice_coach_rate') ?? 0.5;
+    _voiceCoachPitch = _prefs.getDouble('voice_coach_pitch') ?? 1.0;
+    _voiceCoachHinglishClean = _prefs.getBool('voice_coach_hinglish_clean') ?? true;
     notifyListeners();
   }
 
@@ -83,6 +101,51 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> toggleGhostTrainer(bool value) async {
     _ghostTrainerEnabled = value;
     await _prefs.setBool('ghost_trainer_enabled', value);
+    notifyListeners();
+  }
+
+  Future<void> setVoiceCoachLanguage(String value) async {
+    _voiceCoachLanguage = value;
+    await _prefs.setString('voice_coach_language', value);
+    notifyListeners();
+  }
+
+  Future<void> setVoiceCoachPersona(String value) async {
+    _voiceCoachPersona = value;
+    await _prefs.setString('voice_coach_persona', value);
+    if (value == 'motivator') {
+      _voiceCoachRate = 0.5;
+      _voiceCoachPitch = 1.0;
+    } else if (value == 'drill_sergeant') {
+      _voiceCoachRate = 0.58;
+      _voiceCoachPitch = 0.9;
+    } else if (value == 'chill') {
+      _voiceCoachRate = 0.42;
+      _voiceCoachPitch = 0.95;
+    } else if (value == 'playful') {
+      _voiceCoachRate = 0.52;
+      _voiceCoachPitch = 1.1;
+    }
+    await _prefs.setDouble('voice_coach_rate', _voiceCoachRate);
+    await _prefs.setDouble('voice_coach_pitch', _voiceCoachPitch);
+    notifyListeners();
+  }
+
+  Future<void> setVoiceCoachRate(double value) async {
+    _voiceCoachRate = value;
+    await _prefs.setDouble('voice_coach_rate', value);
+    notifyListeners();
+  }
+
+  Future<void> setVoiceCoachPitch(double value) async {
+    _voiceCoachPitch = value;
+    await _prefs.setDouble('voice_coach_pitch', value);
+    notifyListeners();
+  }
+
+  Future<void> toggleVoiceCoachHinglishClean(bool value) async {
+    _voiceCoachHinglishClean = value;
+    await _prefs.setBool('voice_coach_hinglish_clean', value);
     notifyListeners();
   }
 }
