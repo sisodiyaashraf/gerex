@@ -44,6 +44,7 @@ import '../../features/profile/presentation/screens/guided_photo_capture_screen.
 import '../../features/metrics/presentation/screens/heart_rate_connection_screen.dart';
 import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
 import '../../features/workout/presentation/screens/quick_workout_screen.dart';
+import '../../features/workout/presentation/screens/quick_win_screen.dart';
 import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
 import '../../features/exercise/presentation/screens/create_exercise_screen.dart';
 import '../di/injection_container.dart';
@@ -126,6 +127,10 @@ class AppRouter {
       GoRoute(
         path: '/quick-workout',
         builder: (context, state) => const QuickWorkoutScreen(),
+      ),
+      GoRoute(
+        path: '/quick-win',
+        builder: (context, state) => const QuickWinScreen(),
       ),
       GoRoute(
         path: '/add-exercise',
