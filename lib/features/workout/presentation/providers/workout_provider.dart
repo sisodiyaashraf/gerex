@@ -498,6 +498,9 @@ class WorkoutProvider extends ChangeNotifier {
           );
         } catch (_) {}
         try {
+          di.sl<NotificationProvider>().scheduleReengagementReminder();
+        } catch (_) {}
+        try {
           di.sl<VoiceCoachService>().speak("Workout complete, nice work!");
         } catch (_) {}
         return true;
@@ -570,6 +573,9 @@ class WorkoutProvider extends ChangeNotifier {
             'Workout Completed!',
             'Fantastic! You completed "${savedSession.name}" in ${savedSession.durationSeconds ~/ 60} minutes.',
           );
+        } catch (_) {}
+        try {
+          di.sl<NotificationProvider>().scheduleReengagementReminder();
         } catch (_) {}
         return true;
       },
