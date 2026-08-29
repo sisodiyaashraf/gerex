@@ -16,6 +16,15 @@ class FormFeedback {
 class FormAnalyzer {
   FormAnalyzer._();
 
+  /// Confidence threshold helper to discard weak landmark detections.
+  static PoseLandmark? getValidLandmark(Pose pose, PoseLandmarkType type, {double threshold = 0.55}) {
+    final landmark = pose.landmarks[type];
+    if (landmark == null || landmark.likelihood < threshold) {
+      return null;
+    }
+    return landmark;
+  }
+
   /// Calculates the 3D angle (in degrees) at the vertex joint between first and last points.
   static double calculateAngle(PoseLandmark first, PoseLandmark vertex, PoseLandmark last) {
     final double ax = first.x - vertex.x;
@@ -47,6 +56,50 @@ class FormAnalyzer {
     return atan2(dx, dy) * 180.0 / pi;
   }
 
+  /// Checks if key landmarks are visible with high confidence.
+  static bool isFullyTracked(Pose pose, String exercise) {
+    const double threshold = 0.55;
+    
+    bool hasLeftLower = getValidLandmark(pose, PoseLandmarkType.leftHip, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.leftKnee, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.leftAnkle, threshold: threshold) != null;
+        
+    bool hasRightLower = getValidLandmark(pose, PoseLandmarkType.rightHip, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.rightKnee, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.rightAnkle, threshold: threshold) != null;
+        
+    bool hasLeftUpper = getValidLandmark(pose, PoseLandmarkType.leftShoulder, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.leftElbow, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.leftWrist, threshold: threshold) != null;
+
+    bool hasRightUpper = getValidLandmark(pose, PoseLandmarkType.rightShoulder, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.rightElbow, threshold: threshold) != null &&
+        getValidLandmark(pose, PoseLandmarkType.rightWrist, threshold: threshold) != null;
+
+    if (exercise == 'Squat') {
+      bool leftOk = hasLeftLower && getValidLandmark(pose, PoseLandmarkType.leftShoulder, threshold: threshold) != null;
+      bool rightOk = hasRightLower && getValidLandmark(pose, PoseLandmarkType.rightShoulder, threshold: threshold) != null;
+      return leftOk || rightOk;
+    } else if (exercise == 'Push-Up') {
+      bool leftOk = hasLeftUpper && getValidLandmark(pose, PoseLandmarkType.leftHip, threshold: threshold) != null && getValidLandmark(pose, PoseLandmarkType.leftKnee, threshold: threshold) != null;
+      bool rightOk = hasRightUpper && getValidLandmark(pose, PoseLandmarkType.rightHip, threshold: threshold) != null && getValidLandmark(pose, PoseLandmarkType.rightKnee, threshold: threshold) != null;
+      return leftOk || rightOk;
+    } else if (exercise == 'Jumping Jack') {
+      return (getValidLandmark(pose, PoseLandmarkType.leftShoulder, threshold: threshold) != null &&
+          getValidLandmark(pose, PoseLandmarkType.leftElbow, threshold: threshold) != null &&
+          getValidLandmark(pose, PoseLandmarkType.leftHip, threshold: threshold) != null &&
+          getValidLandmark(pose, PoseLandmarkType.leftKnee, threshold: threshold) != null) ||
+          (getValidLandmark(pose, PoseLandmarkType.rightShoulder, threshold: threshold) != null &&
+          getValidLandmark(pose, PoseLandmarkType.rightElbow, threshold: threshold) != null &&
+          getValidLandmark(pose, PoseLandmarkType.rightHip, threshold: threshold) != null &&
+          getValidLandmark(pose, PoseLandmarkType.rightKnee, threshold: threshold) != null);
+    } else {
+      bool leftOk = hasLeftLower && getValidLandmark(pose, PoseLandmarkType.leftShoulder, threshold: threshold) != null;
+      bool rightOk = hasRightLower && getValidLandmark(pose, PoseLandmarkType.rightShoulder, threshold: threshold) != null;
+      return leftOk || rightOk;
+    }
+  }
+
   /// Analyzes the pose and returns feedback based on squat performance.
   static FormFeedback analyzeSquat({
     required Pose pose,
@@ -55,13 +108,13 @@ class FormAnalyzer {
     required Function(String nextPhase) onPhaseChanged,
     required Function() onRepCompleted,
   }) {
-    // 1. Dynamic side selection (resolves "not detecting user" when showing right or left profile)
-    final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-    final leftKnee = pose.landmarks[PoseLandmarkType.leftKnee];
-    final leftAnkle = pose.landmarks[PoseLandmarkType.leftAnkle];
-    final rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    final rightKnee = pose.landmarks[PoseLandmarkType.rightKnee];
-    final rightAnkle = pose.landmarks[PoseLandmarkType.rightAnkle];
+    // Dynamic side selection based on visibility
+    final leftHip = getValidLandmark(pose, PoseLandmarkType.leftHip);
+    final leftKnee = getValidLandmark(pose, PoseLandmarkType.leftKnee);
+    final leftAnkle = getValidLandmark(pose, PoseLandmarkType.leftAnkle);
+    final rightHip = getValidLandmark(pose, PoseLandmarkType.rightHip);
+    final rightKnee = getValidLandmark(pose, PoseLandmarkType.rightKnee);
+    final rightAnkle = getValidLandmark(pose, PoseLandmarkType.rightAnkle);
 
     final bool useLeft = (leftHip != null && leftKnee != null) &&
         (rightHip == null || rightKnee == null || (leftHip.likelihood > rightHip.likelihood));
@@ -69,7 +122,7 @@ class FormAnalyzer {
     final hip = useLeft ? leftHip : rightHip;
     final knee = useLeft ? leftKnee : rightKnee;
     final ankle = useLeft ? leftAnkle : rightAnkle;
-    final shoulder = useLeft ? pose.landmarks[PoseLandmarkType.leftShoulder] : pose.landmarks[PoseLandmarkType.rightShoulder];
+    final shoulder = useLeft ? getValidLandmark(pose, PoseLandmarkType.leftShoulder) : getValidLandmark(pose, PoseLandmarkType.rightShoulder);
 
     if (hip == null || knee == null || ankle == null) {
       return FormFeedback(message: "Stand sideways to show full profile", isGoodForm: false, progress: 0.0);
@@ -78,8 +131,8 @@ class FormAnalyzer {
     final kneeAngle = calculateAngle(hip, knee, ankle);
     final spineLean = shoulder != null ? calculateLeanAngle(shoulder, hip) : 0.0;
 
-    // 2. Real-time Face check (neck and head alignment)
-    final nose = pose.landmarks[PoseLandmarkType.nose];
+    // Face/Head Check
+    final nose = getValidLandmark(pose, PoseLandmarkType.nose);
     bool isHeadNeutral = true;
     String headWarning = "";
     if (nose != null && shoulder != null) {
@@ -89,23 +142,27 @@ class FormAnalyzer {
       }
     }
 
-    // 3. Real-time Leg check (feet separation stance width)
+    // Legs Check (Feet width)
     bool isLegsAligned = true;
     String legWarning = "";
-    if (leftAnkle != null && rightAnkle != null && leftHip != null && rightHip != null) {
-      final hipDist = (leftHip.x - rightHip.x).abs();
-      final ankleDist = (leftAnkle.x - rightAnkle.x).abs();
+    final leftAnkVal = getValidLandmark(pose, PoseLandmarkType.leftAnkle);
+    final rightAnkVal = getValidLandmark(pose, PoseLandmarkType.rightAnkle);
+    final leftHipVal = getValidLandmark(pose, PoseLandmarkType.leftHip);
+    final rightHipVal = getValidLandmark(pose, PoseLandmarkType.rightHip);
+    if (leftAnkVal != null && rightAnkVal != null && leftHipVal != null && rightHipVal != null) {
+      final hipDist = (leftHipVal.x - rightHipVal.x).abs();
+      final ankleDist = (leftAnkVal.x - rightAnkVal.x).abs();
       if (ankleDist < hipDist * 0.9) {
         isLegsAligned = false;
         legWarning = "Widen stance to shoulder width!";
       }
     }
 
-    // 4. Real-time Hand check (arm elevation balance)
+    // Hands Check
     bool isHandsAligned = true;
     String handWarning = "";
-    final leftWrist = pose.landmarks[PoseLandmarkType.leftWrist];
-    final rightWrist = pose.landmarks[PoseLandmarkType.rightWrist];
+    final leftWrist = getValidLandmark(pose, PoseLandmarkType.leftWrist);
+    final rightWrist = getValidLandmark(pose, PoseLandmarkType.rightWrist);
     if (leftWrist != null && rightWrist != null) {
       if (leftWrist.y > hip.y && rightWrist.y > hip.y) {
         isHandsAligned = false;
@@ -115,7 +172,6 @@ class FormAnalyzer {
 
     bool isGoodSpine = spineLean < 35.0;
     
-    // Prioritize the correct warning guidance
     String feedback = "Squat down smoothly";
     if (!isGoodSpine) {
       feedback = "Keep your back straight!";
@@ -168,17 +224,17 @@ class FormAnalyzer {
     required Function() onRepCompleted,
   }) {
     // Dynamic side selection
-    final leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    final leftElbow = pose.landmarks[PoseLandmarkType.leftElbow];
-    final leftWrist = pose.landmarks[PoseLandmarkType.leftWrist];
-    final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-    final leftKnee = pose.landmarks[PoseLandmarkType.leftKnee];
+    final leftShoulder = getValidLandmark(pose, PoseLandmarkType.leftShoulder);
+    final leftElbow = getValidLandmark(pose, PoseLandmarkType.leftElbow);
+    final leftWrist = getValidLandmark(pose, PoseLandmarkType.leftWrist);
+    final leftHip = getValidLandmark(pose, PoseLandmarkType.leftHip);
+    final leftKnee = getValidLandmark(pose, PoseLandmarkType.leftKnee);
 
-    final rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    final rightElbow = pose.landmarks[PoseLandmarkType.rightElbow];
-    final rightWrist = pose.landmarks[PoseLandmarkType.rightWrist];
-    final rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    final rightKnee = pose.landmarks[PoseLandmarkType.rightKnee];
+    final rightShoulder = getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+    final rightElbow = getValidLandmark(pose, PoseLandmarkType.rightElbow);
+    final rightWrist = getValidLandmark(pose, PoseLandmarkType.rightWrist);
+    final rightHip = getValidLandmark(pose, PoseLandmarkType.rightHip);
+    final rightKnee = getValidLandmark(pose, PoseLandmarkType.rightKnee);
 
     final bool useLeft = (leftShoulder != null && leftElbow != null && leftWrist != null) &&
         (rightShoulder == null || rightElbow == null || rightWrist == null || (leftShoulder.likelihood > rightShoulder.likelihood));
@@ -195,15 +251,15 @@ class FormAnalyzer {
 
     final elbowAngle = calculateAngle(shoulder, elbow, wrist);
 
-    // 1. Real-time Spine check (sagging hips)
+    // Spine/Hip check
     double hipAngle = 180.0;
     if (hip != null && knee != null) {
       hipAngle = calculateAngle(shoulder, hip, knee);
     }
     final isStraightSpine = hipAngle > 155.0 && hipAngle < 195.0;
 
-    // 2. Real-time Face check (head drop)
-    final nose = pose.landmarks[PoseLandmarkType.nose];
+    // Face Check
+    final nose = getValidLandmark(pose, PoseLandmarkType.nose);
     bool isHeadNeutral = true;
     String headWarning = "";
     if (nose != null) {
@@ -213,22 +269,26 @@ class FormAnalyzer {
       }
     }
 
-    // 3. Real-time Hand alignment check (wrists positioning width)
+    // Hands Placement Check
     bool isHandsAligned = true;
     String handWarning = "";
-    if (leftWrist != null && rightWrist != null && leftShoulder != null && rightShoulder != null) {
-      final shoulderDist = (leftShoulder.x - rightShoulder.x).abs();
-      final wristDist = (leftWrist.x - rightWrist.x).abs();
+    final leftWristVal = getValidLandmark(pose, PoseLandmarkType.leftWrist);
+    final rightWristVal = getValidLandmark(pose, PoseLandmarkType.rightWrist);
+    final leftShoulderVal = getValidLandmark(pose, PoseLandmarkType.leftShoulder);
+    final rightShoulderVal = getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+    if (leftWristVal != null && rightWristVal != null && leftShoulderVal != null && rightShoulderVal != null) {
+      final shoulderDist = (leftShoulderVal.x - rightShoulderVal.x).abs();
+      final wristDist = (leftWristVal.x - rightWristVal.x).abs();
       if (wristDist > shoulderDist * 1.6) {
         isHandsAligned = false;
         handWarning = "Bring hands closer under shoulders!";
       }
     }
 
-    // 4. Real-time Leg check (knees lock straight)
+    // Legs Check (Locked knees)
     bool isLegsAligned = true;
     String legWarning = "";
-    final ankle = useLeft ? pose.landmarks[PoseLandmarkType.leftAnkle] : pose.landmarks[PoseLandmarkType.rightAnkle];
+    final ankle = useLeft ? getValidLandmark(pose, PoseLandmarkType.leftAnkle) : getValidLandmark(pose, PoseLandmarkType.rightAnkle);
     if (hip != null && knee != null && ankle != null) {
       final kneeAngle = calculateAngle(hip, knee, ankle);
       if (kneeAngle < 160.0) {
@@ -285,10 +345,10 @@ class FormAnalyzer {
     required Function(String nextPhase) onPhaseChanged,
     required Function() onRepCompleted,
   }) {
-    final leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    final leftElbow = pose.landmarks[PoseLandmarkType.leftElbow];
-    final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-    final leftKnee = pose.landmarks[PoseLandmarkType.leftKnee];
+    final leftShoulder = getValidLandmark(pose, PoseLandmarkType.leftShoulder);
+    final leftElbow = getValidLandmark(pose, PoseLandmarkType.leftElbow);
+    final leftHip = getValidLandmark(pose, PoseLandmarkType.leftHip);
+    final leftKnee = getValidLandmark(pose, PoseLandmarkType.leftKnee);
 
     if (leftShoulder == null || leftHip == null || leftElbow == null) {
       return FormFeedback(message: "Stand fully in frame", isGoodForm: false, progress: 0.0);
@@ -296,8 +356,8 @@ class FormAnalyzer {
 
     final armAngle = calculateAngle(leftHip, leftShoulder, leftElbow);
     
-    final rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    final rightKnee = pose.landmarks[PoseLandmarkType.rightKnee];
+    final rightHip = getValidLandmark(pose, PoseLandmarkType.rightHip);
+    final rightKnee = getValidLandmark(pose, PoseLandmarkType.rightKnee);
     double legWidthRatio = 0.0;
     if (rightHip != null && rightKnee != null && leftKnee != null) {
       final hipWidth = sqrt(pow(leftHip.x - rightHip.x, 2) + pow(leftHip.y - rightHip.y, 2));
@@ -336,15 +396,15 @@ class FormAnalyzer {
     required Pose pose,
   }) {
     // Dynamic side selection
-    final leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-    final leftKnee = pose.landmarks[PoseLandmarkType.leftKnee];
-    final leftAnkle = pose.landmarks[PoseLandmarkType.leftAnkle];
+    final leftShoulder = getValidLandmark(pose, PoseLandmarkType.leftShoulder);
+    final leftHip = getValidLandmark(pose, PoseLandmarkType.leftHip);
+    final leftKnee = getValidLandmark(pose, PoseLandmarkType.leftKnee);
+    final leftAnkle = getValidLandmark(pose, PoseLandmarkType.leftAnkle);
 
-    final rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    final rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    final rightKnee = pose.landmarks[PoseLandmarkType.rightKnee];
-    final rightAnkle = pose.landmarks[PoseLandmarkType.rightAnkle];
+    final rightShoulder = getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+    final rightHip = getValidLandmark(pose, PoseLandmarkType.rightHip);
+    final rightKnee = getValidLandmark(pose, PoseLandmarkType.rightKnee);
+    final rightAnkle = getValidLandmark(pose, PoseLandmarkType.rightAnkle);
 
     final bool useLeft = (leftShoulder != null && leftHip != null && leftKnee != null && leftAnkle != null) &&
         (rightShoulder == null || rightHip == null || rightKnee == null || rightAnkle == null || (leftShoulder.likelihood > rightShoulder.likelihood));
@@ -361,8 +421,8 @@ class FormAnalyzer {
     final hipAngle = calculateAngle(shoulder, hip, knee);
     final kneeAngle = calculateAngle(hip, knee, ankle);
 
-    // 1. Real-time Face check (neck and head posture)
-    final nose = pose.landmarks[PoseLandmarkType.nose];
+    // Face check
+    final nose = getValidLandmark(pose, PoseLandmarkType.nose);
     bool isHeadNeutral = true;
     String headWarning = "";
     if (nose != null) {
@@ -372,14 +432,14 @@ class FormAnalyzer {
       }
     }
 
-    // 2. Real-time Hip check (flat alignment)
+    // Hip check
     final isHipAligned = hipAngle > 155.0 && hipAngle < 205.0;
 
-    // 3. Real-time Leg check (knees straight locked)
+    // Knee check
     final isKneeAligned = kneeAngle > 160.0;
 
-    // 4. Real-time Hand check (elbow directly under shoulders)
-    final elbow = useLeft ? pose.landmarks[PoseLandmarkType.leftElbow] : pose.landmarks[PoseLandmarkType.rightElbow];
+    // Elbow check (directly under shoulders)
+    final elbow = useLeft ? getValidLandmark(pose, PoseLandmarkType.leftElbow) : getValidLandmark(pose, PoseLandmarkType.rightElbow);
     bool isElbowAligned = true;
     String elbowWarning = "";
     if (elbow != null) {
@@ -423,17 +483,17 @@ class FormAnalyzer {
 
     PoseLandmark? first, vertex, last;
     if (jointStr == 'elbow') {
-      first = pose.landmarks[PoseLandmarkType.leftShoulder] ?? pose.landmarks[PoseLandmarkType.rightShoulder];
-      vertex = pose.landmarks[PoseLandmarkType.leftElbow] ?? pose.landmarks[PoseLandmarkType.rightElbow];
-      last = pose.landmarks[PoseLandmarkType.leftWrist] ?? pose.landmarks[PoseLandmarkType.rightWrist];
+      first = getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      vertex = getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? getValidLandmark(pose, PoseLandmarkType.rightElbow);
+      last = getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? getValidLandmark(pose, PoseLandmarkType.rightWrist);
     } else if (jointStr == 'knee') {
-      first = pose.landmarks[PoseLandmarkType.leftHip] ?? pose.landmarks[PoseLandmarkType.rightHip];
-      vertex = pose.landmarks[PoseLandmarkType.leftKnee] ?? pose.landmarks[PoseLandmarkType.rightKnee];
-      last = pose.landmarks[PoseLandmarkType.leftAnkle] ?? pose.landmarks[PoseLandmarkType.rightAnkle];
+      first = getValidLandmark(pose, PoseLandmarkType.leftHip) ?? getValidLandmark(pose, PoseLandmarkType.rightHip);
+      vertex = getValidLandmark(pose, PoseLandmarkType.leftKnee) ?? getValidLandmark(pose, PoseLandmarkType.rightKnee);
+      last = getValidLandmark(pose, PoseLandmarkType.leftAnkle) ?? getValidLandmark(pose, PoseLandmarkType.rightAnkle);
     } else if (jointStr == 'shoulder') {
-      first = pose.landmarks[PoseLandmarkType.leftHip] ?? pose.landmarks[PoseLandmarkType.rightHip];
-      vertex = pose.landmarks[PoseLandmarkType.leftShoulder] ?? pose.landmarks[PoseLandmarkType.rightShoulder];
-      last = pose.landmarks[PoseLandmarkType.leftElbow] ?? pose.landmarks[PoseLandmarkType.rightElbow];
+      first = getValidLandmark(pose, PoseLandmarkType.leftHip) ?? getValidLandmark(pose, PoseLandmarkType.rightHip);
+      vertex = getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      last = getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? getValidLandmark(pose, PoseLandmarkType.rightElbow);
     }
 
     if (first == null || vertex == null || last == null) {

@@ -5,6 +5,7 @@ import 'voice_engine.dart';
 
 class VoiceCoachService {
   final VoiceEngine _voiceEngine;
+  DateTime _lastCorrectionSpokenAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   VoiceCoachService(this._voiceEngine);
 
@@ -132,6 +133,11 @@ class VoiceCoachService {
       final profileProvider = di.sl<ProfileProvider>();
       if (!profileProvider.voiceCoachingEnabled) return;
 
+      final now = DateTime.now();
+      if (now.difference(_lastCorrectionSpokenAt).inSeconds < 3.5) {
+        return; // Suppress template prompts if a safety/form correction was just spoken
+      }
+
       final lang = profileProvider.voiceCoachLanguage;
       final persona = profileProvider.voiceCoachPersona;
       final rate = profileProvider.voiceCoachRate;
@@ -246,6 +252,11 @@ class VoiceCoachService {
     } catch (e) {
       SecureLogger.logError('VoiceCoachService: speak failed', e);
     }
+  }
+
+  Future<void> speakCorrection(String text) async {
+    _lastCorrectionSpokenAt = DateTime.now();
+    await speak(text);
   }
 
   Future<bool> checkLanguageVoicePack(String language) async {

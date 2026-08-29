@@ -63,6 +63,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
   double _aiProgress = 0.0;
   String _lastSpokenFeedback = '';
   DateTime _lastSpokenFeedbackTime = DateTime.now().subtract(const Duration(seconds: 10));
+  String _detectionState = 'no_person';
+  bool _isLowLighting = false;
+  String _lastSpokenWarningText = '';
+  DateTime _lastSpokenWarningTime = DateTime.now().subtract(const Duration(seconds: 10));
 
   @override
   void initState() {
@@ -88,6 +92,39 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
         _initializeCamera();
       }
     });
+  }
+
+  InputImageRotation _getRotation(CameraDescription camera) {
+    final Map<DeviceOrientation, int> turns = {
+      DeviceOrientation.portraitUp: 0,
+      DeviceOrientation.landscapeLeft: 90,
+      DeviceOrientation.portraitDown: 180,
+      DeviceOrientation.landscapeRight: 270,
+    };
+    
+    final deviceOrientation = _cameraController?.value.deviceOrientation ?? DeviceOrientation.portraitUp;
+    final int sensorOrientation = camera.sensorOrientation;
+    int rotationDegrees;
+    
+    if (camera.lensDirection == CameraLensDirection.front) {
+      rotationDegrees = (sensorOrientation + (turns[deviceOrientation] ?? 0)) % 360;
+      rotationDegrees = (360 - rotationDegrees) % 360;
+    } else {
+      rotationDegrees = (sensorOrientation - (turns[deviceOrientation] ?? 0) + 360) % 360;
+    }
+    
+    switch (rotationDegrees) {
+      case 0:
+        return InputImageRotation.rotation0deg;
+      case 90:
+        return InputImageRotation.rotation90deg;
+      case 180:
+        return InputImageRotation.rotation180deg;
+      case 270:
+        return InputImageRotation.rotation270deg;
+      default:
+        return InputImageRotation.rotation0deg;
+    }
   }
 
   @override
@@ -184,17 +221,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
             ? InputImageFormat.nv21
             : InputImageFormat.bgra8888;
 
-        final int sensorOrientation = _cameraController?.description.sensorOrientation ?? 270;
-        InputImageRotation rotation;
-        if (sensorOrientation == 90) {
-          rotation = InputImageRotation.rotation90deg;
-        } else if (sensorOrientation == 180) {
-          rotation = InputImageRotation.rotation180deg;
-        } else if (sensorOrientation == 270) {
-          rotation = InputImageRotation.rotation270deg;
-        } else {
-          rotation = InputImageRotation.rotation0deg;
-        }
+        final rotation = _getRotation(_cameraController!.description);
 
         final poses = await _poseDetectorService.processImage(
           InputImage.fromBytes(
@@ -230,10 +257,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                 _onAiRepCompleted();
               },
             );
-            // Track deepest flexion point
-            final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-            final leftKnee = pose.landmarks[PoseLandmarkType.leftKnee];
-            final leftAnkle = pose.landmarks[PoseLandmarkType.leftAnkle];
+            final leftHip = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftHip);
+            final leftKnee = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftKnee);
+            final leftAnkle = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftAnkle);
             if (leftHip != null && leftKnee != null && leftAnkle != null) {
               final angle = FormAnalyzer.calculateAngle(leftHip, leftKnee, leftAnkle);
               if (angle < _aiMaxFlexion) {
@@ -258,9 +284,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                 _onAiRepCompleted();
               },
             );
-            final leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-            final leftElbow = pose.landmarks[PoseLandmarkType.leftElbow];
-            final leftWrist = pose.landmarks[PoseLandmarkType.leftWrist];
+            final leftShoulder = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder);
+            final leftElbow = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow);
+            final leftWrist = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist);
             if (leftShoulder != null && leftElbow != null && leftWrist != null) {
               final angle = FormAnalyzer.calculateAngle(leftShoulder, leftElbow, leftWrist);
               if (angle < _aiMaxFlexion) {
@@ -280,23 +306,69 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
               },
             );
           } else {
-            // Plank
             feedback = FormAnalyzer.analyzePlank(pose: pose);
           }
+
+          double totalConfidence = 0.0;
+          for (final landmark in pose.landmarks.values) {
+            totalConfidence += landmark.likelihood;
+          }
+          final avgConfidence = totalConfidence / (pose.landmarks.isEmpty ? 1 : pose.landmarks.length);
 
           setState(() {
             _aiFeedbackMessage = feedback.message;
             _aiIsGoodForm = feedback.isGoodForm;
             _aiProgress = feedback.progress;
+            _detectionState = FormAnalyzer.isFullyTracked(pose, _selectedExerciseTarget) ? 'fully_tracked' : 'partial';
+            _isLowLighting = avgConfidence < 0.48;
           });
 
           final now = DateTime.now();
+
+          String? warningToSpeak;
+          if (_detectionState == 'partial') {
+            warningToSpeak = "Step back so I can see your full body.";
+          } else if (_isLowLighting) {
+            warningToSpeak = "It's too dark. Please adjust the lighting.";
+          }
+
+          if (warningToSpeak != null &&
+              warningToSpeak != _lastSpokenWarningText &&
+              now.difference(_lastSpokenWarningTime).inSeconds >= 6) {
+            _lastSpokenWarningText = warningToSpeak;
+            _lastSpokenWarningTime = now;
+            di.sl<VoiceCoachService>().speakCorrection(warningToSpeak);
+          }
+
           if (feedback.message.isNotEmpty &&
+              !feedback.isGoodForm &&
+              feedback.message != _lastSpokenFeedback &&
+              now.difference(_lastSpokenFeedbackTime).inSeconds >= 4) {
+            _lastSpokenFeedback = feedback.message;
+            _lastSpokenFeedbackTime = now;
+            di.sl<VoiceCoachService>().speakCorrection(feedback.message);
+          } else if (feedback.message.isNotEmpty &&
+              feedback.isGoodForm &&
               feedback.message != _lastSpokenFeedback &&
               now.difference(_lastSpokenFeedbackTime).inSeconds >= 4) {
             _lastSpokenFeedback = feedback.message;
             _lastSpokenFeedbackTime = now;
             di.sl<VoiceCoachService>().speak(feedback.message);
+          }
+        } else if (mounted) {
+          setState(() {
+            _detectionState = 'no_person';
+            _isLowLighting = false;
+            _aiFeedbackMessage = "Position body in frame";
+          });
+
+          final now = DateTime.now();
+          final warningToSpeak = "I can't see anyone. Please stand fully in frame.";
+          if (warningToSpeak != _lastSpokenWarningText &&
+              now.difference(_lastSpokenWarningTime).inSeconds >= 6) {
+            _lastSpokenWarningText = warningToSpeak;
+            _lastSpokenWarningTime = now;
+            di.sl<VoiceCoachService>().speakCorrection(warningToSpeak);
           }
         }
       } catch (_) {} finally {
@@ -650,6 +722,14 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                             ),
                           ),
                   ),
+                  if (_isCameraInitialized && _cameraController != null)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _BodySilhouettePainter(),
+                        ),
+                      ),
+                    ),
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -678,6 +758,47 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                       ),
                     ),
                   ),
+                  Positioned(
+                    top: 10,
+                    left: 95,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _detectionState == 'fully_tracked'
+                            ? Colors.green.withValues(alpha: 0.8)
+                            : (_detectionState == 'partial' ? Colors.orange.withValues(alpha: 0.8) : Colors.grey.withValues(alpha: 0.8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _detectionState == 'fully_tracked'
+                            ? 'FULLY TRACKED'
+                            : (_detectionState == 'partial' ? 'PARTIAL TRACKING' : 'NO PERSON'),
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  if (_isLowLighting)
+                    Positioned(
+                      top: 38,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.amber[900]?.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.light_mode_rounded, color: Colors.white, size: 10),
+                            SizedBox(width: 4),
+                            Text(
+                              'LOW LIGHTING',
+                              style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: 10,
                     right: 10,
@@ -1752,4 +1873,52 @@ class GlassParticle {
     required this.baseSize,
     required this.color,
   });
+}
+
+class _BodySilhouettePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.25)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final fillPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.05)
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.addOval(Rect.fromCircle(center: Offset(size.width / 2, size.height * 0.22), radius: size.height * 0.1));
+    path.moveTo(size.width / 2 - 8, size.height * 0.32);
+    path.lineTo(size.width / 2 - 8, size.height * 0.35);
+    path.lineTo(size.width / 2 + 8, size.height * 0.35);
+    path.lineTo(size.width / 2 + 8, size.height * 0.32);
+    path.close();
+    
+    path.moveTo(size.width / 2 - 32, size.height * 0.35);
+    path.lineTo(size.width / 2 + 32, size.height * 0.35);
+    path.lineTo(size.width / 2 + 24, size.height * 0.65);
+    path.lineTo(size.width / 2 - 24, size.height * 0.65);
+    path.close();
+
+    path.moveTo(size.width / 2 - 32, size.height * 0.35);
+    path.lineTo(size.width / 2 - 48, size.height * 0.55);
+    path.lineTo(size.width / 2 - 42, size.height * 0.70);
+    
+    path.moveTo(size.width / 2 + 32, size.height * 0.35);
+    path.lineTo(size.width / 2 + 48, size.height * 0.55);
+    path.lineTo(size.width / 2 + 42, size.height * 0.70);
+
+    path.moveTo(size.width / 2 - 18, size.height * 0.65);
+    path.lineTo(size.width / 2 - 24, size.height * 0.95);
+    
+    path.moveTo(size.width / 2 + 18, size.height * 0.65);
+    path.lineTo(size.width / 2 + 24, size.height * 0.95);
+
+    canvas.drawPath(path, fillPaint);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
