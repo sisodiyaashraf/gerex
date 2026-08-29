@@ -25,6 +25,8 @@ import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/notifications/notification_models.dart';
 import 'package:gerex/core/notifications/content_packs.dart';
+import 'package:gerex/core/services/voice_coach_service.dart';
+import 'package:gerex/core/di/injection_container.dart' as di;
 
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
@@ -613,6 +615,10 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
                   ),
+                  if (profileProvider.voiceCoachingEnabled) ...[
+                    const SizedBox(height: 8),
+                    _buildVoiceCoachSettingsCard(context, profileProvider, theme),
+                  ],
                   const SizedBox(height: 8),
                   Consumer<NotificationProvider>(builder: (context, notifications, _) => _buildSettingsRow(
                      icon: FontAwesomeIcons.language,
@@ -1554,6 +1560,228 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVoiceCoachSettingsCard(
+      BuildContext context, ProfileProvider profileProvider, ThemeData theme) {
+    final languageOptions = {
+      'english': 'English (US/India)',
+      'hindi': 'Hindi (हिन्दी)',
+      'hinglish': 'Hinglish (Mixed)'
+    };
+
+    final personaOptions = {
+      'motivator': 'Motivator (Warm & Friendly)',
+      'drill_sergeant': 'Drill Sergeant (Tough Love)',
+      'chill': 'Chill (Mindful & Calm)',
+      'playful': 'Playful (Hype Friend)'
+    };
+
+    return FutureBuilder<bool>(
+      future: di.sl<VoiceCoachService>().checkLanguageVoicePack(profileProvider.voiceCoachLanguage),
+      builder: (context, snapshot) {
+        final packAvailable = snapshot.data ?? true;
+
+        return PastelGradientCard(
+          type: PastelCardType.slate,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Voice Coach Settings',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0B1220),
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Language', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  DropdownButton<String>(
+                    value: profileProvider.voiceCoachLanguage,
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: theme.cardColor,
+                    style: TextStyle(
+                      color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                    items: languageOptions.entries.map((e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    )).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        profileProvider.setVoiceCoachLanguage(val);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              if (profileProvider.voiceCoachLanguage == 'hinglish') ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Clean Sentence Fallback', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                          Text(
+                            'Generates clean sentences per language instead of code-switched phrases for better TTS pronunciation.',
+                            style: TextStyle(fontSize: 9.5, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: profileProvider.voiceCoachHinglishClean,
+                      onChanged: (val) => profileProvider.toggleVoiceCoachHinglishClean(val),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Persona', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  DropdownButton<String>(
+                    value: profileProvider.voiceCoachPersona,
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: theme.cardColor,
+                    style: TextStyle(
+                      color: theme.brightness == Brightness.dark ? Colors.white : const Color(0xFF14181F),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                    items: personaOptions.entries.map((e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    )).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        profileProvider.setVoiceCoachPersona(val);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 60,
+                    child: Text('Speed', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: profileProvider.voiceCoachRate,
+                      min: 0.3,
+                      max: 1.0,
+                      divisions: 7,
+                      label: '${profileProvider.voiceCoachRate}x',
+                      onChanged: (val) => profileProvider.setVoiceCoachRate(val),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 60,
+                    child: Text('Pitch', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: profileProvider.voiceCoachPitch,
+                      min: 0.5,
+                      max: 1.5,
+                      divisions: 10,
+                      label: '${profileProvider.voiceCoachPitch}x',
+                      onChanged: (val) => profileProvider.setVoiceCoachPitch(val),
+                    ),
+                  ),
+                ],
+              ),
+              
+              ElevatedButton.icon(
+                onPressed: () {
+                  di.sl<VoiceCoachService>().speakPreview(
+                    language: profileProvider.voiceCoachLanguage,
+                    persona: profileProvider.voiceCoachPersona,
+                    rate: profileProvider.voiceCoachRate,
+                    pitch: profileProvider.voiceCoachPitch,
+                  );
+                },
+                icon: const Icon(Icons.play_circle_filled_rounded, size: 16),
+                label: const Text('Preview Coach Voice', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+
+              if (!packAvailable) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error, size: 14),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'TTS Voice Pack Warning',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.red),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Selected language pack is not installed on this device. Guide to download:',
+                        style: TextStyle(fontSize: 9.5, height: 1.3),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '• Android: Settings -> System -> Languages & Input -> Text-to-speech output\n'
+                        '• iOS: Settings -> Accessibility -> Spoken Content -> Voices',
+                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 8),
+              const Text(
+                'Note: Voice quality depends entirely on the device\'s installed system TTS engine and voices. '
+                'For best results, download premium neural voice packs in system settings.',
+                style: TextStyle(fontSize: 8.5, fontStyle: FontStyle.italic, color: Colors.grey, height: 1.3),
+              ),
+            ],
           ),
         );
       },

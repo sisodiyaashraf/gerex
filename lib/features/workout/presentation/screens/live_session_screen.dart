@@ -780,6 +780,21 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           ],
         ),
         actions: [
+          Consumer<ProfileProvider>(
+            builder: (context, profile, _) {
+              final enabled = profile.voiceCoachingEnabled;
+              return IconButton(
+                icon: Icon(
+                  enabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                  color: enabled ? theme.colorScheme.primary : Colors.grey,
+                ),
+                onPressed: () {
+                  profile.toggleVoiceCoaching(!enabled);
+                },
+                tooltip: 'Toggle Voice Coach',
+              );
+            },
+          ),
           TextButton(
             onPressed: () => _confirmCancelSession(context, provider),
             child: Text(
