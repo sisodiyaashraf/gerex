@@ -346,7 +346,70 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                             ),
                           ],
                         ),
-                        if (metricsProvider.currentStreak > 0 && !metricsProvider.workoutDates.contains(
+                        const SizedBox(height: 12),
+                        const Divider(height: 1, color: Color(0x1A14181F)),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.shield_rounded, color: Color(0xFF3B82F6), size: 16),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Streak Freezes Available',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0x9914181F),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: List.generate(2, (index) {
+                                final active = index < metricsProvider.streakFreezesActive;
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 4.0),
+                                  child: Icon(
+                                    Icons.shield_rounded,
+                                    color: active ? const Color(0xFF3B82F6) : const Color(0xFFCBD5E1),
+                                    size: 14,
+                                  ),
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
+                        if (metricsProvider.lastStreakProtected && !metricsProvider.workoutDates.contains(
+                          '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                        )) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.shield_rounded, color: Color(0xFF2563EB), size: 16),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Your streak was protected — 1 freeze used! Log a session today to keep it active.',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1E3A8A),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (metricsProvider.currentStreak > 0 && !metricsProvider.workoutDates.contains(
                           '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
                         )) ...[
                           const SizedBox(height: 12),

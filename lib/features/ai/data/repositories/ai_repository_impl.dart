@@ -53,7 +53,8 @@ class AIRepositoryImpl implements AIRepository {
     required List<String> recentWorkoutsSummary,
   }) async {
     final prompt =
-        'Based on the user\'s recent workout sessions: $recentWorkoutsSummary, generate one short, highly personalized fitness insight, recovery tip, or motivational line (maximum 2 sentences). Avoid generic suggestions; be direct, actionable, and encouraging.';
+        'Based on the user\'s recent workout sessions: $recentWorkoutsSummary, generate one short, highly personalized fitness insight, recovery tip, or motivational line (maximum 2 sentences). Avoid generic suggestions; be direct, actionable, and encouraging. '
+        'Occasionally (roughly 30-40% of the time), frame the user\'s progress using identity-reinforcing language rather than purely activity terms (e.g. "You\'re becoming someone who shows up 4 times a week" or "You\'re building the habits of a consistent runner" instead of "You logged 4 workouts"). Keep the insights natural and varied, avoiding guilt or scripted phrases.';
 
     final res = await _aiRouter.routeQuery(prompt: prompt);
     return res.fold(
@@ -91,7 +92,8 @@ class AIRepositoryImpl implements AIRepository {
     required List<String> sessionsSummary,
   }) async {
     final prompt =
-        'Based on the user\'s workout history: $sessionsSummary, generate a natural-language fitness progress recap for the week/month (maximum 3 sentences) summarizing how many times they trained, their primary muscle focus, and their volume/consistency progression. Make it sound professional, motivating, and clean.';
+        'Based on the user\'s workout history: $sessionsSummary, generate a natural-language fitness progress recap for the week/month (maximum 3 sentences) summarizing how many times they trained, their primary muscle focus, and their volume/consistency progression. Make it sound professional, motivating, and clean. '
+        'Occasionally (roughly 30-40% of the time), frame the user\'s progress using identity-reinforcing language rather than purely activity terms (e.g. "You\'re becoming someone who shows up 4 times a week" or "You\'re building the habits of a consistent runner" instead of "You logged 4 workouts"). Keep the insights natural and varied, avoiding guilt or scripted phrases.';
 
     final res = await _aiRouter.routeQuery(prompt: prompt);
     return res.fold(
@@ -105,7 +107,8 @@ class AIRepositoryImpl implements AIRepository {
     required List<String> sessionsSummary,
   }) async {
     final prompt =
-        'Based on the user\'s workout history: $sessionsSummary, write a short, friendly, narrative-style fitness story of their week (maximum 3 sentences) (e.g. "This week you showed up 4 times, pushed hardest on Wednesday\'s leg day, and your consistency is trending up."). Make it feel personal and encouraging, using a conversational storytelling tone.';
+        'Based on the user\'s workout history: $sessionsSummary, write a short, friendly, narrative-style fitness story of their week (maximum 3 sentences) (e.g. "This week you showed up 4 times, pushed hardest on Wednesday\'s leg day, and your consistency is trending up."). Make it feel personal and encouraging, using a conversational storytelling tone. '
+        'Occasionally (roughly 30-40% of the time), frame the user\'s progress using identity-reinforcing language rather than purely activity terms (e.g. "You\'re becoming someone who shows up 4 times a week" or "You\'re building the habits of a consistent runner" instead of "You logged 4 workouts"). Keep the insights natural and varied, avoiding guilt or scripted phrases.';
 
     final res = await _aiRouter.routeQuery(prompt: prompt);
     return res.fold(
