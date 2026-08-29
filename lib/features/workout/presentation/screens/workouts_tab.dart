@@ -39,6 +39,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
         final ai = context.read<AIProvider>();
         ai.loadDailyInsight(wp.sessions);
         ai.loadWeeklyTrainingStory(wp.sessions);
+        context.read<NotificationProvider>().scheduleReengagementReminder();
       }
     });
   }

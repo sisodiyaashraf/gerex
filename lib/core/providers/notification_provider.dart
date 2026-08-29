@@ -135,6 +135,8 @@ class NotificationProvider extends ChangeNotifier {
 
   Future<List<int>> getPendingNotificationIds() => service.getPendingNotificationIds();
 
+  Future<void> scheduleReengagementReminder() => service.scheduleReengagementReminder();
+
   Future<void> showCustomNotification(NotificationPayload payload) async {
     await sendNotification(payload.title, payload.body);
     await service.showNow(payload);
