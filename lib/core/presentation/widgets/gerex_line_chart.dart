@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:math' as math;
 import '../../theme/app_theme.dart';
 
 class GerexLineChartPoint {
@@ -15,6 +16,7 @@ class GerexLineChart extends StatefulWidget {
   final double height;
   final int? selectedIndex;
   final ValueChanged<int>? onPointSelected;
+  final bool showForecast;
 
   const GerexLineChart({
     super.key,
@@ -23,6 +25,7 @@ class GerexLineChart extends StatefulWidget {
     this.height = 200.0,
     this.selectedIndex,
     this.onPointSelected,
+    this.showForecast = false,
   });
 
   @override
@@ -94,6 +97,7 @@ class _GerexLineChartState extends State<GerexLineChart> {
                       data: widget.data,
                       selectedIndex: _activeIdx,
                       unit: widget.unit,
+                      showForecast: widget.showForecast,
                     ),
                   ),
                 );
@@ -110,11 +114,13 @@ class _GerexWavePainter extends CustomPainter {
   final List<GerexLineChartPoint> data;
   final int selectedIndex;
   final String? unit;
+  final bool showForecast;
 
   _GerexWavePainter({
     required this.data,
     required this.selectedIndex,
     this.unit,
+    required this.showForecast,
   });
 
   @override
@@ -129,7 +135,36 @@ class _GerexWavePainter extends CustomPainter {
     final double width = size.width - paddingLeft - paddingRight;
     final double height = size.height - paddingTop - paddingBottom;
 
-    final values = data.map((d) => d.value).toList();
+    final localData = List<GerexLineChartPoint>.from(data);
+    final int realDataLength = data.length;
+    
+    if (showForecast && data.length >= 3) {
+      final N = data.length;
+      double sumX = 0;
+      double sumY = 0;
+      for (int i = 0; i < N; i++) {
+        sumX += i;
+        sumY += data[i].value;
+      }
+      final meanX = sumX / N;
+      final meanY = sumY / N;
+      
+      double num = 0;
+      double den = 0;
+      for (int i = 0; i < N; i++) {
+        final diffX = i - meanX;
+        num += diffX * (data[i].value - meanY);
+        den += diffX * diffX;
+      }
+      
+      final slope = den == 0 ? 0.0 : num / den;
+      final intercept = meanY - slope * meanX;
+      final yProj = (slope * N + intercept).clamp(0.0, double.infinity);
+      
+      localData.add(GerexLineChartPoint(label: 'Proj.', value: yProj));
+    }
+
+    final values = localData.map((d) => d.value).toList();
     double maxVal = values.reduce((curr, next) => curr > next ? curr : next);
     double minVal = values.reduce((curr, next) => curr < next ? curr : next);
 
@@ -160,11 +195,11 @@ class _GerexWavePainter extends CustomPainter {
 
     // Compute point coordinates
     final points = <Offset>[];
-    final double stepX = data.length > 1 ? width / (data.length - 1) : width;
+    final double stepX = localData.length > 1 ? width / (localData.length - 1) : width;
 
-    for (int i = 0; i < data.length; i++) {
+    for (int i = 0; i < localData.length; i++) {
       final x = paddingLeft + i * stepX;
-      final y = paddingTop + height * (1.0 - (data[i].value - minVal) / valRange);
+      final y = paddingTop + height * (1.0 - (localData[i].value - minVal) / valRange);
       points.add(Offset(x, y));
     }
 
@@ -180,7 +215,7 @@ class _GerexWavePainter extends CustomPainter {
       pathArea.moveTo(points.first.dx, size.height - paddingBottom);
       pathArea.lineTo(points.first.dx, points.first.dy);
 
-      for (int i = 0; i < points.length - 1; i++) {
+      for (int i = 0; i < realDataLength - 1; i++) {
         final p0 = points[i];
         final p1 = points[i + 1];
         final controlX1 = p0.dx + (p1.dx - p0.dx) / 2;
@@ -192,7 +227,7 @@ class _GerexWavePainter extends CustomPainter {
         pathArea.cubicTo(controlX1, controlY1, controlX2, controlY2, p1.dx, p1.dy);
       }
 
-      pathArea.lineTo(points.last.dx, size.height - paddingBottom);
+      pathArea.lineTo(points[realDataLength - 1].dx, size.height - paddingBottom);
       pathArea.close();
 
       // Draw soft gradient fill underneath line
@@ -218,17 +253,52 @@ class _GerexWavePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawPath(pathLine, linePaint);
 
+    // If forecast is present, draw the dashed projection line
+    if (localData.length > realDataLength) {
+      final pLast = points[realDataLength - 1];
+      final pProj = points[realDataLength];
+
+      final dashPaint = Paint()
+        ..color = const Color(0xFFF59E0B)
+        ..strokeWidth = 3.0
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+
+      final dx = pProj.dx - pLast.dx;
+      final dy = pProj.dy - pLast.dy;
+      final distance = math.sqrt(dx * dx + dy * dy);
+      const dashWidth = 6.0;
+      const spaceWidth = 4.0;
+      double currentDist = 0.0;
+
+      while (currentDist < distance) {
+        final double tStart = currentDist / distance;
+        final double tEnd = (currentDist + dashWidth).clamp(0.0, distance) / distance;
+        
+        canvas.drawLine(
+          Offset(pLast.dx + dx * tStart, pLast.dy + dy * tStart),
+          Offset(pLast.dx + dx * tEnd, pLast.dy + dy * tEnd),
+          dashPaint,
+        );
+        currentDist += dashWidth + spaceWidth;
+      }
+    }
+
     // Draw x-axis labels
-    for (int i = 0; i < data.length; i++) {
+    for (int i = 0; i < localData.length; i++) {
       final p = points[i];
       final isSelected = i == selectedIndex;
+      final isForecast = i >= realDataLength;
+      
       final textPainter = TextPainter(
         text: TextSpan(
-          text: data[i].label,
+          text: localData[i].label,
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? const Color(0xFF0D807B) : const Color(0xFF14181F).withValues(alpha: 0.6),
+            color: isSelected 
+                ? (isForecast ? const Color(0xFFD97706) : const Color(0xFF0D807B)) 
+                : const Color(0xFF14181F).withValues(alpha: 0.6),
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -243,10 +313,13 @@ class _GerexWavePainter extends CustomPainter {
     // Draw selected active point, guide line, and callout pill
     if (selectedIndex >= 0 && selectedIndex < points.length) {
       final activeP = points[selectedIndex];
+      final isForecast = selectedIndex >= realDataLength;
+      final activeColor = isForecast ? const Color(0xFFF59E0B) : AppColors.accentEmeraldLight;
+      final activeGlowColor = isForecast ? const Color(0xFFF59E0B).withValues(alpha: 0.35) : AppColors.accentEmeraldLight.withValues(alpha: 0.35);
 
       // Vertical dashed guide line
       final dashedPaint = Paint()
-        ..color = AppColors.accentEmeraldLight.withValues(alpha: 0.5)
+        ..color = activeColor.withValues(alpha: 0.5)
         ..strokeWidth = 1.5;
 
       const double dashHeight = 4, dashSpace = 4;
@@ -262,21 +335,21 @@ class _GerexWavePainter extends CustomPainter {
 
       // Outer glowing ring
       final glowPaint = Paint()
-        ..color = AppColors.accentEmeraldLight.withValues(alpha: 0.35)
+        ..color = activeGlowColor
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
       canvas.drawCircle(activeP, 12, glowPaint);
 
-      // Node circle: White center with emerald outer border
-      final outerNodePaint = Paint()..color = AppColors.accentEmeraldLight;
+      // Node circle: White center with emerald/amber outer border
+      final outerNodePaint = Paint()..color = activeColor;
       final innerNodePaint = Paint()..color = Colors.white;
 
       canvas.drawCircle(activeP, 7.0, outerNodePaint);
       canvas.drawCircle(activeP, 4.5, innerNodePaint);
 
       // Floating Callout Pill above node
-      final valStr = data[selectedIndex].value % 1 == 0
-          ? data[selectedIndex].value.toInt().toString()
-          : data[selectedIndex].value.toStringAsFixed(1);
+      final valStr = localData[selectedIndex].value % 1 == 0
+          ? localData[selectedIndex].value.toInt().toString()
+          : localData[selectedIndex].value.toStringAsFixed(1);
       final calloutText = unit != null ? '$valStr $unit' : valStr;
 
       final textSpan = TextSpan(
@@ -284,7 +357,7 @@ class _GerexWavePainter extends CustomPainter {
         style: GoogleFonts.outfit(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: AppColors.accentEmeraldLight,
+          color: activeColor,
         ),
       );
 
@@ -314,7 +387,7 @@ class _GerexWavePainter extends CustomPainter {
       canvas.drawRRect(pillRRect, pillBgPaint);
 
       final pillBorderPaint = Paint()
-        ..color = AppColors.accentEmeraldLight.withValues(alpha: 0.5)
+        ..color = activeColor.withValues(alpha: 0.5)
         ..strokeWidth = 1.0
         ..style = PaintingStyle.stroke;
       canvas.drawRRect(pillRRect, pillBorderPaint);

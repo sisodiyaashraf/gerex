@@ -5,7 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/workout_provider.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../challenges/presentation/providers/challenge_provider.dart';
+import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import '../../../ai/presentation/providers/ai_provider.dart';
 import '../../../metrics/presentation/providers/metrics_provider.dart';
 import '../../../metrics/presentation/providers/heart_rate_provider.dart';
@@ -592,49 +593,41 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                             'Workout Consistency Progress',
+                             'Workout Consistency & Forecast Trend',
                              style: TextStyle(
                                fontWeight: FontWeight.bold,
                                fontSize: 16,
                              ),
                            ),
                           const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(7, (index) {
-                              final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                              // Find if completed workout on this day
-                              final dayOffset = 6 - index;
-                              final checkDate = now.subtract(Duration(days: dayOffset));
-                              final isCompleted = workoutProvider.sessions.any((s) {
-                                final compDate = s.completedAt ?? s.startedAt;
-                                return compDate.year == checkDate.year &&
-                                    compDate.month == checkDate.month &&
-                                    compDate.day == checkDate.day;
-                              });
+                          Builder(
+                            builder: (context) {
+                              final chartPoints = <GerexLineChartPoint>[];
+                              for (int i = 4; i >= 0; i--) {
+                                final checkDate = DateTime.now().subtract(Duration(days: i));
+                                final count = workoutProvider.sessions.where((s) {
+                                  final compDate = s.completedAt ?? s.startedAt;
+                                  return compDate.year == checkDate.year &&
+                                      compDate.month == checkDate.month &&
+                                      compDate.day == checkDate.day;
+                                }).length;
+                                
+                                final weekdayLabel = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][checkDate.weekday - 1];
+                                chartPoints.add(GerexLineChartPoint(
+                                  label: weekdayLabel,
+                                  value: count.toDouble(),
+                                ));
+                              }
 
-                              return Column(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 12,
-                                    backgroundColor: isCompleted
-                                        ? const Color(0xFF0D807B)
-                                        : Colors.black.withValues(alpha: 0.05),
-                                    child: isCompleted
-                                        ? const Icon(Icons.check, size: 12, color: Colors.white)
-                                        : null,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    weekdays[index],
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                              return SizedBox(
+                                height: 160,
+                                child: GerexLineChart(
+                                  data: chartPoints,
+                                  unit: 'sessions',
+                                  showForecast: true,
+                                ),
                               );
-                            }),
+                            },
                           ),
                         ],
                       ),
