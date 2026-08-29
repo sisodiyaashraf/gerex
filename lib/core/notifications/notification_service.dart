@@ -391,6 +391,28 @@ class NotificationService {
 
   Future<void> scheduleAiInsight(DateTime when) => scheduleNotification(NotificationPayload(id: 'ai-insight-${when.toIso8601String()}', title: 'Gerex AI insight ready', body: contentPack.message(NotificationCategory.aiCoach), category: NotificationCategory.aiCoach, deepLink: '/coach', scheduledTime: when));
 
+  Future<void> scheduleReengagementReminder() async {
+    const id = 'lapsed_user_reengagement';
+    await cancelNotification(id);
+
+    final scheduledTime = DateTime.now().add(const Duration(days: 4));
+    final copies = [
+      "Ready to get back to it? Your last streak was great — let's start a new one when you're ready.",
+      "Just a gentle wave from Gerex! Whenever you're ready to move, we're here to help you get that next small win.",
+      "How are you feeling today? Remember, even a 2-minute session keeps the habit loop active. We're here for you!",
+    ];
+    final body = copies[DateTime.now().millisecond % copies.length];
+
+    await scheduleNotification(NotificationPayload(
+      id: id,
+      title: 'Welcome back anytime!',
+      body: body,
+      category: NotificationCategory.general,
+      deepLink: '/workout-tracker',
+      scheduledTime: scheduledTime,
+    ));
+  }
+
   Future<bool> _isDuplicate(NotificationPayload payload) async {
     final id = _id(payload.id ?? '${payload.category.name}:${payload.scheduledTime.toIso8601String()}');
     final pending = await _plugin.pendingNotificationRequests();
