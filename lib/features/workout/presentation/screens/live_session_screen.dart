@@ -363,7 +363,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           });
 
           final now = DateTime.now();
-          final warningToSpeak = "I can't see anyone. Please stand fully in frame.";
+          const warningToSpeak = "I can't see anyone. Please stand fully in frame.";
           if (warningToSpeak != _lastSpokenWarningText &&
               now.difference(_lastSpokenWarningTime).inSeconds >= 6) {
             _lastSpokenWarningText = warningToSpeak;
@@ -1090,6 +1090,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                                         ),
                                       );
                                     }
+
+                                    if (!context.mounted) return;
 
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
