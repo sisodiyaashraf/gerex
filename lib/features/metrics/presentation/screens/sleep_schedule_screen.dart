@@ -220,14 +220,14 @@ class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    const Icon(Icons.sensors_rounded, size: 12, color: const Color(0xFF10B981)),
+                                    const Icon(Icons.sensors_rounded, size: 12, color: Color(0xFF10B981)),
                                     const SizedBox(width: 4),
                                     Text(
                                       'Smart Window: ${alarm.smartAlarmWindowStart} - ${alarm.wakeHour}',
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF10B981),
+                                        color: Color(0xFF10B981),
                                       ),
                                     ),
                                   ],

@@ -716,13 +716,19 @@ class SleepProvider extends ChangeNotifier {
           final remRatio = _syncedSleepData!.remHours / totalHrs;
           
           double deepPts = 10.0;
-          if (deepRatio < 0.15) deepPts = 10.0 * (deepRatio / 0.15);
-          else if (deepRatio > 0.25) deepPts = 10.0 - (deepRatio - 0.25) * 10.0;
+          if (deepRatio < 0.15) {
+            deepPts = 10.0 * (deepRatio / 0.15);
+          } else if (deepRatio > 0.25) {
+            deepPts = 10.0 - (deepRatio - 0.25) * 10.0;
+          }
           deepPts = deepPts.clamp(0.0, 10.0);
 
           double remPts = 10.0;
-          if (remRatio < 0.20) remPts = 10.0 * (remRatio / 0.20);
-          else if (remRatio > 0.25) remPts = 10.0 - (remRatio - 0.25) * 10.0;
+          if (remRatio < 0.20) {
+            remPts = 10.0 * (remRatio / 0.20);
+          } else if (remRatio > 0.25) {
+            remPts = 10.0 - (remRatio - 0.25) * 10.0;
+          }
           remPts = remPts.clamp(0.0, 10.0);
 
           qualityScore = deepPts + remPts;
