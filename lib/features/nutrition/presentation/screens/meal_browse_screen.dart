@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/meal_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
@@ -199,7 +198,7 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: const ['All', 'Favorites', 'Vegetarian', 'High Protein', 'Low Carb'].length,
                 itemBuilder: (context, index) {
-                  final tags = const ['All', 'Favorites', 'Vegetarian', 'High Protein', 'Low Carb'];
+                  const tags = ['All', 'Favorites', 'Vegetarian', 'High Protein', 'Low Carb'];
                   final tag = tags[index];
                   final isSelected = tag == _selectedDietTag;
 
