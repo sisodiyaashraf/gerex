@@ -305,7 +305,7 @@ class _WindDownScreenState extends State<WindDownScreen> {
 
           // Timer Countdown & Trigger controls
           Text(
-            _isPlaying ? _formatTimerString() : '${_timerMinutes}:00',
+            _isPlaying ? _formatTimerString() : '$_timerMinutes:00',
             style: GoogleFonts.outfit(
               fontSize: 48,
               fontWeight: FontWeight.w900,
