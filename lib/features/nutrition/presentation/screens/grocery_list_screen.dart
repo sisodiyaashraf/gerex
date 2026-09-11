@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,9 +9,7 @@ import '../../domain/entities/grocery_item.dart';
 import '../providers/grocery_provider.dart';
 import '../providers/meal_provider.dart';
 import 'package:gerex/core/theme/app_theme.dart';
-import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
-import 'package:gerex/core/presentation/utils/responsive_helper.dart';
 
 class GroceryListScreen extends StatefulWidget {
   const GroceryListScreen({super.key});
@@ -25,6 +22,8 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
   final TextEditingController _addItemController = TextEditingController();
   GroceryCategory _selectedAddCategory = GroceryCategory.produce;
   GroceryCategory? _selectedFilterCategory;
+
+  static const Color accentMint = Color(0xFF10B981);
 
   @override
   void dispose() {
@@ -90,7 +89,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
         : groceryProvider.items.where((i) => i.category == _selectedFilterCategory).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackgroundColor,
+      backgroundColor: AppColors.bgDarkPrimary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -108,7 +107,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_rounded, color: AppTheme.accentMint),
+            icon: const Icon(Icons.share_rounded, color: accentMint),
             tooltip: 'Share / Copy List',
             onPressed: () => _onShareList(groceryProvider),
           ),
@@ -127,7 +126,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                 value: 'clear_checked',
                 child: Row(
                   children: [
-                    const Icon(Icons.cleaning_services_rounded, color: AppTheme.accentMint, size: 20),
+                    const Icon(Icons.cleaning_services_rounded, color: accentMint, size: 20),
                     const SizedBox(width: 12),
                     Text('Clear Purchased Items', style: GoogleFonts.inter(color: Colors.white)),
                   ],
@@ -184,14 +183,14 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentMint.withOpacity(0.2),
+                            color: accentMint.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppTheme.accentMint.withOpacity(0.4)),
+                            border: Border.all(color: accentMint.withValues(alpha: 0.4)),
                           ),
                           child: Text(
                             '${(groceryProvider.progressRatio * 100).toInt()}% Done',
                             style: GoogleFonts.outfit(
-                              color: AppTheme.accentMint,
+                              color: accentMint,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
@@ -205,8 +204,8 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                       child: LinearProgressIndicator(
                         value: groceryProvider.progressRatio,
                         minHeight: 8,
-                        backgroundColor: Colors.white.withOpacity(0.1),
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentMint),
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
+                        valueColor: const AlwaysStoppedAnimation<Color>(accentMint),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -224,7 +223,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.accentMint,
+                          backgroundColor: accentMint,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -294,7 +293,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     required VoidCallback onTap,
     Color? color,
   }) {
-    final chipColor = color ?? AppTheme.accentMint;
+    final chipColor = color ?? accentMint;
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: InkWell(
@@ -304,7 +303,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? chipColor.withOpacity(0.25) : const Color(0xFF1E293B),
+            color: isSelected ? chipColor.withValues(alpha: 0.25) : const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected ? chipColor : Colors.white10,
@@ -324,7 +323,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                 label,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.semibold : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   color: isSelected ? Colors.white : Colors.white70,
                 ),
               ),
@@ -339,12 +338,12 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withOpacity(0.7),
+        color: const Color(0xFF1E293B).withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: item.isChecked
               ? Colors.white10
-              : item.category.categoryColor.withOpacity(0.3),
+              : item.category.categoryColor.withValues(alpha: 0.3),
         ),
       ),
       child: ListTile(
@@ -358,10 +357,10 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: item.isChecked
-                  ? AppTheme.accentMint
+                  ? accentMint
                   : Colors.transparent,
               border: Border.all(
-                color: item.isChecked ? AppTheme.accentMint : Colors.white38,
+                color: item.isChecked ? accentMint : Colors.white38,
                 width: 2,
               ),
             ),
@@ -377,7 +376,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
             fontWeight: FontWeight.w600,
             color: item.isChecked ? Colors.white38 : Colors.white,
             decoration: item.isChecked ? TextDecoration.lineThrough : null,
-            decorationColor: AppTheme.accentMint,
+            decorationColor: accentMint,
           ),
         ),
         subtitle: Row(
@@ -385,7 +384,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: item.category.categoryColor.withOpacity(0.2),
+                color: item.category.categoryColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -438,12 +437,12 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.accentMint.withOpacity(0.1),
+                color: accentMint.withValues(alpha: 0.1),
               ),
               child: const Icon(
                 Icons.shopping_basket_outlined,
                 size: 64,
-                color: AppTheme.accentMint,
+                color: accentMint,
               ),
             ),
             const SizedBox(height: 16),
@@ -477,7 +476,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
         color: const Color(0xFF1E293B),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),
@@ -496,9 +495,9 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   decoration: BoxDecoration(
-                    color: _selectedAddCategory.categoryColor.withOpacity(0.2),
+                    color: _selectedAddCategory.categoryColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _selectedAddCategory.categoryColor.withOpacity(0.5)),
+                    border: Border.all(color: _selectedAddCategory.categoryColor.withValues(alpha: 0.5)),
                   ),
                   child: Row(
                     children: [
@@ -532,7 +531,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                     hintText: 'Add grocery item (e.g. Almond Milk)...',
                     hintStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
                     filled: true,
-                    fillColor: Colors.black.withOpacity(0.2),
+                    fillColor: Colors.black.withValues(alpha: 0.2),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -547,7 +546,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                 onPressed: () => _onAddItem(provider),
                 icon: const Icon(Icons.add_rounded, color: Colors.black, size: 24),
                 style: IconButton.styleFrom(
-                  backgroundColor: AppTheme.accentMint,
+                  backgroundColor: accentMint,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.all(10),
                 ),
