@@ -31,6 +31,7 @@ import '../../features/metrics/presentation/screens/sleep_schedule_screen.dart';
 import '../../features/metrics/presentation/screens/add_alarm_screen.dart';
 import '../../features/metrics/presentation/screens/wind_down_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_planner_screen.dart';
+import '../../features/nutrition/presentation/screens/grocery_list_screen.dart';
 import '../../features/nutrition/presentation/screens/meal_details_screen.dart';
 import '../../features/nutrition/domain/entities/meal_entities.dart';
 import '../../features/exercise/presentation/screens/exercise_detail_screen.dart';
@@ -211,6 +212,10 @@ class AppRouter {
       GoRoute(
         path: '/meal-planner',
         builder: (context, state) => const MealPlannerScreen(),
+      ),
+      GoRoute(
+        path: '/grocery-list',
+        builder: (context, state) => const GroceryListScreen(),
       ),
       GoRoute(
         path: '/meal-details',
