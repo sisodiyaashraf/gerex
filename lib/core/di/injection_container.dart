@@ -27,6 +27,7 @@ import '../../features/profile/presentation/providers/profile_provider.dart';
 import '../../features/profile/presentation/providers/progress_photos_provider.dart';
 import '../../features/metrics/presentation/providers/sleep_provider.dart';
 import '../../features/nutrition/presentation/providers/meal_provider.dart';
+import '../../features/nutrition/presentation/providers/grocery_provider.dart';
 import '../../features/nutrition/domain/repositories/food_scanner_repository.dart';
 import '../../features/nutrition/data/repositories/food_scanner_repository_impl.dart';
 import '../../features/nutrition/domain/usecases/analyze_food_image_usecase.dart';
@@ -115,6 +116,7 @@ Future<void> init() async {
   // Features - Sleep & Nutrition Metrics
   sl.registerLazySingleton<SleepProvider>(() => SleepProvider(sl(), sl()));
   sl.registerLazySingleton<MealProvider>(() => MealProvider(sl()));
+  sl.registerLazySingleton<GroceryProvider>(() => GroceryProvider(sl()));
 
   // AI Food Scanner
   sl.registerLazySingleton<FoodScannerRepository>(() => FoodScannerRepositoryImpl());
