@@ -21,4 +21,5 @@
 - [x] Harden chat bubbles limits, input floating offsets and empty states in `lib/features/ai/presentation/screens/ai_coach_chat_screen.dart`
 - [x] Fix builder cards constraints and alternatives modal sheet dimensions in `lib/features/workout/presentation/screens/workout_builder_screen.dart`
 - [x] Create PastelGradientCard widget in `lib/core/presentation/widgets/pastel_gradient_card.dart` for optimized frame rates
+- [x] Add Grocery / Shopping List Generator feature in `lib/features/nutrition` with automated meal plan ingredient parsing, category filtering, item check-off, and clipboard export
 - [x] Verify clean compilation and full unit tests stability
