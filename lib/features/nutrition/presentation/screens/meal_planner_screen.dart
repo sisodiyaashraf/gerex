@@ -238,6 +238,11 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         ),
         actions: [
           IconButton(
+            icon: Icon(Icons.shopping_bag_outlined, color: theme.colorScheme.onSurface, size: 22),
+            tooltip: 'Shopping List',
+            onPressed: () => context.push('/grocery-list'),
+          ),
+          IconButton(
             icon: Icon(Icons.photo_camera_rounded, color: theme.colorScheme.onSurface, size: 22),
             tooltip: 'AI Food Scanner',
             onPressed: () => context.push('/meal-food-scanner'),
