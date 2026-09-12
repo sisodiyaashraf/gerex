@@ -55,6 +55,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/.env
+    - assets/images/robot_mascot/
     - assets/images/app icon/
     - assets/images/gerex smartwatch.png
     - assets/images/meal_icon.png
