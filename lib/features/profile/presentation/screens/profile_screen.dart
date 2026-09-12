@@ -798,6 +798,15 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  _buildSettingsRow(
+                    icon: FontAwesomeIcons.robot,
+                    title: '8-Bit Floating AI Mascot',
+                    trailing: Switch.adaptive(
+                      value: profileProvider.mascotEnabled,
+                      onChanged: (val) => profileProvider.toggleMascot(val),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
                   // Subscription Plan settings item
                   _buildSettingsRow(

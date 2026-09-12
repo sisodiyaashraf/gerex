@@ -49,6 +49,7 @@ class ProfileProvider extends ChangeNotifier {
     _streakFlameEnabled = _prefs.getBool('streak_flame_enabled') ?? true;
     _confettiEnabled = _prefs.getBool('confetti_enabled') ?? true;
     _ghostTrainerEnabled = _prefs.getBool('ghost_trainer_enabled') ?? false;
+    _mascotEnabled = _prefs.getBool('mascot_enabled') ?? true;
 
     _voiceCoachLanguage = _prefs.getString('voice_coach_language') ?? 'english';
     _voiceCoachPersona = _prefs.getString('voice_coach_persona') ?? 'motivator';
@@ -103,6 +104,12 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> toggleGhostTrainer(bool value) async {
     _ghostTrainerEnabled = value;
     await _prefs.setBool('ghost_trainer_enabled', value);
+    notifyListeners();
+  }
+
+  Future<void> toggleMascot(bool value) async {
+    _mascotEnabled = value;
+    await _prefs.setBool('mascot_enabled', value);
     notifyListeners();
   }
 
