@@ -264,10 +264,12 @@ class MascotAiHubBottomSheet extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 20,
+                child: Center(
+                  child: FaIcon(
+                    icon,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),

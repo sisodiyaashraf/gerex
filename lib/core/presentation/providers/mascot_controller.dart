@@ -90,7 +90,6 @@ class MascotController extends ChangeNotifier {
           loop: false,
         );
       case MascotState.idle:
-      default:
         return const MascotAnimConfig(
           assetPath: 'assets/images/robot_mascot/robot_idle.png',
           frameWidth: 32,
