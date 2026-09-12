@@ -14,14 +14,14 @@ void main() async {
     final filePath = '${dir.path}/$state.png';
     final bytes = generatePlaceholderPng(state);
     File(filePath).writeAsBytesSync(bytes);
-    print('Generated placeholder PNG: $filePath (${bytes.length} bytes)');
+    stdout.writeln('Generated placeholder PNG: $filePath (${bytes.length} bytes)');
   }
 }
 
 List<int> generatePlaceholderPng(String state) {
   // 128 x 32 PNG (4 frames of 32x32)
-  final width = 128;
-  final height = 32;
+  const width = 128;
+  const height = 32;
   
   // PNG signature
   final header = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
