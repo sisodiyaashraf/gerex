@@ -9,6 +9,7 @@ import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/features/metrics/presentation/providers/metrics_provider.dart';
 import 'package:gerex/core/services/voice_coach_service.dart';
+import 'package:gerex/core/presentation/providers/mascot_controller.dart';
 
 class PrCelebrationEvent {
   final String exerciseName;
@@ -508,6 +509,9 @@ class WorkoutProvider extends ChangeNotifier {
         } catch (_) {}
         try {
           di.sl<VoiceCoachService>().speakTrigger('finish');
+        } catch (_) {}
+        try {
+          di.sl<MascotController>().triggerFlexAnimation();
         } catch (_) {}
         return true;
       },

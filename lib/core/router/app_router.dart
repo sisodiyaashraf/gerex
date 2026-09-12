@@ -50,6 +50,8 @@ import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
 import '../../features/exercise/presentation/screens/create_exercise_screen.dart';
 import '../di/injection_container.dart';
 import '../presentation/widgets/liquid_glass_nav_bar.dart';
+import '../presentation/widgets/floating_mascot_widget.dart';
+import '../presentation/providers/mascot_controller.dart';
 
 
 class AppRouter {
@@ -337,8 +339,19 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        sl<MascotController>().triggerWave();
+      } catch (_) {}
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final sleepProvider = Provider.of<SleepProvider>(context);
+    final profileProvider = Provider.of<ProfileProvider>(context);
     final activeAlarm = sleepProvider.activeFiringAlarm;
 
     return Scaffold(
@@ -349,6 +362,20 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             child: IndexedStack(index: _currentIndex, children: _tabs),
           ),
 
+          // Floating Robot Mascot (positioned overlapping top edge of LiquidGlassNavBar)
+          if (profileProvider.mascotEnabled)
+            Positioned(
+              right: 32,
+              bottom: 72 + MediaQuery.of(context).padding.bottom,
+              child: FloatingMascotWidget(
+                onSelectMealTab: () {
+                  setState(() {
+                    _currentIndex = 2; // Meals tab
+                  });
+                },
+              ),
+            ),
+
           Positioned(
             left: 24,
             right: 24,
@@ -356,6 +383,16 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             child: LiquidGlassNavBar(
               currentIndex: _currentIndex,
               onTap: (index) {
+                if (index != _currentIndex) {
+                  try {
+                    final mascotController = Provider.of<MascotController>(context, listen: false);
+                    if (index == 0) {
+                      mascotController.triggerWave();
+                    } else {
+                      mascotController.triggerWalkOrRun();
+                    }
+                  } catch (_) {}
+                }
                 setState(() {
                   _currentIndex = index;
                 });

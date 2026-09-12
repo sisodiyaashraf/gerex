@@ -41,6 +41,7 @@ import '../../features/challenges/data/repositories/challenge_repository_impl.da
 import '../../features/challenges/presentation/providers/challenge_provider.dart';
 import 'package:gerex/core/services/voice_coach_service.dart';
 import 'package:gerex/core/services/voice_engine.dart';
+import '../presentation/providers/mascot_controller.dart';
 
 final sl = GetIt.instance;
 
@@ -129,4 +130,5 @@ Future<void> init() async {
   sl.registerLazySingleton<ActivityProvider>(() => ActivityProvider(sl()));
   sl.registerLazySingleton<NotificationProvider>(() => NotificationProvider(sl()));
   sl.registerLazySingleton<HeartRateProvider>(() => HeartRateProvider(sl(), sl()));
+  sl.registerLazySingleton<MascotController>(() => MascotController());
 }

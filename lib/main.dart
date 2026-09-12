@@ -22,6 +22,7 @@ import 'features/challenges/presentation/providers/challenge_provider.dart';
 import 'features/metrics/presentation/providers/heart_rate_provider.dart';
 import 'core/providers/activity_provider.dart';
 import 'core/providers/notification_provider.dart';
+import 'core/presentation/providers/mascot_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +69,7 @@ void main() async {
         ChangeNotifierProvider.value(value: di.sl<NotificationProvider>()),
         ChangeNotifierProvider.value(value: di.sl<ChallengeProvider>()),
         ChangeNotifierProvider.value(value: di.sl<HeartRateProvider>()),
+        ChangeNotifierProvider.value(value: di.sl<MascotController>()),
       ],
       child: const MainApp(),
     ),
