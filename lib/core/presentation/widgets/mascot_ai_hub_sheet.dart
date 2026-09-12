@@ -217,7 +217,7 @@ class MascotAiHubBottomSheet extends StatelessWidget {
 
   Widget _buildOptionCard(
     BuildContext context, {
-    required IconData icon,
+    required dynamic icon,
     required List<Color> gradientColors,
     required String title,
     required String subtitle,
