@@ -26,7 +26,6 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
   Animation<double>? _idleBobAnimation;
   Animation<double>? _idleScaleAnimation;
 
-  final bool _isFacingRight = true;
   bool _isLapInProgress = false;
 
   @override
