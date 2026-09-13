@@ -2,13 +2,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/mascot_controller.dart';
+import 'sprite_animator.dart';
 import 'mascot_ai_hub_sheet.dart';
 
 typedef RobotMascot = FloatingMascotWidget;
 
-/// Transform-driven Robot Mascot Widget positioned along the top edge of the bottom nav bar.
-/// Uses Flutter animation primitives (translate, footstep cadence bobbing, scale breathing,
-/// direction flipping, and fade transitions) on high-resolution single static PNG assets.
+/// Frame-animated Robot Mascot Widget positioned relative to the bottom nav bar.
+/// Slices horizontal sprite sheets using [SpriteAnimator] and runs a perimeter lap
+/// around the navigation bar when tapped before opening the AI Hub sheet.
 class FloatingMascotWidget extends StatefulWidget {
   final VoidCallback? onSelectMealTab;
 
@@ -23,57 +24,34 @@ class FloatingMascotWidget extends StatefulWidget {
 
 class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     with TickerProviderStateMixin {
-  late final AnimationController _horizontalController;
+  late final AnimationController _lapController;
   late final AnimationController _idleBobController;
-  late final AnimationController _footstepBobController;
-
   late final Animation<double> _idleBobAnimation;
   late final Animation<double> _idleScaleAnimation;
-  late final Animation<double> _footstepBobAnimation;
 
   bool _isFacingRight = true;
-  double _lastHorizontalValue = 0.0;
+  bool _isLapInProgress = false;
 
   @override
   void initState() {
     super.initState();
 
-    // 1. Horizontal movement controller across the track
-    _horizontalController = AnimationController(
+    // 1. Lap animation controller around the navbar perimeter (~1.8s total duration)
+    _lapController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3400),
+      duration: const Duration(milliseconds: 1800),
     );
 
-    _horizontalController.addListener(() {
-      final currentValue = _horizontalController.value;
-      if (currentValue > _lastHorizontalValue) {
-        if (!_isFacingRight) {
-          setState(() {
-            _isFacingRight = true;
-          });
-        }
-      } else if (currentValue < _lastHorizontalValue) {
-        if (_isFacingRight) {
-          setState(() {
-            _isFacingRight = false;
-          });
-        }
-      }
-      _lastHorizontalValue = currentValue;
-    });
-
-    _horizontalController.addStatusListener((status) {
+    _lapController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        _horizontalController.reverse();
-      } else if (status == AnimationStatus.dismissed) {
-        _horizontalController.forward();
+        _onLapCompleted();
       }
     });
 
-    // 2. Idle vertical bobbing & breathing pulse
+    // 2. Continuous idle bobbing & breathing scale pulse in resting state
     _idleBobController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
 
     _idleBobAnimation = Tween<double>(begin: 0.0, end: -4.0).animate(
@@ -83,75 +61,44 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     _idleScaleAnimation = Tween<double>(begin: 1.0, end: 1.04).animate(
       CurvedAnimation(parent: _idleBobController, curve: Curves.easeInOut),
     );
-
-    // 3. Footstep cadence bobbing during walk/run
-    _footstepBobController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-
-    _footstepBobAnimation = Tween<double>(begin: 0.0, end: -5.0).animate(
-      CurvedAnimation(parent: _footstepBobController, curve: Curves.easeInOut),
-    );
   }
 
   @override
   void dispose() {
-    _horizontalController.dispose();
+    _lapController.dispose();
     _idleBobController.dispose();
-    _footstepBobController.dispose();
     super.dispose();
   }
 
-  void _updateAnimationStates(MascotState state) {
-    switch (state) {
-      case MascotState.walking:
-        if (_horizontalController.duration != const Duration(milliseconds: 3400)) {
-          _horizontalController.duration = const Duration(milliseconds: 3400);
-        }
-        if (!_horizontalController.isAnimating) {
-          _horizontalController.forward(from: _horizontalController.value);
-        }
-        if (_footstepBobController.duration != const Duration(milliseconds: 400)) {
-          _footstepBobController.duration = const Duration(milliseconds: 400);
-          _footstepBobController.repeat(reverse: true);
-        } else if (!_footstepBobController.isAnimating) {
-          _footstepBobController.repeat(reverse: true);
-        }
-        break;
-
-      case MascotState.running:
-        if (_horizontalController.duration != const Duration(milliseconds: 1600)) {
-          _horizontalController.duration = const Duration(milliseconds: 1600);
-        }
-        if (!_horizontalController.isAnimating) {
-          _horizontalController.forward(from: _horizontalController.value);
-        }
-        if (_footstepBobController.duration != const Duration(milliseconds: 210)) {
-          _footstepBobController.duration = const Duration(milliseconds: 210);
-          _footstepBobController.repeat(reverse: true);
-        } else if (!_footstepBobController.isAnimating) {
-          _footstepBobController.repeat(reverse: true);
-        }
-        break;
-
-      case MascotState.idle:
-      case MascotState.smiling:
-      case MascotState.exercise:
-      case MascotState.sweating:
-      case MascotState.sweatingAndTired:
-      case MascotState.tired:
-        if (_horizontalController.isAnimating) {
-          _horizontalController.stop();
-        }
-        if (_footstepBobController.isAnimating) {
-          _footstepBobController.stop();
-        }
-        if (!_idleBobController.isAnimating) {
-          _idleBobController.repeat(reverse: true);
-        }
-        break;
+  void _handleTap(MascotController mascotController) {
+    if (_isLapInProgress) {
+      // Rapid re-tap handling: cancel lap & open sheet immediately without stacking
+      _lapController.stop();
+      _isLapInProgress = false;
+      mascotController.resetToIdle();
+      _openHubSheet(mascotController);
+      return;
     }
+
+    // Start perimeter lap
+    _isLapInProgress = true;
+    mascotController.triggerRunning();
+    _lapController.forward(from: 0.0);
+  }
+
+  void _onLapCompleted() {
+    _isLapInProgress = false;
+    final mascotController = Provider.of<MascotController>(context, listen: false);
+    mascotController.resetToIdle();
+    _openHubSheet(mascotController);
+  }
+
+  void _openHubSheet(MascotController mascotController) {
+    mascotController.triggerWave();
+    MascotAiHubBottomSheet.show(
+      context,
+      onSelectMealTab: widget.onSelectMealTab,
+    );
   }
 
   @override
@@ -162,135 +109,144 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     return Consumer<MascotController>(
       builder: (context, mascotController, child) {
         final state = mascotController.currentState;
-        _updateAnimationStates(state);
-
-        final bool isMoving = state == MascotState.walking || state == MascotState.running;
 
         return LayoutBuilder(
           builder: (context, constraints) {
             final double trackWidth = constraints.maxWidth;
-            const double mascotWidth = 56.0;
-            const double mascotHeight = 56.0;
+            const double mascotSize = 54.0;
+            const double navBarHeight = 72.0;
 
-            final double maxX = (trackWidth - mascotWidth).clamp(0.0, double.infinity);
-            final double currentX = isMoving ? _horizontalController.value * maxX : maxX * 0.85;
+            // Container height is 120px. Nav bar sits at bottom (y: 48..120).
+            // Top rim of nav bar is at y = 48 - mascotSize (resting spot top-right).
+            final Offset p0 = Offset(trackWidth - mascotSize - 8, 48 - mascotSize); // Resting spot (Top-Right)
+            final Offset p1 = Offset(8, 48 - mascotSize);                          // Top-Left
+            final Offset p2 = Offset(8, 120 - mascotSize - 4);                      // Bottom-Left
+            final Offset p3 = Offset(trackWidth - mascotSize - 8, 120 - mascotSize - 4); // Bottom-Right
 
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                AnimatedBuilder(
-                  animation: Listenable.merge([
-                    _horizontalController,
-                    _idleBobController,
-                    _footstepBobController,
-                  ]),
-                  builder: (context, child) {
-                    final double verticalOffset = isMoving
-                        ? _footstepBobAnimation.value
-                        : _idleBobAnimation.value;
+            final double d0 = (p1.dx - p0.dx).abs();
+            final double d1 = (p2.dy - p1.dy).abs();
+            final double d2 = (p3.dx - p2.dx).abs();
+            final double d3 = (p0.dy - p3.dy).abs();
+            final double totalDist = d0 + d1 + d2 + d3;
 
-                    final double scaleValue = isMoving ? 1.0 : _idleScaleAnimation.value;
+            return AnimatedBuilder(
+              animation: Listenable.merge([_lapController, _idleBobController]),
+              builder: (context, child) {
+                Offset currentPos;
+                bool facingRight = _isFacingRight;
 
-                    Widget mascotImage = Image.asset(
-                      state.assetPath,
-                      width: 44,
-                      height: 44,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.smart_toy_rounded,
-                          size: 38,
-                          color: Color(0xFF6366F1),
-                        );
-                      },
-                    );
+                if (_isLapInProgress && totalDist > 0) {
+                  final double dist = _lapController.value * totalDist;
+                  if (dist <= d0) {
+                    final double u = dist / d0;
+                    currentPos = Offset(p0.dx + u * (p1.dx - p0.dx), p0.dy + u * (p1.dy - p0.dy));
+                    facingRight = false; // Moving Left along top edge
+                  } else if (dist <= d0 + d1) {
+                    final double u = (dist - d0) / d1;
+                    currentPos = Offset(p1.dx + u * (p2.dx - p1.dx), p1.dy + u * (p2.dy - p1.dy));
+                    facingRight = false; // Moving Down left edge
+                  } else if (dist <= d0 + d1 + d2) {
+                    final double u = (dist - d0 - d1) / d2;
+                    currentPos = Offset(p2.dx + u * (p3.dx - p2.dx), p2.dy + u * (p3.dy - p2.dy));
+                    facingRight = true; // Moving Right along bottom edge
+                  } else {
+                    final double u = (dist - d0 - d1 - d2) / d3;
+                    currentPos = Offset(p3.dx + u * (p0.dx - p3.dx), p3.dy + u * (p0.dy - p3.dy));
+                    facingRight = true; // Moving Up right edge to resting spot
+                  }
+                } else {
+                  // Resting state position with gentle vertical bobbing
+                  currentPos = Offset(p0.dx, p0.dy + _idleBobAnimation.value);
+                  facingRight = true;
+                }
 
-                    // Flip horizontally when traveling left
-                    if (!_isFacingRight) {
-                      mascotImage = Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.rotationY(pi),
-                        child: mascotImage,
-                      );
+                Widget mascotWidget = SpriteAnimator(
+                  key: ValueKey('${state.assetPath}_${state.frameCount}'),
+                  assetPath: state.assetPath,
+                  frameCount: state.frameCount,
+                  frameDuration: state.frameDuration,
+                  loop: state == MascotState.idle ||
+                      state == MascotState.smiling ||
+                      state == MascotState.running ||
+                      state == MascotState.walking,
+                  width: 40,
+                  height: 40,
+                  mascotStateName: state.name,
+                  onComplete: () {
+                    if (state == MascotState.exercise ||
+                        state == MascotState.sweating ||
+                        state == MascotState.sweatingAndTired ||
+                        state == MascotState.tired) {
+                      mascotController.resetToIdle();
                     }
+                  },
+                );
 
-                    return Positioned(
-                      left: currentX,
-                      bottom: 0,
-                      child: Transform.translate(
-                        offset: Offset(0, verticalOffset),
-                        child: Transform.scale(
-                          scale: scaleValue,
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              mascotController.triggerWave();
-                              MascotAiHubBottomSheet.show(
-                                context,
-                                onSelectMealTab: widget.onSelectMealTab,
-                              );
-                            },
-                            child: Container(
-                              width: mascotWidth,
-                              height: mascotHeight,
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: isDark
-                                    ? const LinearGradient(
-                                        colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : const LinearGradient(
-                                        colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                border: Border.all(
-                                  color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.6 : 0.4),
-                                  width: 2.0,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.45 : 0.25),
-                                    blurRadius: 14,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                if (!facingRight) {
+                  mascotWidget = Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.rotationY(pi),
+                    child: mascotWidget,
+                  );
+                }
+
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: currentPos.dx,
+                      top: currentPos.dy,
+                      child: Transform.scale(
+                        scale: _isLapInProgress ? 1.0 : _idleScaleAnimation.value,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _handleTap(mascotController),
+                          child: Container(
+                            width: mascotSize,
+                            height: mascotSize,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: isDark
+                                  ? const LinearGradient(
+                                      colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : const LinearGradient(
+                                      colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                              border: Border.all(
+                                color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.6 : 0.4),
+                                width: 2.0,
                               ),
-                              child: Center(
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  transitionBuilder: (child, animation) {
-                                    return ScaleTransition(
-                                      scale: Tween<double>(begin: 0.82, end: 1.0).animate(
-                                        CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeOutCubic,
-                                        ),
-                                      ),
-                                      child: FadeTransition(
-                                        opacity: animation,
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  child: KeyedSubtree(
-                                    key: ValueKey(state.assetPath),
-                                    child: mascotImage,
-                                  ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.45 : 0.25),
+                                  blurRadius: 14,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                child: KeyedSubtree(
+                                  key: ValueKey(state.assetPath),
+                                  child: mascotWidget,
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-              ],
+                    ),
+                  ],
+                );
+              },
             );
           },
         );
@@ -298,4 +254,5 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     );
   }
 }
+
 
