@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 /// Asset-agnostic generic Sprite Animator widget for 8-bit pixel graphics.
 /// Loads any grid-based PNG sprite sheet (e.g., 4 frames x 1 row) from assets
 /// and cycles through frames using an [AnimationController].
-/// 
+///
 /// If the PNG image is loading or unavailable, falls back gracefully to a crisp
 /// pixel-art custom canvas rendering so the mascot is 100% visibly testable.
 class SpriteAnimator extends StatefulWidget {
@@ -41,7 +41,8 @@ class SpriteAnimator extends StatefulWidget {
   State<SpriteAnimator> createState() => _SpriteAnimatorState();
 }
 
-class _SpriteAnimatorState extends State<SpriteAnimator> with SingleTickerProviderStateMixin {
+class _SpriteAnimatorState extends State<SpriteAnimator>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   ui.Image? _spriteImage;
   bool _isLoadingImage = false;
@@ -56,10 +57,7 @@ class _SpriteAnimatorState extends State<SpriteAnimator> with SingleTickerProvid
 
   void _initAnimationController() {
     final totalDuration = widget.frameDuration * widget.frameCount;
-    _controller = AnimationController(
-      vsync: this,
-      duration: totalDuration,
-    );
+    _controller = AnimationController(vsync: this, duration: totalDuration);
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -220,14 +218,24 @@ class _SpriteFramePainter extends CustomPainter {
     final Paint bodyPaint = Paint()..color = bodyColor;
     final Paint eyePaint = Paint()..color = const Color(0xFF06B6D4); // Cyan
     final Paint chestPaint = Paint()..color = const Color(0xFFFDE047); // Yellow
-    final Paint outlinePaint = Paint()..color = const Color(0xFF0F172A); // Dark slate
+    final Paint outlinePaint = Paint()
+      ..color = const Color(0xFF0F172A); // Dark slate
 
     // Animation frame variations
-    final int bobOffset = (stateName == 'idle' && currentFrame % 2 == 1) ? 1 : 0;
-    final int waveOffset = (stateName == 'wave' && currentFrame % 2 == 1) ? 2 : 0;
+    final int bobOffset = (stateName == 'idle' && currentFrame % 2 == 1)
+        ? 1
+        : 0;
+    final int waveOffset = (stateName == 'wave' && currentFrame % 2 == 1)
+        ? 2
+        : 0;
 
     void drawPixel(int x, int y, Paint p) {
-      final Rect r = Rect.fromLTWH(x * pixelSize, (y + bobOffset) * pixelSize, pixelSize, pixelSize);
+      final Rect r = Rect.fromLTWH(
+        x * pixelSize,
+        (y + bobOffset) * pixelSize,
+        pixelSize,
+        pixelSize,
+      );
       canvas.drawRect(r, p);
     }
 
