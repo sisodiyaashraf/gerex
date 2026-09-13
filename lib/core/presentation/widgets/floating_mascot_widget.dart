@@ -117,7 +117,10 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
             final double trackWidth = constraints.maxWidth;
             const double mascotSize = 52.0;
 
-            final double xRight = (trackWidth - mascotSize - 8).clamp(0.0, double.infinity);
+            final double xRight = (trackWidth - mascotSize - 8).clamp(
+              0.0,
+              double.infinity,
+            );
             const double xLeft = 8.0;
 
             final animList = <Listenable>[];
@@ -157,7 +160,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                   assetPath: state.assetPath,
                   frameCount: state.frameCount,
                   frameDuration: state.frameDuration,
-                  loop: state == MascotState.idle ||
+                  loop:
+                      state == MascotState.idle ||
                       state == MascotState.smiling ||
                       state == MascotState.running ||
                       state == MascotState.walking,
