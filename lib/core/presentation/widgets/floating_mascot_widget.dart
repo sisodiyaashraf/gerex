@@ -24,10 +24,10 @@ class FloatingMascotWidget extends StatefulWidget {
 
 class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     with TickerProviderStateMixin {
-  late final AnimationController _lapController;
-  late final AnimationController _idleBobController;
-  late final Animation<double> _idleBobAnimation;
-  late final Animation<double> _idleScaleAnimation;
+  AnimationController? _lapController;
+  AnimationController? _idleBobController;
+  Animation<double>? _idleBobAnimation;
+  Animation<double>? _idleScaleAnimation;
 
   final bool _isFacingRight = true;
   bool _isLapInProgress = false;
@@ -35,45 +35,48 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
   @override
   void initState() {
     super.initState();
+    _initControllers();
+  }
 
+  void _initControllers() {
     // 1. Lap animation controller around the navbar perimeter (~1.8s total duration)
     _lapController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
-    );
-
-    _lapController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _onLapCompleted();
-      }
-    });
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          _onLapCompleted();
+        }
+      });
 
     // 2. Continuous idle bobbing & breathing scale pulse in resting state
-    _idleBobController = AnimationController(
+    final idleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
-    )..repeat(reverse: true);
+    );
 
     _idleBobAnimation = Tween<double>(begin: 0.0, end: -4.0).animate(
-      CurvedAnimation(parent: _idleBobController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: idleController, curve: Curves.easeInOut),
     );
 
     _idleScaleAnimation = Tween<double>(begin: 1.0, end: 1.04).animate(
-      CurvedAnimation(parent: _idleBobController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: idleController, curve: Curves.easeInOut),
     );
+
+    _idleBobController = idleController..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _lapController.dispose();
-    _idleBobController.dispose();
+    _lapController?.dispose();
+    _idleBobController?.dispose();
     super.dispose();
   }
 
   void _handleTap(MascotController mascotController) {
     if (_isLapInProgress) {
       // Rapid re-tap handling: cancel lap & open sheet immediately without stacking
-      _lapController.stop();
+      _lapController?.stop();
       _isLapInProgress = false;
       mascotController.resetToIdle();
       _openHubSheet(mascotController);
@@ -83,7 +86,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     // Start perimeter lap
     _isLapInProgress = true;
     mascotController.triggerRunning();
-    _lapController.forward(from: 0.0);
+    _lapController?.forward(from: 0.0);
   }
 
   void _onLapCompleted() {
@@ -128,14 +131,19 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
             final double d3 = (p0.dy - p3.dy).abs();
             final double totalDist = d0 + d1 + d2 + d3;
 
+            final animList = <Listenable>[];
+            if (_lapController != null) animList.add(_lapController!);
+            if (_idleBobController != null) animList.add(_idleBobController!);
+
             return AnimatedBuilder(
-              animation: Listenable.merge([_lapController, _idleBobController]),
+              animation: Listenable.merge(animList),
               builder: (context, child) {
                 Offset currentPos;
                 bool facingRight = _isFacingRight;
 
                 if (_isLapInProgress && totalDist > 0) {
-                  final double dist = _lapController.value * totalDist;
+                  final double lapProgress = _lapController?.value ?? 0.0;
+                  final double dist = lapProgress * totalDist;
                   if (dist <= d0) {
                     final double u = dist / d0;
                     currentPos = Offset(p0.dx + u * (p1.dx - p0.dx), p0.dy + u * (p1.dy - p0.dy));
@@ -155,7 +163,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                   }
                 } else {
                   // Resting state position with gentle vertical bobbing
-                  currentPos = Offset(p0.dx, p0.dy + _idleBobAnimation.value);
+                  final double bobVal = _idleBobAnimation?.value ?? 0.0;
+                  currentPos = Offset(p0.dx, p0.dy + bobVal);
                   facingRight = true;
                 }
 
@@ -189,6 +198,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                   );
                 }
 
+                final double scaleVal = _idleScaleAnimation?.value ?? 1.0;
+
                 return Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -196,7 +207,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                       left: currentPos.dx,
                       top: currentPos.dy,
                       child: Transform.scale(
-                        scale: _isLapInProgress ? 1.0 : _idleScaleAnimation.value,
+                        scale: _isLapInProgress ? 1.0 : scaleVal,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () => _handleTap(mascotController),
