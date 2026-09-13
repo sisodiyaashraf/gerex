@@ -29,7 +29,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
   late final Animation<double> _idleBobAnimation;
   late final Animation<double> _idleScaleAnimation;
 
-  bool _isFacingRight = true;
+  final bool _isFacingRight = true;
   bool _isLapInProgress = false;
 
   @override
@@ -114,13 +114,12 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
           builder: (context, constraints) {
             final double trackWidth = constraints.maxWidth;
             const double mascotSize = 54.0;
-            const double navBarHeight = 72.0;
 
             // Container height is 120px. Nav bar sits at bottom (y: 48..120).
             // Top rim of nav bar is at y = 48 - mascotSize (resting spot top-right).
             final Offset p0 = Offset(trackWidth - mascotSize - 8, 48 - mascotSize); // Resting spot (Top-Right)
-            final Offset p1 = Offset(8, 48 - mascotSize);                          // Top-Left
-            final Offset p2 = Offset(8, 120 - mascotSize - 4);                      // Bottom-Left
+            const Offset p1 = Offset(8, 48 - mascotSize);                          // Top-Left
+            const Offset p2 = Offset(8, 120 - mascotSize - 4);                      // Bottom-Left
             final Offset p3 = Offset(trackWidth - mascotSize - 8, 120 - mascotSize - 4); // Bottom-Right
 
             final double d0 = (p1.dx - p0.dx).abs();
