@@ -13,10 +13,7 @@ typedef RobotMascot = FloatingMascotWidget;
 class FloatingMascotWidget extends StatefulWidget {
   final VoidCallback? onSelectMealTab;
 
-  const FloatingMascotWidget({
-    super.key,
-    this.onSelectMealTab,
-  });
+  const FloatingMascotWidget({super.key, this.onSelectMealTab});
 
   @override
   State<FloatingMascotWidget> createState() => _FloatingMascotWidgetState();
@@ -40,14 +37,15 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
 
   void _initControllers() {
     // 1. Lap animation controller around the navbar perimeter (~1.8s total duration)
-    _lapController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _onLapCompleted();
-        }
-      });
+    _lapController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1800),
+        )..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            _onLapCompleted();
+          }
+        });
 
     // 2. Continuous idle bobbing & breathing scale pulse in resting state
     final idleController = AnimationController(
@@ -55,13 +53,15 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       duration: const Duration(milliseconds: 2200),
     );
 
-    _idleBobAnimation = Tween<double>(begin: 0.0, end: -4.0).animate(
-      CurvedAnimation(parent: idleController, curve: Curves.easeInOut),
-    );
+    _idleBobAnimation = Tween<double>(
+      begin: 0.0,
+      end: -4.0,
+    ).animate(CurvedAnimation(parent: idleController, curve: Curves.easeInOut));
 
-    _idleScaleAnimation = Tween<double>(begin: 1.0, end: 1.04).animate(
-      CurvedAnimation(parent: idleController, curve: Curves.easeInOut),
-    );
+    _idleScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.04,
+    ).animate(CurvedAnimation(parent: idleController, curve: Curves.easeInOut));
 
     _idleBobController = idleController..repeat(reverse: true);
   }
@@ -91,7 +91,10 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
 
   void _onLapCompleted() {
     _isLapInProgress = false;
-    final mascotController = Provider.of<MascotController>(context, listen: false);
+    final mascotController = Provider.of<MascotController>(
+      context,
+      listen: false,
+    );
     mascotController.resetToIdle();
     _openHubSheet(mascotController);
   }
@@ -120,10 +123,16 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
 
             // Container height is 120px. Nav bar sits at bottom (y: 48..120).
             // Top rim of nav bar is at y = 48 - mascotSize (resting spot top-right).
-            final Offset p0 = Offset(trackWidth - mascotSize - 8, 48 - mascotSize); // Resting spot (Top-Right)
-            const Offset p1 = Offset(8, 48 - mascotSize);                          // Top-Left
-            const Offset p2 = Offset(8, 120 - mascotSize - 4);                      // Bottom-Left
-            final Offset p3 = Offset(trackWidth - mascotSize - 8, 120 - mascotSize - 4); // Bottom-Right
+            final Offset p0 = Offset(
+              trackWidth - mascotSize - 8,
+              48 - mascotSize,
+            ); // Resting spot (Top-Right)
+            const Offset p1 = Offset(8, 48 - mascotSize); // Top-Left
+            const Offset p2 = Offset(8, 120 - mascotSize - 4); // Bottom-Left
+            final Offset p3 = Offset(
+              trackWidth - mascotSize - 8,
+              120 - mascotSize - 4,
+            ); // Bottom-Right
 
             final double d0 = (p1.dx - p0.dx).abs();
             final double d1 = (p2.dy - p1.dy).abs();
@@ -146,19 +155,31 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                   final double dist = lapProgress * totalDist;
                   if (dist <= d0) {
                     final double u = dist / d0;
-                    currentPos = Offset(p0.dx + u * (p1.dx - p0.dx), p0.dy + u * (p1.dy - p0.dy));
+                    currentPos = Offset(
+                      p0.dx + u * (p1.dx - p0.dx),
+                      p0.dy + u * (p1.dy - p0.dy),
+                    );
                     facingRight = false; // Moving Left along top edge
                   } else if (dist <= d0 + d1) {
                     final double u = (dist - d0) / d1;
-                    currentPos = Offset(p1.dx + u * (p2.dx - p1.dx), p1.dy + u * (p2.dy - p1.dy));
+                    currentPos = Offset(
+                      p1.dx + u * (p2.dx - p1.dx),
+                      p1.dy + u * (p2.dy - p1.dy),
+                    );
                     facingRight = false; // Moving Down left edge
                   } else if (dist <= d0 + d1 + d2) {
                     final double u = (dist - d0 - d1) / d2;
-                    currentPos = Offset(p2.dx + u * (p3.dx - p2.dx), p2.dy + u * (p3.dy - p2.dy));
+                    currentPos = Offset(
+                      p2.dx + u * (p3.dx - p2.dx),
+                      p2.dy + u * (p3.dy - p2.dy),
+                    );
                     facingRight = true; // Moving Right along bottom edge
                   } else {
                     final double u = (dist - d0 - d1 - d2) / d3;
-                    currentPos = Offset(p3.dx + u * (p0.dx - p3.dx), p3.dy + u * (p0.dy - p3.dy));
+                    currentPos = Offset(
+                      p3.dx + u * (p0.dx - p3.dx),
+                      p3.dy + u * (p0.dy - p3.dy),
+                    );
                     facingRight = true; // Moving Up right edge to resting spot
                   }
                 } else {
@@ -173,7 +194,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                   assetPath: state.assetPath,
                   frameCount: state.frameCount,
                   frameDuration: state.frameDuration,
-                  loop: state == MascotState.idle ||
+                  loop:
+                      state == MascotState.idle ||
                       state == MascotState.smiling ||
                       state == MascotState.running ||
                       state == MascotState.walking,
@@ -219,22 +241,32 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                               shape: BoxShape.circle,
                               gradient: isDark
                                   ? const LinearGradient(
-                                      colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                                      colors: [
+                                        Color(0xFF1E1B4B),
+                                        Color(0xFF312E81),
+                                      ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     )
                                   : const LinearGradient(
-                                      colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+                                      colors: [
+                                        Color(0xFFEEF2FF),
+                                        Color(0xFFE0E7FF),
+                                      ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
                               border: Border.all(
-                                color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.6 : 0.4),
+                                color: const Color(
+                                  0xFF6366F1,
+                                ).withValues(alpha: isDark ? 0.6 : 0.4),
                                 width: 2.0,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.45 : 0.25),
+                                  color: const Color(
+                                    0xFF6366F1,
+                                  ).withValues(alpha: isDark ? 0.45 : 0.25),
                                   blurRadius: 14,
                                   spreadRadius: 2,
                                   offset: const Offset(0, 4),
@@ -264,5 +296,3 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     );
   }
 }
-
-
