@@ -100,13 +100,19 @@ class MascotAiHubBottomSheet extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: Color(0xFF0F172A),
                       ),
-                      child: const Center(
-                        child: SpriteAnimator(
-                          assetPath: 'assets/images/robot_mascot/robot_wave.png',
-                          width: 36,
-                          height: 36,
-                          mascotStateName: 'wave',
-                          loop: true,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/images/robot_mascot/gerex_robot_smiling.png',
+                          width: 38,
+                          height: 38,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.smart_toy_rounded,
+                              size: 30,
+                              color: Color(0xFF6366F1),
+                            );
+                          },
                         ),
                       ),
                     ),
