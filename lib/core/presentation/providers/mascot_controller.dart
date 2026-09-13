@@ -33,8 +33,54 @@ enum MascotState {
     }
   }
 
-  // Legacy configuration helper for compatibility
-  MascotAnimConfig get config => MascotAnimConfig(assetPath: assetPath);
+  int get frameCount {
+    switch (this) {
+      case MascotState.idle:
+        return 1;
+      case MascotState.smiling:
+        return 4;
+      case MascotState.walking:
+        return 3;
+      case MascotState.running:
+        return 4;
+      case MascotState.exercise:
+        return 3;
+      case MascotState.sweating:
+        return 4;
+      case MascotState.sweatingAndTired:
+        return 4;
+      case MascotState.tired:
+        return 4;
+    }
+  }
+
+  Duration get frameDuration {
+    switch (this) {
+      case MascotState.idle:
+        return const Duration(milliseconds: 200);
+      case MascotState.smiling:
+        return const Duration(milliseconds: 120);
+      case MascotState.walking:
+        return const Duration(milliseconds: 140);
+      case MascotState.running:
+        return const Duration(milliseconds: 90);
+      case MascotState.exercise:
+        return const Duration(milliseconds: 150);
+      case MascotState.sweating:
+        return const Duration(milliseconds: 130);
+      case MascotState.sweatingAndTired:
+        return const Duration(milliseconds: 130);
+      case MascotState.tired:
+        return const Duration(milliseconds: 140);
+    }
+  }
+
+  MascotAnimConfig get config => MascotAnimConfig(
+        assetPath: assetPath,
+        frameCount: frameCount,
+        frameDuration: frameDuration,
+        columns: frameCount,
+      );
 }
 
 class MascotAnimConfig {

@@ -150,6 +150,7 @@ class _SpriteAnimatorState extends State<SpriteAnimator> with SingleTickerProvid
               frameWidth: widget.frameWidth,
               frameHeight: widget.frameHeight,
               columns: widget.columns,
+              frameCount: widget.frameCount,
               stateName: widget.mascotStateName,
               hasError: _hasImageError || _isLoadingImage,
             ),
@@ -166,6 +167,7 @@ class _SpriteFramePainter extends CustomPainter {
   final int frameWidth;
   final int frameHeight;
   final int columns;
+  final int frameCount;
   final String stateName;
   final bool hasError;
 
@@ -175,30 +177,32 @@ class _SpriteFramePainter extends CustomPainter {
     required this.frameWidth,
     required this.frameHeight,
     required this.columns,
+    required this.frameCount,
     required this.stateName,
     required this.hasError,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (image != null && !hasError) {
-      final int col = currentFrame % columns;
-      final int row = currentFrame ~/ columns;
+    if (image != null && !hasError && frameCount > 0) {
+      final double singleFrameWidth = image!.width / frameCount;
+      final double singleFrameHeight = image!.height.toDouble();
+
+      final int frameIndex = currentFrame.clamp(0, frameCount - 1);
 
       final Rect srcRect = Rect.fromLTWH(
-        (col * frameWidth).toDouble(),
-        (row * frameHeight).toDouble(),
-        frameWidth.toDouble(),
-        frameHeight.toDouble(),
+        frameIndex * singleFrameWidth,
+        0,
+        singleFrameWidth,
+        singleFrameHeight,
       );
 
       final Rect dstRect = Rect.fromLTWH(0, 0, size.width, size.height);
 
-      final Paint paint = Paint()..filterQuality = FilterQuality.none; // Crisp pixel art
+      final Paint paint = Paint()..filterQuality = FilterQuality.none;
 
       canvas.drawImageRect(image!, srcRect, dstRect, paint);
     } else {
-      // Fallback 8-bit pixel painter when asset is loading or missing
       _drawPixelFallback(canvas, size);
     }
   }
