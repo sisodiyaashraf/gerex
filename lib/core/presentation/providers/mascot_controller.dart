@@ -4,10 +4,37 @@ import 'package:flutter/material.dart';
 
 enum MascotState {
   idle,
-  walk,
-  run,
-  wave,
-  flex,
+  smiling,
+  walking,
+  running,
+  exercise,
+  sweating,
+  sweatingAndTired,
+  tired;
+
+  String get assetPath {
+    switch (this) {
+      case MascotState.idle:
+        return 'assets/images/robot_mascot/gerex_robot_idle.png';
+      case MascotState.smiling:
+        return 'assets/images/robot_mascot/gerex_robot_smiling.png';
+      case MascotState.walking:
+        return 'assets/images/robot_mascot/gerex_robot_walking.png';
+      case MascotState.running:
+        return 'assets/images/robot_mascot/gerex_robot_running.png';
+      case MascotState.exercise:
+        return 'assets/images/robot_mascot/gerex_robot_exercise.png';
+      case MascotState.sweating:
+        return 'assets/images/robot_mascot/gerex_robot_sweating.png';
+      case MascotState.sweatingAndTired:
+        return 'assets/images/robot_mascot/gerex_robot_sweating_and_tired.png';
+      case MascotState.tired:
+        return 'assets/images/robot_mascot/gerex_robot_tired.png';
+    }
+  }
+
+  // Legacy configuration helper for compatibility
+  MascotAnimConfig get config => MascotAnimConfig(assetPath: assetPath);
 }
 
 class MascotAnimConfig {
@@ -23,102 +50,81 @@ class MascotAnimConfig {
     required this.assetPath,
     this.frameWidth = 32,
     this.frameHeight = 32,
-    this.frameCount = 4,
-    this.columns = 4,
+    this.frameCount = 1,
+    this.columns = 1,
     this.frameDuration = const Duration(milliseconds: 150),
     this.loop = true,
   });
 }
 
 /// Centralized Mascot Controller / Behavior State Machine for Gerex.
-/// Manages the robot mascot's animation state across the app, ensuring
-/// consistent triggers (greeting wave, walking on tab switch, flex pose on workout completed).
+/// Manages the robot mascot's state across the app, supporting 8 static PNG poses
+/// and transform-driven movement along the navigation bar.
 class MascotController extends ChangeNotifier {
   MascotState _currentState = MascotState.idle;
   Timer? _stateReturnTimer;
+  Timer? _sequenceTimer;
   Timer? _randomIdleActionTimer;
   DateTime? _lastActionTime;
+  final List<DateTime> _tabSwitchTimestamps = [];
   final Random _random = Random();
 
   MascotState get currentState => _currentState;
+  MascotAnimConfig get activeConfig => _currentState.config;
 
   MascotController() {
     _startRandomIdleActionScheduler();
   }
 
-  /// Get the configuration for the active sprite sheet state slot.
-  MascotAnimConfig get activeConfig {
-    switch (_currentState) {
-      case MascotState.walk:
-        return const MascotAnimConfig(
-          assetPath: 'assets/images/robot_mascot/robot_walk.png',
-          frameWidth: 32,
-          frameHeight: 32,
-          frameCount: 4,
-          columns: 4,
-          frameDuration: Duration(milliseconds: 140),
-          loop: true,
-        );
-      case MascotState.run:
-        return const MascotAnimConfig(
-          assetPath: 'assets/images/robot_mascot/robot_run.png',
-          frameWidth: 32,
-          frameHeight: 32,
-          frameCount: 4,
-          columns: 4,
-          frameDuration: Duration(milliseconds: 100),
-          loop: true,
-        );
-      case MascotState.wave:
-        return const MascotAnimConfig(
-          assetPath: 'assets/images/robot_mascot/robot_wave.png',
-          frameWidth: 32,
-          frameHeight: 32,
-          frameCount: 4,
-          columns: 4,
-          frameDuration: Duration(milliseconds: 160),
-          loop: false,
-        );
-      case MascotState.flex:
-        return const MascotAnimConfig(
-          assetPath: 'assets/images/robot_mascot/robot_flex.png',
-          frameWidth: 32,
-          frameHeight: 32,
-          frameCount: 4,
-          columns: 4,
-          frameDuration: Duration(milliseconds: 180),
-          loop: false,
-        );
-      case MascotState.idle:
-        return const MascotAnimConfig(
-          assetPath: 'assets/images/robot_mascot/robot_idle.png',
-          frameWidth: 32,
-          frameHeight: 32,
-          frameCount: 4,
-          columns: 4,
-          frameDuration: Duration(milliseconds: 180),
-          loop: true,
-        );
-    }
-  }
-
-  /// Trigger a friendly greeting wave (e.g. when app starts or home tab focuses).
+  /// Trigger a friendly smiling greeting (e.g. when app starts or tab focuses).
   void triggerWave() {
-    _cancelReturnTimer();
-    _currentState = MascotState.wave;
+    _cancelReturnTimers();
+    _currentState = MascotState.smiling;
     _lastActionTime = DateTime.now();
     notifyListeners();
 
-    _stateReturnTimer = Timer(const Duration(milliseconds: 2400), () {
+    _stateReturnTimer = Timer(const Duration(milliseconds: 2600), () {
       resetToIdle();
     });
   }
 
-  /// Trigger a short walk or run animation (e.g. switching tabs).
+  /// Trigger a tab switch walk or run animation.
+  /// Detects rapid tab switching to switch from walk to run state.
   void triggerWalkOrRun() {
-    _cancelReturnTimer();
-    final bool useRun = _random.nextBool();
-    _currentState = useRun ? MascotState.run : MascotState.walk;
+    _cancelReturnTimers();
+    final now = DateTime.now();
+    _tabSwitchTimestamps.add(now);
+
+    // Keep timestamps from the last 2 seconds
+    _tabSwitchTimestamps.removeWhere((t) => now.difference(t).inMilliseconds > 2000);
+
+    // If 3 or more tab switches in 2 seconds, trigger running, else walking
+    final bool isRapidSwitch = _tabSwitchTimestamps.length >= 3;
+    _currentState = isRapidSwitch ? MascotState.running : MascotState.walking;
+    _lastActionTime = now;
+    notifyListeners();
+
+    _stateReturnTimer = Timer(Duration(milliseconds: isRapidSwitch ? 2200 : 2800), () {
+      resetToIdle();
+    });
+  }
+
+  /// Explicitly trigger walking pose.
+  void triggerWalking() {
+    _cancelReturnTimers();
+    _currentState = MascotState.walking;
+    _lastActionTime = DateTime.now();
+    notifyListeners();
+
+    _stateReturnTimer = Timer(const Duration(milliseconds: 2800), () {
+      resetToIdle();
+    });
+  }
+
+  /// Explicitly trigger running pose.
+  void triggerRunning() {
+    _cancelReturnTimers();
+    _currentState = MascotState.running;
     _lastActionTime = DateTime.now();
     notifyListeners();
 
@@ -127,52 +133,94 @@ class MascotController extends ChangeNotifier {
     });
   }
 
-  /// Trigger a celebratory gym-pose / flex animation when a workout is finished or streak hit.
+  /// Trigger exercise/flex pose celebration.
   void triggerFlexAnimation() {
-    _cancelReturnTimer();
-    _currentState = MascotState.flex;
+    triggerWorkoutCompletion();
+  }
+
+  /// Trigger workout completion sequence: exercise (flex pose) -> recovery pose (sweating/tired) -> idle.
+  void triggerWorkoutCompletion() {
+    _cancelReturnTimers();
+    _currentState = MascotState.exercise;
     _lastActionTime = DateTime.now();
     notifyListeners();
 
-    _stateReturnTimer = Timer(const Duration(milliseconds: 3600), () {
+    // Step 1: Hold exercise/flex pose for 2.8s
+    _sequenceTimer = Timer(const Duration(milliseconds: 2800), () {
+      if (_currentState == MascotState.exercise) {
+        // Choose recovery state: sweating, tired, or sweatingAndTired
+        final recoveryOptions = [
+          MascotState.sweating,
+          MascotState.sweatingAndTired,
+          MascotState.tired,
+        ];
+        _currentState = recoveryOptions[_random.nextInt(recoveryOptions.length)];
+        notifyListeners();
+
+        // Step 2: Hold recovery pose for 2.5s before returning to idle
+        _stateReturnTimer = Timer(const Duration(milliseconds: 2500), () {
+          resetToIdle();
+        });
+      }
+    });
+  }
+
+  /// Trigger specific momentary pose (exercise, sweating, tired, sweatingAndTired, smiling).
+  void triggerPose(MascotState state, {Duration duration = const Duration(milliseconds: 2800)}) {
+    _cancelReturnTimers();
+    _currentState = state;
+    _lastActionTime = DateTime.now();
+    notifyListeners();
+
+    _stateReturnTimer = Timer(duration, () {
       resetToIdle();
     });
   }
 
-  /// Revert back to the continuous default idle animation state.
+  /// Revert back to continuous default idle pose.
   void resetToIdle() {
-    _cancelReturnTimer();
+    _cancelReturnTimers();
     if (_currentState != MascotState.idle) {
       _currentState = MascotState.idle;
       notifyListeners();
     }
   }
 
-  /// Low-frequency subtle random action scheduler during quiet idle browsing.
+  /// Low-frequency subtle random action scheduler during quiet browsing.
   void _startRandomIdleActionScheduler() {
     _randomIdleActionTimer?.cancel();
-    _randomIdleActionTimer = Timer.periodic(const Duration(seconds: 25), (timer) {
+    _randomIdleActionTimer = Timer.periodic(const Duration(seconds: 18), (timer) {
       if (_currentState == MascotState.idle) {
         final now = DateTime.now();
-        if (_lastActionTime == null || now.difference(_lastActionTime!).inSeconds > 20) {
-          // 30% chance to do a quick walk or wave
-          if (_random.nextDouble() < 0.3) {
-            triggerWalkOrRun();
+        if (_lastActionTime == null || now.difference(_lastActionTime!).inSeconds > 12) {
+          final roll = _random.nextDouble();
+          if (roll < 0.35) {
+            // Swap to smiling image for variety
+            triggerPose(MascotState.smiling, duration: const Duration(milliseconds: 3200));
+          } else if (roll < 0.55) {
+            // Low distraction walk across navbar
+            triggerWalking();
+          } else if (roll < 0.60) {
+            // Rare energetic run burst
+            triggerRunning();
           }
         }
       }
     });
   }
 
-  void _cancelReturnTimer() {
+  void _cancelReturnTimers() {
     _stateReturnTimer?.cancel();
     _stateReturnTimer = null;
+    _sequenceTimer?.cancel();
+    _sequenceTimer = null;
   }
 
   @override
   void dispose() {
-    _cancelReturnTimer();
+    _cancelReturnTimers();
     _randomIdleActionTimer?.cancel();
     super.dispose();
   }
 }
+
