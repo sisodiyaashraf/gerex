@@ -363,19 +363,22 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             child: IndexedStack(index: _currentIndex, children: _tabs),
           ),
 
-          // Robot Mascot floating resting spot + lap animation container around LiquidGlassNavBar
+          // Robot Mascot running track along the TOP LINE of LiquidGlassNavBar
           if (profileProvider.mascotEnabled)
             Positioned(
               left: 24,
               right: 24,
-              bottom: 12 + MediaQuery.of(context).padding.bottom,
-              height: 120,
-              child: FloatingMascotWidget(
-                onSelectMealTab: () {
-                  setState(() {
-                    _currentIndex = 2; // Meals tab
-                  });
-                },
+              bottom: 80 + MediaQuery.of(context).padding.bottom,
+              height: 60,
+              child: IgnorePointer(
+                ignoring: false,
+                child: FloatingMascotWidget(
+                  onSelectMealTab: () {
+                    setState(() {
+                      _currentIndex = 2; // Meals tab
+                    });
+                  },
+                ),
               ),
             ),
 
