@@ -220,8 +220,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                           height: shadowHeight,
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.35),
-                            borderRadius: BorderRadius.all(
-                              Radius.elliptical(shadowWidth / 2, shadowHeight / 2),
+                            borderRadius: const BorderRadius.all(
+                              Radius.elliptical(14.0, 2.5),
                             ),
                           ),
                         ),
