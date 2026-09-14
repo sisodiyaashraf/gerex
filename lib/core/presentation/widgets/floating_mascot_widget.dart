@@ -9,8 +9,12 @@ import 'mascot_ai_hub_sheet.dart';
 typedef RobotMascot = FloatingMascotWidget;
 
 /// Frame-animated Robot Mascot Widget positioned relative to the bottom nav bar.
-/// When any bottom nav bar icon is clicked, the robot walks/runs to that exact icon,
-/// stands above it for 1 second in idle/greeting pose, and smoothly disappears (fades out).
+///
+/// Behavior:
+/// - On Homescreen (Tab 0: Workouts): Robot stays PERMANENTLY VISIBLE in resting idle/smiling pose.
+/// - On Other Tabs (Explore, Meals, Analytics): Robot walks/runs to the tapped tab icon,
+///   plays a sweating/tired recovery pose above that icon for 1.4s, then smoothly disappears (fades out).
+/// - When returning to Homescreen: Robot walks back to Tab 0 position and STAYS VISIBLE.
 class FloatingMascotWidget extends StatefulWidget {
   final VoidCallback? onSelectHomeTab;
   final VoidCallback? onSelectMealTab;
@@ -41,6 +45,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
   bool _facingRight = true;
   bool _isNavigating = false;
   int _lastNavTriggerCount = -1;
+  int _currentTabIndex = 0;
   int _tapCount = 0;
 
   @override
@@ -64,7 +69,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
-      value: 1.0, // Start visible
+      value: 1.0, // Start visible on Homescreen
     );
 
     // 3. Continuous idle bobbing & breathing scale pulse
@@ -84,16 +89,22 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     ).animate(CurvedAnimation(parent: idleController, curve: Curves.easeInOut));
 
     _idleBobController = idleController..repeat(reverse: true);
-
-    // Initial greeting pause timer: stand visible for 1 second, then fade out
-    _scheduleDisappearTimer();
   }
 
   void _scheduleDisappearTimer() {
     _disappearTimer?.cancel();
-    _disappearTimer = Timer(const Duration(milliseconds: 1000), () {
-      if (mounted && !_isNavigating) {
-        _fadeController.reverse(); // Fade out and disappear smoothly!
+    // On Homescreen (Tab 0), NEVER disappear! Keep opacity fully visible (1.0)
+    if (_currentTabIndex == 0) {
+      if (_fadeController.value < 1.0) {
+        _fadeController.forward();
+      }
+      return;
+    }
+
+    // On non-Home tabs (Explore, Meals, Analytics), stand & sweat for 1.4s, then fade out!
+    _disappearTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted && !_isNavigating && _currentTabIndex != 0) {
+        _fadeController.reverse(); // Fade out and disappear smoothly on non-Home tabs!
       }
     });
   }
@@ -126,6 +137,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     double mascotSize,
   ) {
     _disappearTimer?.cancel();
+    _currentTabIndex = targetIndex;
 
     // 4 tabs evenly spaced along trackWidth
     final double tabWidth = trackWidth / 4.0;
@@ -146,7 +158,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
 
     _moveController.duration = Duration(milliseconds: moveMs);
 
-    // Make sure mascot is visible (fade in) when starting navigation
+    // Fade in immediately when navigating to any tab
     if (_fadeController.value < 1.0) {
       _fadeController.forward();
     }
@@ -167,9 +179,16 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       context,
       listen: false,
     );
-    mascotController.resetToIdle();
 
-    // Stand at the target tab for 1 full second, then disappear!
+    // Show sweating / tired recovery animation after walking or running to tab
+    final bool wasRunning = mascotController.currentState == MascotState.running;
+    final MascotState recoveryState = wasRunning
+        ? MascotState.sweatingAndTired
+        : MascotState.sweating;
+
+    mascotController.triggerPose(recoveryState, duration: const Duration(milliseconds: 1400));
+
+    // Schedule disappearance for non-Home tabs, or stay visible on Homescreen
     _scheduleDisappearTimer();
   }
 
@@ -265,7 +284,10 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                       state == MascotState.idle ||
                       state == MascotState.smiling ||
                       state == MascotState.running ||
-                      state == MascotState.walking,
+                      state == MascotState.walking ||
+                      state == MascotState.sweating ||
+                      state == MascotState.sweatingAndTired ||
+                      state == MascotState.tired,
                   width: mascotSize,
                   height: mascotSize,
                   mascotStateName: state.name,
