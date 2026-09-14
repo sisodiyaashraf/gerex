@@ -10,7 +10,8 @@ void main() {
         final bd = ByteData.sublistView(bytes);
         final width = bd.getUint32(16);
         final height = bd.getUint32(20);
-        print('${file.uri.pathSegments.last}: ${width}x${height}');
+        final aspect = width / height;
+        print('${file.uri.pathSegments.last}: ${width}x${height} (aspect ratio: ${aspect.toStringAsFixed(2)})');
       }
     }
   }
