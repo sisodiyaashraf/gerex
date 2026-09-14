@@ -150,6 +150,7 @@ class _SpriteAnimatorState extends State<SpriteAnimator>
               frameWidth: widget.frameWidth,
               frameHeight: widget.frameHeight,
               columns: widget.columns,
+              rows: widget.rows,
               frameCount: widget.frameCount,
               stateName: widget.mascotStateName,
               hasError: _hasImageError || _isLoadingImage,
@@ -167,6 +168,7 @@ class _SpriteFramePainter extends CustomPainter {
   final int frameWidth;
   final int frameHeight;
   final int columns;
+  final int rows;
   final int frameCount;
   final String stateName;
   final bool hasError;
@@ -177,6 +179,7 @@ class _SpriteFramePainter extends CustomPainter {
     required this.frameWidth,
     required this.frameHeight,
     required this.columns,
+    required this.rows,
     required this.frameCount,
     required this.stateName,
     required this.hasError,
@@ -185,14 +188,19 @@ class _SpriteFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (image != null && !hasError && frameCount > 0) {
-      final double singleFrameWidth = image!.width / frameCount;
-      final double singleFrameHeight = image!.height.toDouble();
+      final int numCols = columns > 0 ? columns : 1;
+      final int numRows = rows > 0 ? rows : 1;
+
+      final double singleFrameWidth = image!.width / numCols;
+      final double singleFrameHeight = image!.height / numRows;
 
       final int frameIndex = currentFrame.clamp(0, frameCount - 1);
+      final int col = frameIndex % numCols;
+      final int row = frameIndex ~/ numCols;
 
       final Rect srcRect = Rect.fromLTWH(
-        frameIndex * singleFrameWidth,
-        0,
+        col * singleFrameWidth,
+        row * singleFrameHeight,
         singleFrameWidth,
         singleFrameHeight,
       );
