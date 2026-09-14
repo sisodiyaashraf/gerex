@@ -36,6 +36,7 @@ enum MascotState {
   int get frameCount {
     switch (this) {
       case MascotState.idle:
+        return 4;
       case MascotState.smiling:
       case MascotState.walking:
       case MascotState.running:
@@ -43,7 +44,7 @@ enum MascotState {
       case MascotState.sweating:
       case MascotState.sweatingAndTired:
       case MascotState.tired:
-        return 4;
+        return 8;
     }
   }
 
