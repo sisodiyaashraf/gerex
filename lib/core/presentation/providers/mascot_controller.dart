@@ -189,7 +189,7 @@ class MascotController extends ChangeNotifier {
   /// Trigger a tab switch walk or run animation.
   /// Detects rapid tab switching to switch from walk to run state.
   void triggerWalkOrRun() {
-    triggerWalking();
+    navigateToTab(_targetTabIndex);
   }
 
   /// Explicitly trigger walking pose.

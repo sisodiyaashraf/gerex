@@ -103,7 +103,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     _disappearTimer?.cancel();
     _moveController.dispose();
     _fadeController.dispose();
-    _idleBobController?.dispose();
+    _idleBobController.dispose();
     super.dispose();
   }
 
@@ -230,8 +230,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
             final animList = <Listenable>[
               _moveController,
               _fadeController,
+              _idleBobController,
             ];
-            if (_idleBobController != null) animList.add(_idleBobController!);
 
             return AnimatedBuilder(
               animation: Listenable.merge(animList),
