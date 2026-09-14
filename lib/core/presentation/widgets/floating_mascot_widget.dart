@@ -285,12 +285,9 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                             width: mascotSize,
                             height: mascotSize,
                             child: Center(
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
-                                child: KeyedSubtree(
-                                  key: ValueKey(state.assetPath),
-                                  child: mascotWidget,
-                                ),
+                              child: KeyedSubtree(
+                                key: ValueKey(state.assetPath),
+                                child: mascotWidget,
                               ),
                             ),
                           ),

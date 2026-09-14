@@ -36,14 +36,16 @@ enum MascotState {
   int get frameCount {
     switch (this) {
       case MascotState.idle:
-        return 4;
-      case MascotState.smiling:
-      case MascotState.walking:
-      case MascotState.running:
-      case MascotState.exercise:
-      case MascotState.sweating:
-      case MascotState.sweatingAndTired:
       case MascotState.tired:
+        return 1;
+      case MascotState.smiling:
+      case MascotState.sweating:
+        return 4;
+      case MascotState.walking:
+      case MascotState.exercise:
+      case MascotState.sweatingAndTired:
+        return 6;
+      case MascotState.running:
         return 8;
     }
   }
@@ -51,15 +53,17 @@ enum MascotState {
   int get columns {
     switch (this) {
       case MascotState.idle:
-        return 2;
-      case MascotState.smiling:
-      case MascotState.walking:
-      case MascotState.running:
-      case MascotState.exercise:
-      case MascotState.sweating:
-      case MascotState.sweatingAndTired:
       case MascotState.tired:
+        return 1;
+      case MascotState.walking:
+      case MascotState.exercise:
+        return 3;
+      case MascotState.smiling:
+      case MascotState.running:
+      case MascotState.sweating:
         return 4;
+      case MascotState.sweatingAndTired:
+        return 6;
     }
   }
 
@@ -67,12 +71,13 @@ enum MascotState {
     switch (this) {
       case MascotState.idle:
       case MascotState.smiling:
-      case MascotState.walking:
-      case MascotState.running:
-      case MascotState.exercise:
       case MascotState.sweating:
       case MascotState.sweatingAndTired:
       case MascotState.tired:
+        return 1;
+      case MascotState.walking:
+      case MascotState.running:
+      case MascotState.exercise:
         return 2;
     }
   }

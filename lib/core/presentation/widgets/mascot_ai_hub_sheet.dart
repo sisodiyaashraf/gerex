@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/mascot_controller.dart';
+import 'sprite_animator.dart';
 
 class MascotAiHubBottomSheet extends StatefulWidget {
   final VoidCallback? onSelectHomeTab;
@@ -118,20 +119,15 @@ class _MascotAiHubBottomSheetState extends State<MascotAiHubBottomSheet> {
                           shape: BoxShape.circle,
                           color: Color(0xFF0F172A),
                         ),
-                        child: Center(
-                          child: Image.asset(
-                            'assets/images/robot_mascot/gerex_robot_smiling.png',
+                        child: const Center(
+                          child: SpriteAnimator(
+                            assetPath: 'assets/images/robot_mascot/gerex_robot_smiling.png',
+                            frameCount: 4,
+                            columns: 4,
+                            rows: 1,
+                            mascotStateName: 'smiling',
                             width: 38,
                             height: 38,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.none,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.smart_toy_rounded,
-                                size: 30,
-                                color: Color(0xFF6366F1),
-                              );
-                            },
                           ),
                         ),
                       ),
