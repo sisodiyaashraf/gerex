@@ -27,7 +27,7 @@ void main() {
       expect(controller.currentState, equals(MascotState.smiling));
       expect(controller.activeConfig.columns, equals(4));
       expect(controller.activeConfig.rows, equals(2));
-      expect(controller.activeConfig.frameCount, equals(4));
+      expect(controller.activeConfig.frameCount, equals(8));
     });
 
     test('triggerWalking switches state to walking', () {

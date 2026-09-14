@@ -78,12 +78,34 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
   }
 
   int _tapCount = 0;
+  bool _shouldOpenSheetOnLapEnd = false;
+  MascotState? _lastObservedState;
+
+  void _checkStateTrigger(MascotState state) {
+    if (_lastObservedState != state) {
+      _lastObservedState = state;
+      if (state == MascotState.walking || state == MascotState.running) {
+        if (!_isLapInProgress) {
+          _isLapInProgress = true;
+          _lapController?.duration = state == MascotState.running
+              ? const Duration(milliseconds: 1800)
+              : const Duration(milliseconds: 2600);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _isLapInProgress) {
+              _lapController?.forward(from: 0.0);
+            }
+          });
+        }
+      }
+    }
+  }
 
   void _handleTap(MascotController mascotController) {
     if (_isLapInProgress) {
       // Rapid re-tap handling: cancel lap & open sheet immediately without stacking
       _lapController?.stop();
       _isLapInProgress = false;
+      _shouldOpenSheetOnLapEnd = false;
       mascotController.resetToIdle();
       _openHubSheet(mascotController);
       return;
@@ -93,18 +115,20 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     final mode = _tapCount % 4;
 
     if (mode == 1) {
-      // Tap 1: Marching walk pose
+      // Tap 1: Marching walk pose across navbar
+      _shouldOpenSheetOnLapEnd = false;
       mascotController.triggerWalking();
     } else if (mode == 2) {
-      // Tap 2: Fast perimeter run lap
-      _isLapInProgress = true;
+      // Tap 2: Fast perimeter run lap across navbar
+      _shouldOpenSheetOnLapEnd = false;
       mascotController.triggerRunning();
-      _lapController?.forward(from: 0.0);
     } else if (mode == 3) {
       // Tap 3: Flex celebration sequence (flex -> sweating -> idle)
+      _shouldOpenSheetOnLapEnd = false;
       mascotController.triggerWorkoutCompletion();
     } else {
       // Tap 4: Smiling greeting + open AI Hub sheet
+      _shouldOpenSheetOnLapEnd = false;
       _openHubSheet(mascotController);
     }
   }
@@ -116,7 +140,10 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       listen: false,
     );
     mascotController.resetToIdle();
-    _openHubSheet(mascotController);
+    if (_shouldOpenSheetOnLapEnd) {
+      _shouldOpenSheetOnLapEnd = false;
+      _openHubSheet(mascotController);
+    }
   }
 
   void _openHubSheet(MascotController mascotController) {
@@ -133,6 +160,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     return Consumer<MascotController>(
       builder: (context, mascotController, child) {
         final state = mascotController.currentState;
+        _checkStateTrigger(state);
 
         return LayoutBuilder(
           builder: (context, constraints) {
