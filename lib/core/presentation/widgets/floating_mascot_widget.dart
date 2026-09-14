@@ -11,9 +11,14 @@ typedef RobotMascot = FloatingMascotWidget;
 /// Slices horizontal sprite sheets using [SpriteAnimator] and runs a perimeter lap
 /// around the navigation bar when tapped before opening the AI Hub sheet.
 class FloatingMascotWidget extends StatefulWidget {
+  final VoidCallback? onSelectHomeTab;
   final VoidCallback? onSelectMealTab;
 
-  const FloatingMascotWidget({super.key, this.onSelectMealTab});
+  const FloatingMascotWidget({
+    super.key,
+    this.onSelectHomeTab,
+    this.onSelectMealTab,
+  });
 
   @override
   State<FloatingMascotWidget> createState() => _FloatingMascotWidgetState();
@@ -102,6 +107,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     mascotController.triggerWave();
     MascotAiHubBottomSheet.show(
       context,
+      onSelectHomeTab: widget.onSelectHomeTab,
       onSelectMealTab: widget.onSelectMealTab,
     );
   }
@@ -135,9 +141,10 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                 bool facingRight;
 
                 if (_isLapInProgress) {
-                  final double progress = _lapController?.value ?? 0.0;
+                  final double rawProgress = _lapController?.value ?? 0.0;
+                  final double progress = Curves.easeInOut.transform(rawProgress);
                   if (progress <= 0.5) {
-                    // Phase 1: Run right-to-left across top line
+                    // Phase 1: Run right-to-left across top line with easeInOut
                     final double t = progress / 0.5;
                     currentX = xRight - t * (xRight - xLeft);
                     facingRight = false;
@@ -155,18 +162,24 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                   facingRight = true;
                 }
 
+                // Snap computed position to whole integer pixels (prevents sub-pixel shimmer)
+                final double snappedX = currentX.roundToDouble();
+                final double snappedY = currentY.roundToDouble();
+
                 Widget mascotWidget = SpriteAnimator(
                   key: ValueKey('${state.assetPath}_${state.frameCount}'),
                   assetPath: state.assetPath,
                   frameCount: state.frameCount,
+                  columns: state.columns,
+                  rows: state.rows,
                   frameDuration: state.frameDuration,
                   loop:
                       state == MascotState.idle ||
                       state == MascotState.smiling ||
                       state == MascotState.running ||
                       state == MascotState.walking,
-                  width: 52,
-                  height: 52,
+                  width: mascotSize,
+                  height: mascotSize,
                   mascotStateName: state.name,
                   onComplete: () {
                     if (state == MascotState.exercise ||
@@ -188,12 +201,37 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
 
                 final double scaleVal = _idleScaleAnimation?.value ?? 1.0;
 
+                const double shadowWidth = 28.0;
+                const double shadowHeight = 5.0;
+                final double shadowScale = (1.0 - (snappedY.abs() / 16.0)).clamp(0.6, 1.0);
+
                 return Stack(
                   clipBehavior: Clip.none,
                   children: [
+                    // Flat grounding drop shadow fixed on top edge of nav bar
                     Positioned(
-                      left: currentX,
-                      bottom: 4 + (-currentY),
+                      left: snappedX + (mascotSize - shadowWidth) / 2,
+                      bottom: 0,
+                      child: Transform.scale(
+                        scaleX: shadowScale,
+                        scaleY: shadowScale,
+                        child: Container(
+                          width: shadowWidth,
+                          height: shadowHeight,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.all(
+                              Radius.elliptical(shadowWidth / 2, shadowHeight / 2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Robot Mascot Sprite Widget (zero gap flush placement)
+                    Positioned(
+                      left: snappedX,
+                      bottom: 0 + (-snappedY),
                       child: Transform.scale(
                         scale: _isLapInProgress ? 1.0 : scaleVal,
                         child: GestureDetector(
