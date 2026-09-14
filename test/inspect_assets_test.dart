@@ -17,7 +17,7 @@ void main() {
       final width = image.width;
       final height = image.height;
 
-      final byteData = await image.toByteData(format: ui.ImageByteStreamFormat.rawRgba);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
       if (byteData == null) continue;
       final buffer = byteData.buffer.asUint8List();
 
