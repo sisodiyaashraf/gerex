@@ -38,19 +38,43 @@ enum MascotState {
       case MascotState.idle:
         return 1;
       case MascotState.smiling:
-        return 4;
       case MascotState.walking:
-        return 3;
       case MascotState.running:
-        return 4;
       case MascotState.exercise:
-        return 3;
       case MascotState.sweating:
-        return 4;
       case MascotState.sweatingAndTired:
-        return 4;
       case MascotState.tired:
         return 4;
+    }
+  }
+
+  int get columns {
+    switch (this) {
+      case MascotState.idle:
+        return 1;
+      case MascotState.smiling:
+      case MascotState.walking:
+      case MascotState.running:
+      case MascotState.exercise:
+      case MascotState.sweating:
+      case MascotState.sweatingAndTired:
+      case MascotState.tired:
+        return 2;
+    }
+  }
+
+  int get rows {
+    switch (this) {
+      case MascotState.idle:
+        return 1;
+      case MascotState.smiling:
+      case MascotState.walking:
+      case MascotState.running:
+      case MascotState.exercise:
+      case MascotState.sweating:
+      case MascotState.sweatingAndTired:
+      case MascotState.tired:
+        return 2;
     }
   }
 
@@ -79,7 +103,8 @@ enum MascotState {
         assetPath: assetPath,
         frameCount: frameCount,
         frameDuration: frameDuration,
-        columns: frameCount,
+        columns: columns,
+        rows: rows,
       );
 }
 
@@ -89,6 +114,7 @@ class MascotAnimConfig {
   final int frameHeight;
   final int frameCount;
   final int columns;
+  final int rows;
   final Duration frameDuration;
   final bool loop;
 
@@ -98,6 +124,7 @@ class MascotAnimConfig {
     this.frameHeight = 32,
     this.frameCount = 1,
     this.columns = 1,
+    this.rows = 1,
     this.frameDuration = const Duration(milliseconds: 150),
     this.loop = true,
   });

@@ -15,6 +15,7 @@ class SpriteAnimator extends StatefulWidget {
   final int frameHeight;
   final int frameCount;
   final int columns;
+  final int rows;
   final Duration frameDuration;
   final bool loop;
   final VoidCallback? onComplete;
@@ -29,6 +30,7 @@ class SpriteAnimator extends StatefulWidget {
     this.frameHeight = 32,
     this.frameCount = 4,
     this.columns = 4,
+    this.rows = 1,
     this.frameDuration = const Duration(milliseconds: 150),
     this.loop = true,
     this.onComplete,
