@@ -59,7 +59,7 @@ enum MascotState {
       case MascotState.sweating:
       case MascotState.sweatingAndTired:
       case MascotState.tired:
-        return 2;
+        return 4;
     }
   }
 

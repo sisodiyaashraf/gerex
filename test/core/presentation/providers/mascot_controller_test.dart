@@ -25,7 +25,7 @@ void main() {
     test('triggerWave switches state to smiling', () {
       controller.triggerWave();
       expect(controller.currentState, equals(MascotState.smiling));
-      expect(controller.activeConfig.columns, equals(2));
+      expect(controller.activeConfig.columns, equals(4));
       expect(controller.activeConfig.rows, equals(2));
       expect(controller.activeConfig.frameCount, equals(4));
     });
@@ -33,14 +33,14 @@ void main() {
     test('triggerWalking switches state to walking', () {
       controller.triggerWalking();
       expect(controller.currentState, equals(MascotState.walking));
-      expect(controller.activeConfig.columns, equals(2));
+      expect(controller.activeConfig.columns, equals(4));
       expect(controller.activeConfig.rows, equals(2));
     });
 
     test('triggerRunning switches state to running', () {
       controller.triggerRunning();
       expect(controller.currentState, equals(MascotState.running));
-      expect(controller.activeConfig.columns, equals(2));
+      expect(controller.activeConfig.columns, equals(4));
       expect(controller.activeConfig.rows, equals(2));
     });
 
@@ -58,7 +58,7 @@ void main() {
     test('triggerWorkoutCompletion initializes exercise state', () {
       controller.triggerWorkoutCompletion();
       expect(controller.currentState, equals(MascotState.exercise));
-      expect(controller.activeConfig.columns, equals(2));
+      expect(controller.activeConfig.columns, equals(4));
       expect(controller.activeConfig.rows, equals(2));
     });
 
