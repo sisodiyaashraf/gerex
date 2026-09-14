@@ -1,7 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../providers/mascot_controller.dart';
 
 class MascotAiHubBottomSheet extends StatefulWidget {
   final VoidCallback? onSelectHomeTab;
