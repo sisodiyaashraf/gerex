@@ -17,9 +17,9 @@ void main() {
 
     test('Initial state is idle', () {
       expect(controller.currentState, equals(MascotState.idle));
-      expect(controller.activeConfig.columns, equals(1));
-      expect(controller.activeConfig.rows, equals(1));
-      expect(controller.activeConfig.frameCount, equals(1));
+      expect(controller.activeConfig.columns, equals(2));
+      expect(controller.activeConfig.rows, equals(2));
+      expect(controller.activeConfig.frameCount, equals(4));
     });
 
     test('triggerWave switches state to smiling', () {
