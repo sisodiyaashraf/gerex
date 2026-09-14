@@ -146,11 +146,32 @@ class MascotController extends ChangeNotifier {
   final List<DateTime> _tabSwitchTimestamps = [];
   final Random _random = Random();
 
+  int _targetTabIndex = 0;
+  int _navTriggerCount = 0;
+
   MascotState get currentState => _currentState;
   MascotAnimConfig get activeConfig => _currentState.config;
+  int get targetTabIndex => _targetTabIndex;
+  int get navTriggerCount => _navTriggerCount;
 
   MascotController() {
     _startRandomIdleActionScheduler();
+  }
+
+  /// Trigger navigation to a target bottom nav bar tab.
+  /// Robot walks/runs to the target tab icon, stands for 1s, then disappears.
+  void navigateToTab(int tabIndex) {
+    _cancelReturnTimers();
+    final now = DateTime.now();
+    _tabSwitchTimestamps.add(now);
+    _tabSwitchTimestamps.removeWhere((t) => now.difference(t).inMilliseconds > 2000);
+
+    final bool isRapidSwitch = _tabSwitchTimestamps.length >= 3;
+    _targetTabIndex = tabIndex;
+    _currentState = isRapidSwitch ? MascotState.running : MascotState.walking;
+    _navTriggerCount++;
+    _lastActionTime = now;
+    notifyListeners();
   }
 
   /// Trigger a friendly smiling greeting (e.g. when app starts or tab focuses).
@@ -168,22 +189,7 @@ class MascotController extends ChangeNotifier {
   /// Trigger a tab switch walk or run animation.
   /// Detects rapid tab switching to switch from walk to run state.
   void triggerWalkOrRun() {
-    _cancelReturnTimers();
-    final now = DateTime.now();
-    _tabSwitchTimestamps.add(now);
-
-    // Keep timestamps from the last 2 seconds
-    _tabSwitchTimestamps.removeWhere((t) => now.difference(t).inMilliseconds > 2000);
-
-    // If 3 or more tab switches in 2 seconds, trigger running, else walking
-    final bool isRapidSwitch = _tabSwitchTimestamps.length >= 3;
-    _currentState = isRapidSwitch ? MascotState.running : MascotState.walking;
-    _lastActionTime = now;
-    notifyListeners();
-
-    _stateReturnTimer = Timer(Duration(milliseconds: isRapidSwitch ? 2200 : 2800), () {
-      resetToIdle();
-    });
+    triggerWalking();
   }
 
   /// Explicitly trigger walking pose.

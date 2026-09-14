@@ -2,13 +2,11 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../providers/mascot_controller.dart';
 
-/// Asset-agnostic generic Sprite Animator widget for 8-bit pixel graphics.
-/// Loads any grid-based PNG sprite sheet (e.g., 4 frames x 1 row) from assets
+/// Asset-agnostic generic Sprite Animator widget for 8-bit Gerex robot graphics.
+/// Loads grid-based PNG sprite sheets from assets, caches them synchronously in memory,
 /// and cycles through frames using an [AnimationController].
-///
-/// If the PNG image is loading or unavailable, falls back gracefully to a crisp
-/// pixel-art custom canvas rendering so the mascot is 100% visibly testable.
 class SpriteAnimator extends StatefulWidget {
   final String assetPath;
   final int frameWidth;
@@ -22,6 +20,23 @@ class SpriteAnimator extends StatefulWidget {
   final double width;
   final double height;
   final String mascotStateName;
+
+  static final Map<String, ui.Image> _imageCache = {};
+
+  /// Preload all Gerex robot PNG assets into memory for zero-latency frame switching.
+  static Future<void> preloadAllAssets() async {
+    for (final state in MascotState.values) {
+      if (!_imageCache.containsKey(state.assetPath)) {
+        try {
+          final ByteData data = await rootBundle.load(state.assetPath);
+          final Uint8List bytes = data.buffer.asUint8List();
+          final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+          final ui.FrameInfo frameInfo = await codec.getNextFrame();
+          _imageCache[state.assetPath] = frameInfo.image;
+        } catch (_) {}
+      }
+    }
+  }
 
   const SpriteAnimator({
     super.key,
@@ -96,18 +111,28 @@ class _SpriteAnimatorState extends State<SpriteAnimator>
     }
   }
 
-  Future<void> _loadSpriteSheet() async {
+  void _loadSpriteSheet() {
+    if (SpriteAnimator._imageCache.containsKey(widget.assetPath)) {
+      setState(() {
+        _spriteImage = SpriteAnimator._imageCache[widget.assetPath];
+        _isLoadingImage = false;
+        _hasImageError = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoadingImage = true;
       _hasImageError = false;
     });
 
-    try {
-      final ByteData data = await rootBundle.load(widget.assetPath);
+    rootBundle.load(widget.assetPath).then((data) {
       final Uint8List bytes = data.buffer.asUint8List();
-      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-      final ui.FrameInfo frameInfo = await codec.getNextFrame();
-
+      return ui.instantiateImageCodec(bytes);
+    }).then((codec) {
+      return codec.getNextFrame();
+    }).then((frameInfo) {
+      SpriteAnimator._imageCache[widget.assetPath] = frameInfo.image;
       if (mounted) {
         setState(() {
           _spriteImage = frameInfo.image;
@@ -115,7 +140,7 @@ class _SpriteAnimatorState extends State<SpriteAnimator>
           _hasImageError = false;
         });
       }
-    } catch (e) {
+    }).catchError((e) {
       if (mounted) {
         setState(() {
           _spriteImage = null;
@@ -123,7 +148,7 @@ class _SpriteAnimatorState extends State<SpriteAnimator>
           _hasImageError = true;
         });
       }
-    }
+    });
   }
 
   @override
@@ -206,95 +231,9 @@ class _SpriteFramePainter extends CustomPainter {
       );
 
       final Rect dstRect = Rect.fromLTWH(0, 0, size.width, size.height);
-
       final Paint paint = Paint()..filterQuality = FilterQuality.none;
 
       canvas.drawImageRect(image!, srcRect, dstRect, paint);
-    } else {
-      _drawPixelFallback(canvas, size);
-    }
-  }
-
-  void _drawPixelFallback(Canvas canvas, Size size) {
-    final double pixelSize = size.width / 16.0;
-
-    // Pick state tint
-    Color bodyColor = const Color(0xFF6366F1); // Indigo default (idle)
-    if (stateName == 'walk') bodyColor = const Color(0xFF10B981); // Emerald
-    if (stateName == 'run') bodyColor = const Color(0xFFF59E0B); // Amber
-    if (stateName == 'wave') bodyColor = const Color(0xFFEC4899); // Pink
-    if (stateName == 'flex') bodyColor = const Color(0xFF8B5CF6); // Purple
-
-    final Paint bodyPaint = Paint()..color = bodyColor;
-    final Paint eyePaint = Paint()..color = const Color(0xFF06B6D4); // Cyan
-    final Paint chestPaint = Paint()..color = const Color(0xFFFDE047); // Yellow
-    final Paint outlinePaint = Paint()
-      ..color = const Color(0xFF0F172A); // Dark slate
-
-    // Animation frame variations
-    final int bobOffset = (stateName == 'idle' && currentFrame % 2 == 1)
-        ? 1
-        : 0;
-    final int waveOffset = (stateName == 'wave' && currentFrame % 2 == 1)
-        ? 2
-        : 0;
-
-    void drawPixel(int x, int y, Paint p) {
-      final Rect r = Rect.fromLTWH(
-        x * pixelSize,
-        (y + bobOffset) * pixelSize,
-        pixelSize,
-        pixelSize,
-      );
-      canvas.drawRect(r, p);
-    }
-
-    // Outer dark box / head
-    for (int y = 2; y <= 12; y++) {
-      for (int x = 3; x <= 12; x++) {
-        if (x == 3 || x == 12 || y == 2 || y == 12) {
-          drawPixel(x, y, outlinePaint);
-        } else {
-          drawPixel(x, y, bodyPaint);
-        }
-      }
-    }
-
-    // Antenna
-    drawPixel(7, 0, outlinePaint);
-    drawPixel(8, 0, outlinePaint);
-    drawPixel(7, 1, chestPaint);
-    drawPixel(8, 1, chestPaint);
-
-    // Pixel Eyes
-    if (stateName == 'idle' && currentFrame == 2) {
-      // Blinking closed eye line
-      drawPixel(5, 6, outlinePaint);
-      drawPixel(6, 6, outlinePaint);
-      drawPixel(9, 6, outlinePaint);
-      drawPixel(10, 6, outlinePaint);
-    } else {
-      drawPixel(5, 5, eyePaint);
-      drawPixel(6, 5, eyePaint);
-      drawPixel(5, 6, eyePaint);
-      drawPixel(6, 6, eyePaint);
-
-      drawPixel(9, 5, eyePaint);
-      drawPixel(10, 5, eyePaint);
-      drawPixel(9, 6, eyePaint);
-      drawPixel(10, 6, eyePaint);
-    }
-
-    // Chest core
-    drawPixel(7, 8, chestPaint);
-    drawPixel(8, 8, chestPaint);
-    drawPixel(7, 9, chestPaint);
-    drawPixel(8, 9, chestPaint);
-
-    // Waving hand
-    if (stateName == 'wave' || stateName == 'flex') {
-      drawPixel(13, 3 + waveOffset, bodyPaint);
-      drawPixel(14, 3 + waveOffset, chestPaint);
     }
   }
 

@@ -51,6 +51,7 @@ import '../../features/exercise/presentation/screens/create_exercise_screen.dart
 import '../di/injection_container.dart';
 import '../presentation/widgets/liquid_glass_nav_bar.dart';
 import '../presentation/widgets/floating_mascot_widget.dart';
+import '../presentation/widgets/sprite_animator.dart';
 import '../presentation/providers/mascot_controller.dart';
 import '../../features/profile/presentation/providers/profile_provider.dart';
 
@@ -344,6 +345,7 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
+        SpriteAnimator.preloadAllAssets();
         sl<MascotController>().triggerWave();
       } catch (_) {}
     });
@@ -394,16 +396,10 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             child: LiquidGlassNavBar(
               currentIndex: _currentIndex,
               onTap: (index) {
-                if (index != _currentIndex) {
-                  try {
-                    final mascotController = Provider.of<MascotController>(context, listen: false);
-                    if (index == 0) {
-                      mascotController.triggerWave();
-                    } else {
-                      mascotController.triggerWalkOrRun();
-                    }
-                  } catch (_) {}
-                }
+                try {
+                  final mascotController = Provider.of<MascotController>(context, listen: false);
+                  mascotController.navigateToTab(index);
+                } catch (_) {}
                 setState(() {
                   _currentIndex = index;
                 });
