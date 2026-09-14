@@ -87,19 +87,19 @@ enum MascotState {
       case MascotState.idle:
         return const Duration(milliseconds: 200);
       case MascotState.smiling:
-        return const Duration(milliseconds: 120);
-      case MascotState.walking:
         return const Duration(milliseconds: 140);
+      case MascotState.walking:
+        return const Duration(milliseconds: 120);
       case MascotState.running:
-        return const Duration(milliseconds: 90);
+        return const Duration(milliseconds: 80);
       case MascotState.exercise:
-        return const Duration(milliseconds: 150);
-      case MascotState.sweating:
         return const Duration(milliseconds: 130);
+      case MascotState.sweating:
+        return const Duration(milliseconds: 140);
       case MascotState.sweatingAndTired:
         return const Duration(milliseconds: 130);
       case MascotState.tired:
-        return const Duration(milliseconds: 140);
+        return const Duration(milliseconds: 180);
     }
   }
 
@@ -135,8 +135,6 @@ class MascotAnimConfig {
 }
 
 /// Centralized Mascot Controller / Behavior State Machine for Gerex.
-/// Manages the robot mascot's state across the app, supporting 8 static PNG poses
-/// and transform-driven movement along the navigation bar.
 class MascotController extends ChangeNotifier {
   MascotState _currentState = MascotState.idle;
   Timer? _stateReturnTimer;
@@ -159,16 +157,17 @@ class MascotController extends ChangeNotifier {
   }
 
   /// Trigger navigation to a target bottom nav bar tab.
-  /// Robot walks/runs to the target tab icon, stands for 1s, then disappears.
+  /// Detects multiple rapid tab clicks to trigger running & post-run tired/sweating pose.
   void navigateToTab(int tabIndex) {
     _cancelReturnTimers();
     final now = DateTime.now();
     _tabSwitchTimestamps.add(now);
-    _tabSwitchTimestamps.removeWhere((t) => now.difference(t).inMilliseconds > 2000);
+    _tabSwitchTimestamps.removeWhere((t) => now.difference(t).inMilliseconds > 2500);
 
-    final bool isRapidSwitch = _tabSwitchTimestamps.length >= 3;
+    // If 2 or more tab switches in 2.5s, trigger running (which leads to tired/sweating pose)
+    final bool isMultipleNav = _tabSwitchTimestamps.length >= 2;
     _targetTabIndex = tabIndex;
-    _currentState = isRapidSwitch ? MascotState.running : MascotState.walking;
+    _currentState = isMultipleNav ? MascotState.running : MascotState.walking;
     _navTriggerCount++;
     _lastActionTime = now;
     notifyListeners();

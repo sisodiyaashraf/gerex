@@ -91,7 +91,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     _idleBobController = idleController..repeat(reverse: true);
   }
 
-  void _scheduleDisappearTimer() {
+  void _scheduleDisappearTimer({int holdMs = 1000}) {
     _disappearTimer?.cancel();
     // On Homescreen (Tab 0), NEVER disappear! Keep opacity fully visible (1.0)
     if (_currentTabIndex == 0) {
@@ -101,8 +101,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       return;
     }
 
-    // On non-Home tabs (Explore, Meals, Analytics), stand & sweat for 1.4s, then fade out!
-    _disappearTimer = Timer(const Duration(milliseconds: 1400), () {
+    // On non-Home tabs (Explore, Meals, Analytics), stand for holdMs, then fade out!
+    _disappearTimer = Timer(Duration(milliseconds: holdMs), () {
       if (mounted && !_isNavigating && _currentTabIndex != 0) {
         _fadeController.reverse(); // Fade out and disappear smoothly on non-Home tabs!
       }
@@ -180,16 +180,20 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       listen: false,
     );
 
-    // Show sweating / tired recovery animation after walking or running to tab
     final bool wasRunning = mascotController.currentState == MascotState.running;
-    final MascotState recoveryState = wasRunning
-        ? MascotState.sweatingAndTired
-        : MascotState.sweating;
 
-    mascotController.triggerPose(recoveryState, duration: const Duration(milliseconds: 1400));
-
-    // Schedule disappearance for non-Home tabs, or stay visible on Homescreen
-    _scheduleDisappearTimer();
+    if (wasRunning) {
+      // Trigger sweating & tired recovery animation ONLY on multiple nav clicks!
+      mascotController.triggerPose(
+        MascotState.sweatingAndTired,
+        duration: const Duration(milliseconds: 1600),
+      );
+      _scheduleDisappearTimer(holdMs: 1600);
+    } else {
+      // Single click navigation -> happy idle pose!
+      mascotController.resetToIdle();
+      _scheduleDisappearTimer(holdMs: 1000);
+    }
   }
 
   void _handleTap(MascotController mascotController) {
