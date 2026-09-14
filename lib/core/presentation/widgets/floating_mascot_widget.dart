@@ -77,6 +77,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     super.dispose();
   }
 
+  int _tapCount = 0;
+
   void _handleTap(MascotController mascotController) {
     if (_isLapInProgress) {
       // Rapid re-tap handling: cancel lap & open sheet immediately without stacking
@@ -87,10 +89,24 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       return;
     }
 
-    // Start perimeter lap
-    _isLapInProgress = true;
-    mascotController.triggerRunning();
-    _lapController?.forward(from: 0.0);
+    _tapCount++;
+    final mode = _tapCount % 4;
+
+    if (mode == 1) {
+      // Tap 1: Marching walk pose
+      mascotController.triggerWalking();
+    } else if (mode == 2) {
+      // Tap 2: Fast perimeter run lap
+      _isLapInProgress = true;
+      mascotController.triggerRunning();
+      _lapController?.forward(from: 0.0);
+    } else if (mode == 3) {
+      // Tap 3: Flex celebration sequence (flex -> sweating -> idle)
+      mascotController.triggerWorkoutCompletion();
+    } else {
+      // Tap 4: Smiling greeting + open AI Hub sheet
+      _openHubSheet(mascotController);
+    }
   }
 
   void _onLapCompleted() {

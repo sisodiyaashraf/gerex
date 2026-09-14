@@ -257,23 +257,29 @@ class MascotController extends ChangeNotifier {
     }
   }
 
-  /// Low-frequency subtle random action scheduler during quiet browsing.
+  /// Frequent subtle random action scheduler during quiet app usage so the robot feels alive.
   void _startRandomIdleActionScheduler() {
     _randomIdleActionTimer?.cancel();
-    _randomIdleActionTimer = Timer.periodic(const Duration(seconds: 18), (timer) {
+    _randomIdleActionTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
       if (_currentState == MascotState.idle) {
         final now = DateTime.now();
-        if (_lastActionTime == null || now.difference(_lastActionTime!).inSeconds > 12) {
+        if (_lastActionTime == null || now.difference(_lastActionTime!).inSeconds > 5) {
           final roll = _random.nextDouble();
-          if (roll < 0.35) {
-            // Swap to smiling image for variety
-            triggerPose(MascotState.smiling, duration: const Duration(milliseconds: 3200));
+          if (roll < 0.30) {
+            // Waving smile greeting
+            triggerPose(MascotState.smiling, duration: const Duration(milliseconds: 3000));
           } else if (roll < 0.55) {
-            // Low distraction walk across navbar
+            // Marching walk animation
             triggerWalking();
-          } else if (roll < 0.60) {
-            // Rare energetic run burst
+          } else if (roll < 0.75) {
+            // Workout flex celebration
+            triggerWorkoutCompletion();
+          } else if (roll < 0.90) {
+            // Energetic run burst
             triggerRunning();
+          } else {
+            // Tired recovery pose
+            triggerPose(MascotState.tired, duration: const Duration(milliseconds: 2800));
           }
         }
       }
