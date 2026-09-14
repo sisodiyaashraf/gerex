@@ -368,11 +368,16 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             Positioned(
               left: 24,
               right: 24,
-              bottom: 80 + MediaQuery.of(context).padding.bottom,
-              height: 60,
+              bottom: 84 + MediaQuery.of(context).padding.bottom,
+              height: 52,
               child: IgnorePointer(
                 ignoring: false,
                 child: FloatingMascotWidget(
+                  onSelectHomeTab: () {
+                    setState(() {
+                      _currentIndex = 0; // Home / Workouts tab
+                    });
+                  },
                   onSelectMealTab: () {
                     setState(() {
                       _currentIndex = 2; // Meals tab
