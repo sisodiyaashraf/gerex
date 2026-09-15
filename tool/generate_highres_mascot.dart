@@ -32,13 +32,6 @@ void main() async {
     'Generated gerex_robot_tired.png (${tiredBytes.length} bytes)',
   );
 
-  // 4. gerex_robot_pushup.png (1536 x 1024, 3x2 grid = 6 frames of 512x512)
-  final pushupBytes = generatePushupSheet();
-  File('${dir.path}/gerex_robot_pushup.png').writeAsBytesSync(pushupBytes);
-  stdout.writeln(
-    'Generated gerex_robot_pushup.png (${pushupBytes.length} bytes)',
-  );
-
   stdout.writeln('Successfully generated high-resolution mascot PNG assets!');
 }
 

@@ -22,10 +22,16 @@ class AIProvider extends ChangeNotifier {
     try {
       final prefs = di.sl<SharedPreferences>();
       _isOfflineOnly = prefs.getBool('offline_only_ai_assistant') ?? false;
-      _isModelDownloaded = prefs.getBool('offline_gemma_model_downloaded') ?? false;
-      SecureLogger.logInfo('AIProvider: Loaded offline_only_ai_assistant: $_isOfflineOnly');
+      _isModelDownloaded =
+          prefs.getBool('offline_gemma_model_downloaded') ?? false;
+      SecureLogger.logInfo(
+        'AIProvider: Loaded offline_only_ai_assistant: $_isOfflineOnly',
+      );
     } catch (e) {
-      SecureLogger.logError('AIProvider: Failed to load offline state', e.toString());
+      SecureLogger.logError(
+        'AIProvider: Failed to load offline state',
+        e.toString(),
+      );
     }
   }
 
@@ -35,9 +41,14 @@ class AIProvider extends ChangeNotifier {
     try {
       final prefs = di.sl<SharedPreferences>();
       await prefs.setBool('offline_only_ai_assistant', value);
-      SecureLogger.logInfo('AIProvider: Saved offline_only_ai_assistant: $value');
+      SecureLogger.logInfo(
+        'AIProvider: Saved offline_only_ai_assistant: $value',
+      );
     } catch (e) {
-      SecureLogger.logError('AIProvider: Failed to save offline_only_ai_assistant', e.toString());
+      SecureLogger.logError(
+        'AIProvider: Failed to save offline_only_ai_assistant',
+        e.toString(),
+      );
     }
   }
 
@@ -121,7 +132,8 @@ class AIProvider extends ChangeNotifier {
     // Check AI call rate limits
     final allowed = await _checkAndRecordAiCall();
     if (!allowed) {
-      _planError = 'AI plan call limit reached. Please wait a bit and try again.';
+      _planError =
+          'AI plan call limit reached. Please wait a bit and try again.';
       _isPlanLoading = false;
       notifyListeners();
       return;
@@ -197,7 +209,8 @@ class AIProvider extends ChangeNotifier {
         if (failure.message.contains('CLOUD_LIMIT_REACHED')) {
           _chatMessages.add({
             'role': 'model',
-            'text': 'Cloud request limit reached. Please check your offline model or try again later.',
+            'text':
+                'Cloud request limit reached. Please check your offline model or try again later.',
             'source': 'online',
           });
         } else {
@@ -232,11 +245,7 @@ class AIProvider extends ChangeNotifier {
 
     result.fold(
       onSuccess: (reply) {
-        _chatMessages.add({
-          'role': 'model',
-          'text': reply,
-          'source': 'online',
-        });
+        _chatMessages.add({'role': 'model', 'text': reply, 'source': 'online'});
         _isChatLoading = false;
       },
       onFailure: (failure) {
@@ -244,7 +253,7 @@ class AIProvider extends ChangeNotifier {
         final sanitized = SecureLogger.sanitizeException(failure.message);
         _chatError = sanitized;
         _isChatLoading = false;
-        
+
         if (failure.message.contains('CLOUD_LIMIT_REACHED')) {
           _chatMessages.add({
             'role': 'model',
@@ -279,7 +288,7 @@ class AIProvider extends ChangeNotifier {
 
   Future<void> retryLastFailedMessage() async {
     if (_chatMessages.isEmpty) return;
-    
+
     // Find last user prompt
     String? lastUserPrompt;
     for (int i = _chatMessages.length - 1; i >= 0; i--) {
@@ -293,7 +302,8 @@ class AIProvider extends ChangeNotifier {
       // Remove last failed response if it was an error model message
       if (_chatMessages.last['role'] == 'model' &&
           (_chatMessages.last['isError'] == 'true' ||
-              _chatMessages.last['text']?.contains('Sorry, I hit an issue') == true)) {
+              _chatMessages.last['text']?.contains('Sorry, I hit an issue') ==
+                  true)) {
         _chatMessages.removeLast();
       }
       await sendMessageToCoach(lastUserPrompt);
@@ -304,14 +314,17 @@ class AIProvider extends ChangeNotifier {
   // Daily Insight
   // ----------------------------------------------------
 
-  Future<void> loadDailyInsight(List<dynamic> sessions, {bool forceRefresh = false}) async {
+  Future<void> loadDailyInsight(
+    List<dynamic> sessions, {
+    bool forceRefresh = false,
+  }) async {
     final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-    
+
     try {
       final prefs = di.sl<SharedPreferences>();
       final cachedDate = prefs.getString('daily_insight_date');
       final cachedText = prefs.getString('daily_insight_text');
-      
+
       if (cachedDate == todayStr && cachedText != null && !forceRefresh) {
         _dailyInsight = cachedText;
         notifyListeners();
@@ -327,7 +340,8 @@ class AIProvider extends ChangeNotifier {
     if (!allowed) {
       _insightError = 'AI quota reached for this hour.';
       _isInsightLoading = false;
-      _dailyInsight = 'Fuel your body with proper nutrition, prioritize recovery sleep, and target progressive overload for today\'s training session!';
+      _dailyInsight =
+          'Fuel your body with proper nutrition, prioritize recovery sleep, and target progressive overload for today\'s training session!';
       notifyListeners();
       return;
     }
@@ -335,7 +349,9 @@ class AIProvider extends ChangeNotifier {
     final recentSessions = sessions.take(5).toList();
     final recentSummary = recentSessions.map((s) {
       final name = s.name ?? 'Workout';
-      final date = s.completedAt != null ? s.completedAt.toIso8601String().substring(0, 10) : 'recent';
+      final date = s.completedAt != null
+          ? s.completedAt.toIso8601String().substring(0, 10)
+          : 'recent';
       return '$name completed on $date';
     }).toList();
 
@@ -365,7 +381,8 @@ class AIProvider extends ChangeNotifier {
         SecureLogger.logError('loadDailyInsight failed', failure.message);
         _insightError = SecureLogger.sanitizeException(failure.message);
         _isInsightLoading = false;
-        _dailyInsight = 'Fuel your body with proper nutrition, prioritize recovery sleep, and target progressive overload for today\'s training session!';
+        _dailyInsight =
+            'Fuel your body with proper nutrition, prioritize recovery sleep, and target progressive overload for today\'s training session!';
       },
     );
     notifyListeners();
@@ -373,12 +390,12 @@ class AIProvider extends ChangeNotifier {
 
   Future<void> loadSleepInsight({bool forceRefresh = false}) async {
     final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-    
+
     try {
       final prefs = di.sl<SharedPreferences>();
       final cachedDate = prefs.getString('sleep_insight_date');
       final cachedText = prefs.getString('sleep_insight_text');
-      
+
       if (cachedDate == todayStr && cachedText != null && !forceRefresh) {
         _sleepInsight = cachedText;
         notifyListeners();
@@ -394,7 +411,8 @@ class AIProvider extends ChangeNotifier {
     if (!allowed) {
       _sleepInsightError = 'AI quota reached for this hour.';
       _isSleepInsightLoading = false;
-      _sleepInsight = 'Prioritize consistent sleep schedules! Aim to go to bed at the same time every day to maximize recovery and daytime energy.';
+      _sleepInsight =
+          'Prioritize consistent sleep schedules! Aim to go to bed at the same time every day to maximize recovery and daytime energy.';
       notifyListeners();
       return;
     }
@@ -415,7 +433,8 @@ class AIProvider extends ChangeNotifier {
         SecureLogger.logError('loadSleepInsight failed', failure.message);
         _sleepInsightError = SecureLogger.sanitizeException(failure.message);
         _isSleepInsightLoading = false;
-        _sleepInsight = 'Consistent bedtime schedules improve sleep score and deep recovery stages. Try setting a bedtime reminder.';
+        _sleepInsight =
+            'Consistent bedtime schedules improve sleep score and deep recovery stages. Try setting a bedtime reminder.';
       },
     );
     notifyListeners();
@@ -425,14 +444,18 @@ class AIProvider extends ChangeNotifier {
   // Progress Summary
   // ----------------------------------------------------
 
-  Future<void> loadProgressSummary(List<dynamic> sessions, {bool forceRefresh = false}) async {
-    final cacheKey = 'progress_summary_${sessions.length}_${sessions.isNotEmpty ? (sessions.last.completedAt?.toIso8601String() ?? '') : ''}';
-    
+  Future<void> loadProgressSummary(
+    List<dynamic> sessions, {
+    bool forceRefresh = false,
+  }) async {
+    final cacheKey =
+        'progress_summary_${sessions.length}_${sessions.isNotEmpty ? (sessions.last.completedAt?.toIso8601String() ?? '') : ''}';
+
     try {
       final prefs = di.sl<SharedPreferences>();
       final cachedKey = prefs.getString('progress_summary_cache_key');
       final cachedText = prefs.getString('progress_summary_text');
-      
+
       if (cachedKey == cacheKey && cachedText != null && !forceRefresh) {
         _progressSummary = cachedText;
         notifyListeners();
@@ -448,14 +471,17 @@ class AIProvider extends ChangeNotifier {
     if (!allowed) {
       _summaryError = 'AI quota reached for this hour.';
       _isSummaryLoading = false;
-      _progressSummary = 'Consistency is the absolute key to fitness progress! You are regularly logging workouts and staying consistent. Keep up the high volume training!';
+      _progressSummary =
+          'Consistency is the absolute key to fitness progress! You are regularly logging workouts and staying consistent. Keep up the high volume training!';
       notifyListeners();
       return;
     }
 
     final sessionsSummary = sessions.map((s) {
       final name = s.name ?? 'Workout';
-      final date = s.completedAt != null ? s.completedAt.toIso8601String().substring(0, 10) : 'recent';
+      final date = s.completedAt != null
+          ? s.completedAt.toIso8601String().substring(0, 10)
+          : 'recent';
       final duration = '${(s.durationSeconds ?? 0) ~/ 60} minutes';
       final exerciseCount = '${s.loggedSets?.length ?? 0} sets logged';
       return '$name on $date lasting $duration with $exerciseCount';
@@ -483,7 +509,8 @@ class AIProvider extends ChangeNotifier {
         SecureLogger.logError('loadProgressSummary failed', failure.message);
         _summaryError = SecureLogger.sanitizeException(failure.message);
         _isSummaryLoading = false;
-        _progressSummary = 'Consistency is the absolute key to fitness progress! You are regularly logging workouts and staying consistent. Keep up the high volume training!';
+        _progressSummary =
+            'Consistency is the absolute key to fitness progress! You are regularly logging workouts and staying consistent. Keep up the high volume training!';
       },
     );
     notifyListeners();
@@ -493,7 +520,10 @@ class AIProvider extends ChangeNotifier {
   // Exercise Swap
   // ----------------------------------------------------
 
-  Future<List<String>> getExerciseAlternatives(String exerciseName, String muscleGroup) async {
+  Future<List<String>> getExerciseAlternatives(
+    String exerciseName,
+    String muscleGroup,
+  ) async {
     final allowed = await _checkAndRecordAiCall();
     if (!allowed) {
       return _getFallbackAlternatives(muscleGroup);
@@ -507,7 +537,10 @@ class AIProvider extends ChangeNotifier {
     return result.fold(
       onSuccess: (alternatives) => alternatives,
       onFailure: (failure) {
-        SecureLogger.logError('getExerciseAlternatives failed', failure.message);
+        SecureLogger.logError(
+          'getExerciseAlternatives failed',
+          failure.message,
+        );
         return _getFallbackAlternatives(muscleGroup);
       },
     );
@@ -542,14 +575,18 @@ class AIProvider extends ChangeNotifier {
   bool get isStoryLoading => _isStoryLoading;
   String? get storyError => _storyError;
 
-  Future<void> loadWeeklyTrainingStory(List<dynamic> sessions, {bool forceRefresh = false}) async {
-    final cacheKey = 'weekly_story_${sessions.length}_${sessions.isNotEmpty ? (sessions.last.completedAt?.toIso8601String() ?? '') : ''}';
-    
+  Future<void> loadWeeklyTrainingStory(
+    List<dynamic> sessions, {
+    bool forceRefresh = false,
+  }) async {
+    final cacheKey =
+        'weekly_story_${sessions.length}_${sessions.isNotEmpty ? (sessions.last.completedAt?.toIso8601String() ?? '') : ''}';
+
     try {
       final prefs = di.sl<SharedPreferences>();
       final cachedKey = prefs.getString('weekly_story_cache_key');
       final cachedText = prefs.getString('weekly_story_text');
-      
+
       if (cachedKey == cacheKey && cachedText != null && !forceRefresh) {
         _weeklyTrainingStory = cachedText;
         notifyListeners();
@@ -565,14 +602,17 @@ class AIProvider extends ChangeNotifier {
     if (!allowed) {
       _storyError = 'AI quota reached for this hour.';
       _isStoryLoading = false;
-      _weeklyTrainingStory = 'You started off strong this week, maintaining your consistency and hitting key personal records! Keep pushing forward and logging those routines.';
+      _weeklyTrainingStory =
+          'You started off strong this week, maintaining your consistency and hitting key personal records! Keep pushing forward and logging those routines.';
       notifyListeners();
       return;
     }
 
     final sessionsSummary = sessions.map((s) {
       final name = s.name ?? 'Workout';
-      final date = s.completedAt != null ? s.completedAt.toIso8601String().substring(0, 10) : 'recent';
+      final date = s.completedAt != null
+          ? s.completedAt.toIso8601String().substring(0, 10)
+          : 'recent';
       final duration = '${(s.durationSeconds ?? 0) ~/ 60} minutes';
       final exerciseCount = '${s.loggedSets?.length ?? 0} sets logged';
       return '$name on $date lasting $duration with $exerciseCount';
@@ -597,10 +637,14 @@ class AIProvider extends ChangeNotifier {
         } catch (_) {}
       },
       onFailure: (failure) {
-        SecureLogger.logError('loadWeeklyTrainingStory failed', failure.message);
+        SecureLogger.logError(
+          'loadWeeklyTrainingStory failed',
+          failure.message,
+        );
         _storyError = SecureLogger.sanitizeException(failure.message);
         _isStoryLoading = false;
-        _weeklyTrainingStory = 'You started off strong this week, maintaining your consistency and hitting key personal records! Keep pushing forward and logging those routines.';
+        _weeklyTrainingStory =
+            'You started off strong this week, maintaining your consistency and hitting key personal records! Keep pushing forward and logging those routines.';
       },
     );
     notifyListeners();

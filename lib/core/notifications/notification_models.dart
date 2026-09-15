@@ -1,4 +1,12 @@
-enum NotificationCategory { workouts, meals, sleep, hydration, progress, aiCoach, general }
+enum NotificationCategory {
+  workouts,
+  meals,
+  sleep,
+  hydration,
+  progress,
+  aiCoach,
+  general,
+}
 
 enum NotificationRepeatRule { none, daily, weekly }
 
@@ -28,9 +36,8 @@ class NotificationPayload {
   final Map<String, String>? actionData;
 
   Map<String, dynamic> toJson() => {
-        'route': deepLink,
-        'category': category.name,
-        'action': actionData,
-      };
+    'route': deepLink,
+    'category': category.name,
+    'action': actionData,
+  };
 }
-
