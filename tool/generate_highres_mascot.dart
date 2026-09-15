@@ -32,6 +32,13 @@ void main() async {
     'Generated gerex_robot_tired.png (${tiredBytes.length} bytes)',
   );
 
+  // 4. gerex_robot_pushup.png (1536 x 1024, 3x2 grid = 6 frames of 512x512)
+  final pushupBytes = generatePushupSheet();
+  File('${dir.path}/gerex_robot_pushup.png').writeAsBytesSync(pushupBytes);
+  stdout.writeln(
+    'Generated gerex_robot_pushup.png (${pushupBytes.length} bytes)',
+  );
+
   stdout.writeln('Successfully generated high-resolution mascot PNG assets!');
 }
 
@@ -126,6 +133,40 @@ List<int> generateTiredSheet() {
   return encodePng(width, height, scanlines.takeBytes());
 }
 
+List<int> generatePushupSheet() {
+  const width = 1536;
+  const height = 1024;
+  const cols = 3;
+
+  final scanlines = BytesBuilder();
+
+  for (int y = 0; y < height; y++) {
+    scanlines.addByte(0);
+    final rIdx = y ~/ 512;
+    final localY = y % 512;
+
+    for (int x = 0; x < width; x++) {
+      final cIdx = x ~/ 512;
+      final localX = x % 512;
+      final frameIndex = rIdx * cols + cIdx;
+
+      final color = drawMascotFrame(
+        frameIndex: frameIndex,
+        totalFrames: 6,
+        localX: localX,
+        localY: localY,
+        frameSize: 512,
+        isTired: false,
+        isSweating: false,
+        isPushup: true,
+      );
+      scanlines.add(color);
+    }
+  }
+
+  return encodePng(width, height, scanlines.takeBytes());
+}
+
 List<int> drawMascotFrame({
   required int frameIndex,
   required int totalFrames,
@@ -134,25 +175,30 @@ List<int> drawMascotFrame({
   required int frameSize,
   required bool isTired,
   required bool isSweating,
+  bool isPushup = false,
 }) {
   // Normalize coordinates to 0.0 .. 1.0
   final nx = localX / frameSize;
   final ny = localY / frameSize;
 
   // Animation offsets per frame
+  final double pushupOffset = isPushup
+      ? const [0.0, 0.08, 0.16, 0.12, 0.04, 0.0][frameIndex % 6]
+      : 0.0;
+
   final double breathY = isTired
       ? ((frameIndex % 2 == 0) ? 0.02 : -0.01)
       : ((frameIndex % 2 == 0) ? 0.01 : -0.01);
 
-  final double headOffset = isTired ? 0.05 : 0.0;
+  final double headOffset = isTired ? 0.05 : (isPushup ? pushupOffset : 0.0);
 
   // Center points (scaled relative to normalized grid)
   const cx = 0.5;
-  final cy = 0.48 + headOffset + breathY;
+  final cy = (isPushup ? 0.54 : 0.48) + headOffset + breathY;
 
   // Head bounds (rounded metallic face)
-  const headW = 0.52;
-  const headH = 0.44;
+  final headW = isPushup ? 0.58 : 0.52;
+  final headH = isPushup ? 0.36 : 0.44;
   final dx = (nx - cx).abs();
   final dy = (ny - cy).abs();
 
@@ -167,8 +213,8 @@ List<int> drawMascotFrame({
       1.0;
 
   // Screen Face Glass
-  const screenW = 0.40;
-  const screenH = 0.28;
+  final screenW = isPushup ? 0.46 : 0.40;
+  final screenH = isPushup ? 0.22 : 0.28;
   final inScreen =
       (dx * dx) / ((screenW / 2) * (screenW / 2)) +
           ((ny - cy - 0.01).abs() * (ny - cy - 0.01).abs()) /
@@ -191,15 +237,28 @@ List<int> drawMascotFrame({
   final isEyeLid =
       isTired && (ny < eyeY - 0.01 + (frameIndex % 2 == 0 ? 0.008 : 0.0));
 
+  // Pushup Arm Base (Robotic support arms flexing)
+  bool isPushupArm = false;
+  if (isPushup) {
+    final armY = cy + 0.12;
+    final armLeftX = cx - 0.22 - (pushupOffset * 0.3);
+    final armRightX = cx + 0.22 + (pushupOffset * 0.3);
+    final distLeftArm = ((nx - armLeftX) * (nx - armLeftX)) / 0.005 + ((ny - armY) * (ny - armY)) / 0.012;
+    final distRightArm = ((nx - armRightX) * (nx - armRightX)) / 0.005 + ((ny - armY) * (ny - armY)) / 0.012;
+    if (distLeftArm <= 1.0 || distRightArm <= 1.0) {
+      isPushupArm = true;
+    }
+  }
+
   // Chest Core Light (Amber / Cyan pulse)
-  final chestY = cy + 0.28;
+  final chestY = cy + (isPushup ? 0.20 : 0.28);
   final distChest = ((nx - cx) * (nx - cx)) + ((ny - chestY) * (ny - chestY));
   final isChestCore = distChest <= 0.0035;
   final isChestRing = distChest <= 0.0055 && !isChestCore;
 
   // Sweat Droplet (Glistening cyan animated water drops)
   bool isSweatDrop = false;
-  if (isSweating) {
+  if (isSweating || (isPushup && (frameIndex == 2 || frameIndex == 3))) {
     final dropCycle = frameIndex % 3;
     final dropX = cx + 0.18 + (dropCycle == 1 ? 0.03 : 0.0);
     final dropY = cy - 0.12 + (dropCycle * 0.06);
@@ -240,7 +299,8 @@ List<int> drawMascotFrame({
       !isChestCore &&
       !isChestRing &&
       !isSweatDrop &&
-      !isWipingArm) {
+      !isWipingArm &&
+      !isPushupArm) {
     return [0, 0, 0, 0];
   }
 
@@ -249,7 +309,7 @@ List<int> drawMascotFrame({
     return [56, 189, 248, 255]; // Sky cyan
   }
 
-  if (isWipingArm) {
+  if (isWipingArm || isPushupArm) {
     return [99, 102, 241, 255]; // Indigo robot arm
   }
 
@@ -262,6 +322,8 @@ List<int> drawMascotFrame({
     // Glowing warning / exhausted core
     if (isTired) {
       return [245, 158, 11, 255]; // Amber glow
+    } else if (isPushup) {
+      return [16, 185, 129, 255]; // Emerald pushup pulse
     } else {
       return [16, 185, 129, 255]; // Emerald glow
     }
