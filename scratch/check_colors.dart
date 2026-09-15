@@ -9,6 +9,7 @@ void main() {
   for (final path in files) {
     final file = File(path);
     final bytes = file.readAsBytesSync();
+    // ignore: avoid_print
     print('$path size: ${bytes.length}');
   }
 }

@@ -13,6 +13,7 @@ void main() {
   for (final p in files) {
     final file = File(p);
     final bytes = file.readAsBytesSync();
+    // ignore: avoid_print
     print('$p: ${bytes.length} bytes');
   }
 }

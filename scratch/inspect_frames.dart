@@ -23,6 +23,7 @@ void main() {
     final frameW = width / cols;
     final frameH = height / rows;
     final aspect = frameW / frameH;
-    print('${s['name']}: total ${width}x${height}, grid ${cols}x${rows} => frame ${frameW.toStringAsFixed(1)}x${frameH.toStringAsFixed(1)} (aspect: ${aspect.toStringAsFixed(3)})');
+    // ignore: avoid_print
+    print('${s['name']}: total ${width}x$height, grid ${cols}x$rows => frame ${frameW.toStringAsFixed(1)}x${frameH.toStringAsFixed(1)} (aspect: ${aspect.toStringAsFixed(3)})');
   }
 }

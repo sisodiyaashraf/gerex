@@ -177,8 +177,8 @@ List<int> drawMascotFrame({
 
   // Eyes (Cyan glowing digital eyes)
   final eyeY = cy - 0.02;
-  final eyeLeftX = cx - 0.11;
-  final eyeRightX = cx + 0.11;
+  const eyeLeftX = cx - 0.11;
+  const eyeRightX = cx + 0.11;
   final distLeftEye =
       ((nx - eyeLeftX) * (nx - eyeLeftX)) + ((ny - eyeY) * (ny - eyeY));
   final distRightEye =
@@ -211,7 +211,7 @@ List<int> drawMascotFrame({
     }
 
     // Secondary sweat drop on forehead/ear
-    final drop2X = cx - 0.20;
+    const drop2X = cx - 0.20;
     final drop2Y = cy - 0.08 + ((frameIndex * 0.03) % 0.08);
     final drop2Dist =
         ((nx - drop2X) * (nx - drop2X)) / 0.0005 +

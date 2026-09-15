@@ -15,8 +15,10 @@ void main() {
   for (final path in files) {
     final file = File(path);
     if (file.existsSync()) {
+      // ignore: avoid_print
       print('$path: ${file.lengthSync()} bytes');
     } else {
+      // ignore: avoid_print
       print('$path: MISSING');
     }
   }
