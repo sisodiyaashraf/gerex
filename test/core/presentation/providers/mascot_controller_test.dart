@@ -78,5 +78,19 @@ void main() {
       controller.triggerWalkOrRun();
       expect(controller.currentState, equals(MascotState.running));
     });
+
+    test('isTiredOrSweating and displaySize return larger size for recovery states', () {
+      expect(MascotState.idle.isTiredOrSweating, isFalse);
+      expect(MascotState.idle.displaySize, equals(52.0));
+
+      expect(MascotState.tired.isTiredOrSweating, isTrue);
+      expect(MascotState.tired.displaySize, equals(66.0));
+
+      expect(MascotState.sweating.isTiredOrSweating, isTrue);
+      expect(MascotState.sweating.displaySize, equals(66.0));
+
+      expect(MascotState.sweatingAndTired.isTiredOrSweating, isTrue);
+      expect(MascotState.sweatingAndTired.displaySize, equals(66.0));
+    });
   });
 }
