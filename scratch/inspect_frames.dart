@@ -7,8 +7,8 @@ void main() {
     {'name': 'walking', 'path': 'assets/images/robot_mascot/gerex_robot_walking.png', 'cols': 3, 'rows': 2},
     {'name': 'running', 'path': 'assets/images/robot_mascot/gerex_robot_running.png', 'cols': 4, 'rows': 2},
     {'name': 'exercise', 'path': 'assets/images/robot_mascot/gerex_robot_exercise.png', 'cols': 3, 'rows': 2},
-    {'name': 'sweating', 'path': 'assets/images/robot_mascot/gerex_robot_sweating.png', 'cols': 4, 'rows': 1},
-    {'name': 'sweating_and_tired', 'path': 'assets/images/robot_mascot/gerex_robot_sweating_and_tired.png', 'cols': 6, 'rows': 1},
+    {'name': 'sweating', 'path': 'assets/images/robot_mascot/gerex_robot_sweating.png', 'cols': 2, 'rows': 2},
+    {'name': 'sweating_and_tired', 'path': 'assets/images/robot_mascot/gerex_robot_sweating_and_tired.png', 'cols': 3, 'rows': 2},
     {'name': 'tired', 'path': 'assets/images/robot_mascot/gerex_robot_tired.png', 'cols': 1, 'rows': 1},
   ];
 
