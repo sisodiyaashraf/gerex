@@ -12,17 +12,25 @@ void main() async {
   // 1. gerex_robot_sweating.png (1024 x 1024, 2x2 grid = 4 frames of 512x512)
   final sweatingBytes = generateSweatingSheet();
   File('${dir.path}/gerex_robot_sweating.png').writeAsBytesSync(sweatingBytes);
-  stdout.writeln('Generated gerex_robot_sweating.png (${sweatingBytes.length} bytes)');
+  stdout.writeln(
+    'Generated gerex_robot_sweating.png (${sweatingBytes.length} bytes)',
+  );
 
   // 2. gerex_robot_sweating_and_tired.png (1536 x 1024, 3x2 grid = 6 frames of 512x512)
   final sweatingTiredBytes = generateSweatingAndTiredSheet();
-  File('${dir.path}/gerex_robot_sweating_and_tired.png').writeAsBytesSync(sweatingTiredBytes);
-  stdout.writeln('Generated gerex_robot_sweating_and_tired.png (${sweatingTiredBytes.length} bytes)');
+  File(
+    '${dir.path}/gerex_robot_sweating_and_tired.png',
+  ).writeAsBytesSync(sweatingTiredBytes);
+  stdout.writeln(
+    'Generated gerex_robot_sweating_and_tired.png (${sweatingTiredBytes.length} bytes)',
+  );
 
   // 3. gerex_robot_tired.png (1024 x 1024, 1x1 grid = 1 frame of 1024x1024)
   final tiredBytes = generateTiredSheet();
   File('${dir.path}/gerex_robot_tired.png').writeAsBytesSync(tiredBytes);
-  stdout.writeln('Generated gerex_robot_tired.png (${tiredBytes.length} bytes)');
+  stdout.writeln(
+    'Generated gerex_robot_tired.png (${tiredBytes.length} bytes)',
+  );
 
   stdout.writeln('Successfully generated high-resolution mascot PNG assets!');
 }
@@ -151,26 +159,39 @@ List<int> drawMascotFrame({
   final dy = (ny - cy).abs();
 
   // Outer border / contour
-  final inHeadOuter = (dx * dx) / ((headW / 2) * (headW / 2)) + (dy * dy) / ((headH / 2) * (headH / 2)) <= 1.0;
-  final inHeadInner = (dx * dx) / ((headW / 2 - 0.02) * (headW / 2 - 0.02)) + (dy * dy) / ((headH / 2 - 0.02) * (headH / 2 - 0.02)) <= 1.0;
+  final inHeadOuter =
+      (dx * dx) / ((headW / 2) * (headW / 2)) +
+          (dy * dy) / ((headH / 2) * (headH / 2)) <=
+      1.0;
+  final inHeadInner =
+      (dx * dx) / ((headW / 2 - 0.02) * (headW / 2 - 0.02)) +
+          (dy * dy) / ((headH / 2 - 0.02) * (headH / 2 - 0.02)) <=
+      1.0;
 
   // Screen Face Glass
   final screenW = 0.40;
   final screenH = 0.28;
-  final inScreen = (dx * dx) / ((screenW / 2) * (screenW / 2)) + ((ny - cy - 0.01).abs() * (ny - cy - 0.01).abs()) / ((screenH / 2) * (screenH / 2)) <= 1.0;
+  final inScreen =
+      (dx * dx) / ((screenW / 2) * (screenW / 2)) +
+          ((ny - cy - 0.01).abs() * (ny - cy - 0.01).abs()) /
+              ((screenH / 2) * (screenH / 2)) <=
+      1.0;
 
   // Eyes (Cyan glowing digital eyes)
   final eyeY = cy - 0.02;
   final eyeLeftX = cx - 0.11;
   final eyeRightX = cx + 0.11;
-  final distLeftEye = ((nx - eyeLeftX) * (nx - eyeLeftX)) + ((ny - eyeY) * (ny - eyeY));
-  final distRightEye = ((nx - eyeRightX) * (nx - eyeRightX)) + ((ny - eyeY) * (ny - eyeY));
+  final distLeftEye =
+      ((nx - eyeLeftX) * (nx - eyeLeftX)) + ((ny - eyeY) * (ny - eyeY));
+  final distRightEye =
+      ((nx - eyeRightX) * (nx - eyeRightX)) + ((ny - eyeY) * (ny - eyeY));
 
   final isLeftEye = distLeftEye <= 0.0022;
   final isRightEye = distRightEye <= 0.0022;
 
   // Tired half-lids
-  final isEyeLid = isTired && (ny < eyeY - 0.01 + (frameIndex % 2 == 0 ? 0.008 : 0.0));
+  final isEyeLid =
+      isTired && (ny < eyeY - 0.01 + (frameIndex % 2 == 0 ? 0.008 : 0.0));
 
   // Chest Core Light (Amber / Cyan pulse)
   final chestY = cy + 0.28;
@@ -184,7 +205,9 @@ List<int> drawMascotFrame({
     final dropCycle = frameIndex % 3;
     final dropX = cx + 0.18 + (dropCycle == 1 ? 0.03 : 0.0);
     final dropY = cy - 0.12 + (dropCycle * 0.06);
-    final dropDist = ((nx - dropX) * (nx - dropX)) / 0.0006 + ((ny - dropY) * (ny - dropY)) / 0.0012;
+    final dropDist =
+        ((nx - dropX) * (nx - dropX)) / 0.0006 +
+        ((ny - dropY) * (ny - dropY)) / 0.0012;
     if (dropDist <= 1.0) {
       isSweatDrop = true;
     }
@@ -192,7 +215,9 @@ List<int> drawMascotFrame({
     // Secondary sweat drop on forehead/ear
     final drop2X = cx - 0.20;
     final drop2Y = cy - 0.08 + ((frameIndex * 0.03) % 0.08);
-    final drop2Dist = ((nx - drop2X) * (nx - drop2X)) / 0.0005 + ((ny - drop2Y) * (ny - drop2Y)) / 0.0009;
+    final drop2Dist =
+        ((nx - drop2X) * (nx - drop2X)) / 0.0005 +
+        ((ny - drop2Y) * (ny - drop2Y)) / 0.0009;
     if (drop2Dist <= 1.0) {
       isSweatDrop = true;
     }
@@ -203,7 +228,9 @@ List<int> drawMascotFrame({
   if (isSweating && (frameIndex == 1 || frameIndex == 2 || frameIndex == 4)) {
     final armX = cx + 0.14 - (frameIndex == 2 ? 0.04 : 0.0);
     final armY = cy - 0.08;
-    final armDist = ((nx - armX) * (nx - armX)) / 0.004 + ((ny - armY) * (ny - armY)) / 0.008;
+    final armDist =
+        ((nx - armX) * (nx - armX)) / 0.004 +
+        ((ny - armY) * (ny - armY)) / 0.008;
     if (armDist <= 1.0) {
       isWipingArm = true;
     }
@@ -211,7 +238,11 @@ List<int> drawMascotFrame({
 
   // Color Palette Definitions (RGBA)
   // Transparent background
-  if (!inHeadOuter && !isChestCore && !isChestRing && !isSweatDrop && !isWipingArm) {
+  if (!inHeadOuter &&
+      !isChestCore &&
+      !isChestRing &&
+      !isSweatDrop &&
+      !isWipingArm) {
     return [0, 0, 0, 0];
   }
 
