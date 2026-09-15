@@ -230,8 +230,25 @@ class _SpriteFramePainter extends CustomPainter {
         singleFrameHeight,
       );
 
-      final Rect dstRect = Rect.fromLTWH(0, 0, size.width, size.height);
-      final Paint paint = Paint()..filterQuality = FilterQuality.none;
+      final double srcAspect =
+          singleFrameWidth / (singleFrameHeight > 0 ? singleFrameHeight : 1);
+      final double dstAspect =
+          size.width / (size.height > 0 ? size.height : 1);
+
+      Rect dstRect;
+      if ((srcAspect - dstAspect).abs() < 0.001) {
+        dstRect = Rect.fromLTWH(0, 0, size.width, size.height);
+      } else if (srcAspect > dstAspect) {
+        final double drawHeight = size.width / srcAspect;
+        final double top = (size.height - drawHeight) / 2.0;
+        dstRect = Rect.fromLTWH(0, top, size.width, drawHeight);
+      } else {
+        final double drawWidth = size.height * srcAspect;
+        final double left = (size.width - drawWidth) / 2.0;
+        dstRect = Rect.fromLTWH(left, 0, drawWidth, size.height);
+      }
+
+      final Paint paint = Paint()..filterQuality = FilterQuality.high;
 
       canvas.drawImageRect(image!, srcRect, dstRect, paint);
     }
