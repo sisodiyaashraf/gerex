@@ -167,7 +167,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: const Color(0xFF042537),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -175,7 +175,8 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                               '${groceryProvider.checkedCount} of ${groceryProvider.totalCount} items completed',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                color: Colors.white70,
+                                color: const Color(0xFF0D807B),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -183,14 +184,14 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: accentMint.withValues(alpha: 0.2),
+                            color: const Color(0xFF042537),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: accentMint.withValues(alpha: 0.4)),
+                            border: Border.all(color: const Color(0xFF0D807B).withValues(alpha: 0.4)),
                           ),
                           child: Text(
                             '${(groceryProvider.progressRatio * 100).toInt()}% Done',
                             style: GoogleFonts.outfit(
-                              color: accentMint,
+                              color: const Color(0xFFFFDA61),
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
@@ -204,8 +205,8 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                       child: LinearProgressIndicator(
                         value: groceryProvider.progressRatio,
                         minHeight: 8,
-                        backgroundColor: Colors.white.withValues(alpha: 0.1),
-                        valueColor: const AlwaysStoppedAnimation<Color>(accentMint),
+                        backgroundColor: const Color(0xFF042537).withValues(alpha: 0.15),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0D807B)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -213,17 +214,17 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () => _onGenerateFromMealPlan(groceryProvider, mealProvider),
-                        icon: const FaIcon(FontAwesomeIcons.wandMagicSparkles, size: 16, color: Colors.black87),
+                        icon: const FaIcon(FontAwesomeIcons.wandMagicSparkles, size: 16, color: Color(0xFF50C19D)),
                         label: Text(
                           'Generate from Meal Plan',
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: Colors.white,
                             fontSize: 15,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: accentMint,
+                          backgroundColor: const Color(0xFF042537),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -382,10 +383,14 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
         subtitle: Row(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: item.category.categoryColor.withValues(alpha: 0.2),
+                color: item.category.categoryColor.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: item.category.categoryColor.withValues(alpha: 0.6),
+                  width: 0.8,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -396,8 +401,8 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                     item.category.displayName,
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: item.category.categoryColor,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -491,6 +496,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
               PopupMenuButton<GroceryCategory>(
                 initialValue: _selectedAddCategory,
                 tooltip: 'Select Category',
+                color: const Color(0xFF1E293B),
                 onSelected: (cat) => setState(() => _selectedAddCategory = cat),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -514,7 +520,13 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                       children: [
                         Icon(cat.icon, color: cat.categoryColor, size: 18),
                         const SizedBox(width: 10),
-                        Text(cat.displayName, style: GoogleFonts.inter(color: Colors.white)),
+                        Text(
+                          cat.displayName,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   );
