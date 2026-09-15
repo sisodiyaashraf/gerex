@@ -270,6 +270,36 @@ class AIProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setMessageFeedback(int index, String feedback) {
+    if (index >= 0 && index < _chatMessages.length) {
+      _chatMessages[index]['feedback'] = feedback;
+      notifyListeners();
+    }
+  }
+
+  Future<void> retryLastFailedMessage() async {
+    if (_chatMessages.isEmpty) return;
+    
+    // Find last user prompt
+    String? lastUserPrompt;
+    for (int i = _chatMessages.length - 1; i >= 0; i--) {
+      if (_chatMessages[i]['role'] == 'user') {
+        lastUserPrompt = _chatMessages[i]['text'];
+        break;
+      }
+    }
+
+    if (lastUserPrompt != null && lastUserPrompt.isNotEmpty) {
+      // Remove last failed response if it was an error model message
+      if (_chatMessages.last['role'] == 'model' &&
+          (_chatMessages.last['isError'] == 'true' ||
+              _chatMessages.last['text']?.contains('Sorry, I hit an issue') == true)) {
+        _chatMessages.removeLast();
+      }
+      await sendMessageToCoach(lastUserPrompt);
+    }
+  }
+
   // ----------------------------------------------------
   // Daily Insight
   // ----------------------------------------------------
