@@ -558,7 +558,7 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
         child: Image.asset(
           'assets/images/robot_mascot/gerex_robot_idle.png',
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(
+          errorBuilder: (_, __, ___) => const FaIcon(
             FontAwesomeIcons.robot,
             size: 18,
             color: AppColors.accentEmeraldLight,
@@ -740,7 +740,6 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                                     ),
                                   );
                                 },
-                                tooltip: 'Copy Response',
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Icon(
@@ -788,7 +787,6 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                               // TTS Voice Speaker
                               InkWell(
                                 onTap: () => _speakResponse(text, index),
-                                tooltip: 'Speak Reply',
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Icon(

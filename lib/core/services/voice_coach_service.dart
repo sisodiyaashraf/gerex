@@ -266,4 +266,12 @@ class VoiceCoachService {
     }
     return await _voiceEngine.isLanguageAvailable(code);
   }
+
+  Future<void> stop() async {
+    try {
+      await _voiceEngine.stop();
+    } catch (e) {
+      SecureLogger.logError('VoiceCoachService: stop failed', e);
+    }
+  }
 }

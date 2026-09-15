@@ -39,7 +39,6 @@ List<int> generateSweatingSheet() {
   const width = 1024;
   const height = 1024;
   const cols = 2;
-  const rows = 2;
 
   final scanlines = BytesBuilder();
 
@@ -73,7 +72,6 @@ List<int> generateSweatingAndTiredSheet() {
   const width = 1536;
   const height = 1024;
   const cols = 3;
-  const rows = 2;
 
   final scanlines = BytesBuilder();
 
@@ -149,12 +147,12 @@ List<int> drawMascotFrame({
   final double headOffset = isTired ? 0.05 : 0.0;
 
   // Center points (scaled relative to normalized grid)
-  final cx = 0.5;
+  const cx = 0.5;
   final cy = 0.48 + headOffset + breathY;
 
   // Head bounds (rounded metallic face)
-  final headW = 0.52;
-  final headH = 0.44;
+  const headW = 0.52;
+  const headH = 0.44;
   final dx = (nx - cx).abs();
   final dy = (ny - cy).abs();
 
@@ -169,8 +167,8 @@ List<int> drawMascotFrame({
       1.0;
 
   // Screen Face Glass
-  final screenW = 0.40;
-  final screenH = 0.28;
+  const screenW = 0.40;
+  const screenH = 0.28;
   final inScreen =
       (dx * dx) / ((screenW / 2) * (screenW / 2)) +
           ((ny - cy - 0.01).abs() * (ny - cy - 0.01).abs()) /
