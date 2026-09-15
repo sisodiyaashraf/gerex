@@ -53,6 +53,12 @@ void main() {
 
       controller.triggerPose(MascotState.sweatingAndTired);
       expect(controller.currentState, equals(MascotState.sweatingAndTired));
+
+      controller.triggerPose(MascotState.pushup);
+      expect(controller.currentState, equals(MascotState.pushup));
+      expect(controller.activeConfig.columns, equals(3));
+      expect(controller.activeConfig.rows, equals(2));
+      expect(controller.activeConfig.frameCount, equals(6));
     });
 
     test('triggerWorkoutCompletion initializes exercise state', () {

@@ -294,7 +294,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                       state == MascotState.walking ||
                       state == MascotState.sweating ||
                       state == MascotState.sweatingAndTired ||
-                      state == MascotState.tired,
+                      state == MascotState.tired ||
+                      state == MascotState.pushup,
                   width: renderMascotSize,
                   height: renderMascotSize,
                   mascotStateName: state.name,
@@ -302,7 +303,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                     if (state == MascotState.exercise ||
                         state == MascotState.sweating ||
                         state == MascotState.sweatingAndTired ||
-                        state == MascotState.tired) {
+                        state == MascotState.tired ||
+                        state == MascotState.pushup) {
                       mascotController.resetToIdle();
                       _scheduleDisappearTimer();
                     }

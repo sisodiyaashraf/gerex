@@ -10,7 +10,8 @@ enum MascotState {
   exercise,
   sweating,
   sweatingAndTired,
-  tired;
+  tired,
+  pushup;
 
   /// Returns true if state is a tired or sweating recovery pose.
   bool get isTiredOrSweating =>
@@ -39,6 +40,8 @@ enum MascotState {
         return 'assets/images/robot_mascot/gerex_robot_sweating_and_tired.png';
       case MascotState.tired:
         return 'assets/images/robot_mascot/gerex_robot_tired.png';
+      case MascotState.pushup:
+        return 'assets/images/robot_mascot/gerex_robot_pushup.png';
     }
   }
 
@@ -53,6 +56,7 @@ enum MascotState {
       case MascotState.walking:
       case MascotState.exercise:
       case MascotState.sweatingAndTired:
+      case MascotState.pushup:
         return 6;
       case MascotState.running:
         return 8;
@@ -69,6 +73,7 @@ enum MascotState {
       case MascotState.walking:
       case MascotState.exercise:
       case MascotState.sweatingAndTired:
+      case MascotState.pushup:
         return 3;
       case MascotState.smiling:
       case MascotState.running:
@@ -87,6 +92,7 @@ enum MascotState {
       case MascotState.exercise:
       case MascotState.sweating:
       case MascotState.sweatingAndTired:
+      case MascotState.pushup:
         return 2;
     }
   }
@@ -109,6 +115,8 @@ enum MascotState {
         return const Duration(milliseconds: 130);
       case MascotState.tired:
         return const Duration(milliseconds: 180);
+      case MascotState.pushup:
+        return const Duration(milliseconds: 140);
     }
   }
 

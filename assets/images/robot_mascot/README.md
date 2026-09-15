@@ -1,25 +1,32 @@
-# Gerex 8-Bit Pixel Robot Mascot — Asset Slot Specifications
+# Gerex High-Resolution Robot Mascot — Asset Specifications
 
-This folder contains the sprite sheets for the 8-Bit Gerex Robot Mascot. The animation system is **asset-agnostic** — real artwork can be swapped in by replacing these files without changing any code.
+This folder contains the high-resolution sprite sheets for the Gerex Robot Mascot system.
 
 ## File & Slot Requirements
 
-All sprite sheet PNG files must have a **transparent background** and uniform frame layout.
+All sprite sheet PNG files have a **transparent background** and uniform 512x512 px frame layout.
 
-| Slot File Name | Action State | Total Frames | Grid Layout (Cols x Rows) | Frame Dimensions (Width x Height) | Sheet Dimensions (Width x Height) | Default Frame Duration | Loop |
+| Slot File Name | Action State | Total Frames | Grid Layout (Cols x Rows) | Frame Dimensions | Sheet Dimensions | Default Frame Duration | Loop |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| `robot_idle.png` | Idle (breathing/blinking) | 4 | 4 x 1 | 32 x 32 px | 128 x 32 px | 180ms | Yes |
-| `robot_walk.png` | Walk (tab transitions) | 4 | 4 x 1 | 32 x 32 px | 128 x 32 px | 140ms | No |
-| `robot_run.png` | Run (fast transition) | 4 | 4 x 1 | 32 x 32 px | 128 x 32 px | 100ms | No |
-| `robot_wave.png` | Wave ("Hi" greeting) | 4 | 4 x 1 | 32 x 32 px | 128 x 32 px | 160ms | No |
-| `robot_flex.png` | Flex (gym celebration) | 4 | 4 x 1 | 32 x 32 px | 128 x 32 px | 180ms | No |
-
-*Note: If you use higher-resolution pixel art (e.g. 64x64 or 128x128 per frame), update the `frameWidth` and `frameHeight` parameters in `mascot_controller.dart` to match your sheet.*
+| `gerex_robot_idle.png` | Idle (breathing/blinking) | 1 | 1 x 1 | 512 x 512 px | 512 x 512 px | 200ms | Yes |
+| `gerex_robot_smiling.png` | Wave / Smile greeting | 4 | 4 x 1 | 512 x 512 px | 2048 x 512 px | 140ms | Yes |
+| `gerex_robot_walking.png` | Walking (tab transition) | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 120ms | Yes |
+| `gerex_robot_running.png` | Running (fast navigation) | 8 | 4 x 2 | 512 x 512 px | 2048 x 1024 px | 80ms | Yes |
+| `gerex_robot_exercise.png` | Flex / Gym celebration | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 130ms | No |
+| `gerex_robot_sweating.png` | Sweating recovery | 4 | 2 x 2 | 512 x 512 px | 1024 x 1024 px | 140ms | Yes |
+| `gerex_robot_sweating_and_tired.png` | Sweating & Tired recovery | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 130ms | Yes |
+| `gerex_robot_tired.png` | Tired resting pose | 1 | 1 x 1 | 512 x 512 px | 1024 x 1024 px | 180ms | Yes |
+| `gerex_robot_pushup.png` | Pushup workout animation | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 140ms | Yes |
 
 ## Expected Animations
 
-- **`robot_idle.png`**: Gentle pixel eye blinking and chest light breathing pulse.
-- **`robot_walk.png`**: Side-stepping or marching robot leg cycle.
-- **`robot_run.png`**: Fast forward leaning dash cycle with speed trail lines.
-- **`robot_wave.png`**: Hand raised up and waving 8-bit palm back and forth.
-- **`robot_flex.png`**: Double biceps pose / celebration pose with 8-bit sparkle effect.
+- **`gerex_robot_idle.png`**: Gentle cyan eye glow and breathing pose.
+- **`gerex_robot_smiling.png`**: Waving arm greeting and smiling expression.
+- **`gerex_robot_walking.png`**: Stepping leg cycle with arm swings.
+- **`gerex_robot_running.png`**: Fast forward leaning sprint cycle.
+- **`gerex_robot_exercise.png`**: Biceps workout flex celebration pose.
+- **`gerex_robot_sweating.png`**: Robot wiping sweat drop after workout.
+- **`gerex_robot_sweating_and_tired.png`**: Heavy panting workout recovery pose.
+- **`gerex_robot_tired.png`**: Exhausted resting pose.
+- **`gerex_robot_pushup.png`**: Floor pushup workout repetition cycle.
+
