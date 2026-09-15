@@ -277,6 +277,9 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                 final double snappedX = renderX.roundToDouble();
                 final double snappedY = renderY.roundToDouble();
 
+                final double renderMascotSize = state.displaySize;
+                final double sizeOffset = (renderMascotSize - mascotSize) / 2.0;
+
                 Widget mascotWidget = SpriteAnimator(
                   key: ValueKey('${state.assetPath}_${state.frameCount}'),
                   assetPath: state.assetPath,
@@ -292,8 +295,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                       state == MascotState.sweating ||
                       state == MascotState.sweatingAndTired ||
                       state == MascotState.tired,
-                  width: mascotSize,
-                  height: mascotSize,
+                  width: renderMascotSize,
+                  height: renderMascotSize,
                   mascotStateName: state.name,
                   onComplete: () {
                     if (state == MascotState.exercise ||
@@ -348,7 +351,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
 
                       // Robot Mascot Sprite Widget (zero gap flush placement)
                       Positioned(
-                        left: snappedX,
+                        left: snappedX - sizeOffset,
                         bottom: 0 + (-snappedY),
                         child: Transform.scale(
                           scale: _isNavigating ? 1.0 : scaleVal,
@@ -356,8 +359,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
                             behavior: HitTestBehavior.opaque,
                             onTap: () => _handleTap(mascotController),
                             child: SizedBox(
-                              width: mascotSize,
-                              height: mascotSize,
+                              width: renderMascotSize,
+                              height: renderMascotSize,
                               child: Center(
                                 child: KeyedSubtree(
                                   key: ValueKey(state.assetPath),
