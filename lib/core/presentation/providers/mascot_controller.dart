@@ -64,15 +64,15 @@ enum MascotState {
       case MascotState.idle:
       case MascotState.tired:
         return 1;
+      case MascotState.sweating:
+        return 2;
       case MascotState.walking:
       case MascotState.exercise:
+      case MascotState.sweatingAndTired:
         return 3;
       case MascotState.smiling:
       case MascotState.running:
-      case MascotState.sweating:
         return 4;
-      case MascotState.sweatingAndTired:
-        return 6;
     }
   }
 
@@ -80,13 +80,13 @@ enum MascotState {
     switch (this) {
       case MascotState.idle:
       case MascotState.smiling:
-      case MascotState.sweating:
-      case MascotState.sweatingAndTired:
       case MascotState.tired:
         return 1;
       case MascotState.walking:
       case MascotState.running:
       case MascotState.exercise:
+      case MascotState.sweating:
+      case MascotState.sweatingAndTired:
         return 2;
     }
   }
