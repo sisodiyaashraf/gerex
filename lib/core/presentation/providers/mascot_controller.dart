@@ -12,6 +12,15 @@ enum MascotState {
   sweatingAndTired,
   tired;
 
+  /// Returns true if state is a tired or sweating recovery pose.
+  bool get isTiredOrSweating =>
+      this == MascotState.tired ||
+      this == MascotState.sweating ||
+      this == MascotState.sweatingAndTired;
+
+  /// Display render size in logical pixels (increased size for tired & sweating robot).
+  double get displaySize => isTiredOrSweating ? 66.0 : 52.0;
+
   String get assetPath {
     switch (this) {
       case MascotState.idle:
