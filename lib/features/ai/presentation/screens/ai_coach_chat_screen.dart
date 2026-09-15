@@ -148,7 +148,8 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
       );
       // Simulate dictation insert sample prompt if empty
       if (_messageController.text.isEmpty) {
-        _messageController.text = 'Give me a 15-minute quick core workout routine';
+        _messageController.text =
+            'Give me a 15-minute quick core workout routine';
       }
     }
   }
@@ -161,7 +162,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Clear Conversation?',
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
           'Are you sure you want to clear your current conversation history with Coach Gerex?',
@@ -170,7 +174,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white54)),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -185,9 +192,17 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: Text('Clear', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Clear',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -219,26 +234,35 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.download_rounded, color: AppColors.accentEmeraldLight),
+            icon: const Icon(
+              Icons.download_rounded,
+              color: AppColors.accentEmeraldLight,
+            ),
             tooltip: 'Offline Model Settings',
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const OfflineDownloadScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const OfflineDownloadScreen(),
+                ),
               );
             },
           ),
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert_rounded, color: headerTextColor),
             color: const Color(0xFF151729),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
             onSelected: (val) {
               if (val == 'clear') {
                 _confirmClearChat(provider);
               } else if (val == 'offline') {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const OfflineDownloadScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const OfflineDownloadScreen(),
+                  ),
                 );
               }
             },
@@ -247,9 +271,19 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                 value: 'offline',
                 child: Row(
                   children: [
-                    const Icon(Icons.download_for_offline_outlined, color: AppColors.accentEmeraldLight, size: 18),
+                    const Icon(
+                      Icons.download_for_offline_outlined,
+                      color: AppColors.accentEmeraldLight,
+                      size: 18,
+                    ),
                     const SizedBox(width: 10),
-                    Text('Offline Models', style: GoogleFonts.inter(color: Colors.white, fontSize: 14)),
+                    Text(
+                      'Offline Models',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -257,9 +291,19 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                 value: 'clear',
                 child: Row(
                   children: [
-                    const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                    const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.redAccent,
+                      size: 18,
+                    ),
                     const SizedBox(width: 10),
-                    Text('Clear Conversation', style: GoogleFonts.inter(color: Colors.redAccent, fontSize: 14)),
+                    Text(
+                      'Clear Conversation',
+                      style: GoogleFonts.inter(
+                        color: Colors.redAccent,
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -273,7 +317,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
               child: FloatingActionButton.small(
                 onPressed: _scrollToBottom,
                 backgroundColor: AppColors.accentEmeraldDeep,
-                child: const Icon(Icons.arrow_downward_rounded, color: Colors.white),
+                child: const Icon(
+                  Icons.arrow_downward_rounded,
+                  color: Colors.white,
+                ),
               ),
             )
           : null,
@@ -286,24 +333,35 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const OfflineDownloadScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const OfflineDownloadScreen(),
+                    ),
                   );
                 },
                 child: Container(
                   margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0x2610B981) : const Color(0x1F059669),
+                    color: isDark
+                        ? const Color(0x2610B981)
+                        : const Color(0x1F059669),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isDark ? const Color(0x4010B981) : const Color(0x40059669),
+                      color: isDark
+                          ? const Color(0x4010B981)
+                          : const Color(0x40059669),
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.download_for_offline_outlined,
-                        color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857),
+                        color: isDark
+                            ? const Color(0xFF34D399)
+                            : const Color(0xFF047857),
                         size: 20,
                       ),
                       const SizedBox(width: 10),
@@ -316,14 +374,18 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857),
+                                color: isDark
+                                    ? const Color(0xFF34D399)
+                                    : const Color(0xFF047857),
                               ),
                             ),
                             Text(
                               'Setup local Gemma LLM (1.2 GB) for free offline chat.',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
-                                color: isDark ? Colors.white70 : const Color(0xFF1E293B),
+                                color: isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF1E293B),
                               ),
                             ),
                           ],
@@ -331,7 +393,9 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                       ),
                       Icon(
                         Icons.chevron_right_rounded,
-                        color: isDark ? const Color(0xFF34D399) : const Color(0xFF047857),
+                        color: isDark
+                            ? const Color(0xFF34D399)
+                            : const Color(0xFF047857),
                         size: 20,
                       ),
                     ],
@@ -349,7 +413,13 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                       itemCount: provider.chatMessages.length,
                       itemBuilder: (context, index) {
                         final message = provider.chatMessages[index];
-                        return _buildChatBubble(theme, message, index, provider, isDark);
+                        return _buildChatBubble(
+                          theme,
+                          message,
+                          index,
+                          provider,
+                          isDark,
+                        );
                       },
                     ),
             ),
@@ -359,7 +429,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -370,7 +443,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                         child: const PastelGradientCard(
                           type: PastelCardType.slate,
                           borderRadius: 16,
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -414,16 +490,22 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                       padding: const EdgeInsets.only(right: 8.0),
                       child: ActionChip(
                         elevation: 0,
-                        backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                        backgroundColor: isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFE2E8F0),
                         side: BorderSide(
-                          color: isDark ? Colors.white10 : const Color(0xFFCBD5E1),
+                          color: isDark
+                              ? Colors.white10
+                              : const Color(0xFFCBD5E1),
                         ),
                         label: Text(
                           prompt,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
                           ),
                         ),
                         onPressed: () {
@@ -442,16 +524,13 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
             AnimatedPadding(
               duration: const Duration(milliseconds: 150),
               curve: Curves.easeOut,
-              padding: EdgeInsets.fromLTRB(
-                16,
-                4,
-                16,
-                isKeyboardOpen ? 8 : 20,
-              ),
+              padding: EdgeInsets.fromLTRB(16, 4, 16, isKeyboardOpen ? 8 : 20),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFF1F5F9),
                   border: Border.all(
                     color: isDark ? Colors.white12 : const Color(0xFFCBD5E1),
                     width: 1,
@@ -464,7 +543,11 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                     IconButton(
                       icon: Icon(
                         _isDictating ? Icons.mic : Icons.mic_none_rounded,
-                        color: _isDictating ? Colors.redAccent : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                        color: _isDictating
+                            ? Colors.redAccent
+                            : (isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF475569)),
                         size: 22,
                       ),
                       tooltip: 'Voice Input',
@@ -478,13 +561,17 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                         minLines: 1,
                         textInputAction: TextInputAction.send,
                         style: GoogleFonts.inter(
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                           fontSize: 14,
                         ),
                         decoration: InputDecoration(
                           hintText: 'Ask Coach Gerex anything...',
                           hintStyle: GoogleFonts.inter(
-                            color: isDark ? const Color(0x99F1F5F9) : const Color(0x99475569),
+                            color: isDark
+                                ? const Color(0x99F1F5F9)
+                                : const Color(0x99475569),
                             fontSize: 14,
                           ),
                           border: InputBorder.none,
@@ -497,9 +584,9 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                         onSubmitted: (val) {
                           final error = Validators.validateAiChatInput(val);
                           if (error != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(error)),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(error)));
                             return;
                           }
                           provider.sendMessageToCoach(val.trim());
@@ -513,14 +600,18 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                       radius: 20,
                       backgroundColor: AppColors.accentEmeraldDeep,
                       child: IconButton(
-                        icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                        icon: const Icon(
+                          Icons.send_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         onPressed: () {
                           final text = _messageController.text;
                           final error = Validators.validateAiChatInput(text);
                           if (error != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(error)),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(error)));
                             return;
                           }
                           provider.sendMessageToCoach(text.trim());
@@ -637,44 +728,63 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
     final text = message['text'] ?? '';
     final source = message['source'] ?? 'online';
     final feedback = message['feedback'];
-    final isError = message['isError'] == 'true' || text.contains('Sorry, I hit an issue');
+    final isError =
+        message['isError'] == 'true' || text.contains('Sorry, I hit an issue');
 
     final statusBgColor = isDark
-        ? (source == 'offline' ? const Color(0x2610B981) : const Color(0x266366F1))
-        : (source == 'offline' ? const Color(0x1F059669) : const Color(0x1F4338CA));
+        ? (source == 'offline'
+              ? const Color(0x2610B981)
+              : const Color(0x266366F1))
+        : (source == 'offline'
+              ? const Color(0x1F059669)
+              : const Color(0x1F4338CA));
 
     final statusBorderColor = isDark
-        ? (source == 'offline' ? const Color(0x4010B981) : const Color(0x406366F1))
-        : (source == 'offline' ? const Color(0x40059669) : const Color(0x404338CA));
+        ? (source == 'offline'
+              ? const Color(0x4010B981)
+              : const Color(0x406366F1))
+        : (source == 'offline'
+              ? const Color(0x40059669)
+              : const Color(0x404338CA));
 
     final statusTextColor = isDark
-        ? (source == 'offline' ? const Color(0xFF34D399) : const Color(0xFF818CF8))
-        : (source == 'offline' ? const Color(0xFF047857) : const Color(0xFF4338CA));
+        ? (source == 'offline'
+              ? const Color(0xFF34D399)
+              : const Color(0xFF818CF8))
+        : (source == 'offline'
+              ? const Color(0xFF047857)
+              : const Color(0xFF4338CA));
 
-    final askCloudTextColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
+    final askCloudTextColor = isDark
+        ? const Color(0xFF38BDF8)
+        : const Color(0xFF0284C7);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
-          if (!isUser) ...[
-            _buildRobotAvatar(),
-            const SizedBox(width: 8),
-          ],
+          if (!isUser) ...[_buildRobotAvatar(), const SizedBox(width: 8)],
           Flexible(
             child: Container(
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.78,
               ),
               child: Column(
-                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   PastelGradientCard(
                     type: isUser ? PastelCardType.sky : PastelCardType.violet,
                     borderRadius: 16,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: _buildMarkdownBody(text),
                   ),
                   const SizedBox(height: 4),
@@ -686,7 +796,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                         spacing: 8,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: statusBgColor,
                               borderRadius: BorderRadius.circular(6),
@@ -734,7 +847,9 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                                   Clipboard.setData(ClipboardData(text: text));
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Copied response to clipboard'),
+                                      content: Text(
+                                        'Copied response to clipboard',
+                                      ),
                                       duration: Duration(seconds: 2),
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -745,14 +860,19 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                                   child: Icon(
                                     Icons.content_copy_rounded,
                                     size: 13,
-                                    color: isDark ? Colors.white60 : const Color(0xFF475569),
+                                    color: isDark
+                                        ? Colors.white60
+                                        : const Color(0xFF475569),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
                               // Thumbs up
                               InkWell(
-                                onTap: () => provider.setMessageFeedback(index, 'helpful'),
+                                onTap: () => provider.setMessageFeedback(
+                                  index,
+                                  'helpful',
+                                ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Icon(
@@ -762,14 +882,19 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                                     size: 13,
                                     color: feedback == 'helpful'
                                         ? AppColors.accentEmeraldLight
-                                        : (isDark ? Colors.white60 : const Color(0xFF475569)),
+                                        : (isDark
+                                              ? Colors.white60
+                                              : const Color(0xFF475569)),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
                               // Thumbs down
                               InkWell(
-                                onTap: () => provider.setMessageFeedback(index, 'unhelpful'),
+                                onTap: () => provider.setMessageFeedback(
+                                  index,
+                                  'unhelpful',
+                                ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Icon(
@@ -779,7 +904,9 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                                     size: 13,
                                     color: feedback == 'unhelpful'
                                         ? Colors.redAccent
-                                        : (isDark ? Colors.white60 : const Color(0xFF475569)),
+                                        : (isDark
+                                              ? Colors.white60
+                                              : const Color(0xFF475569)),
                                   ),
                                 ),
                               ),
@@ -790,13 +917,18 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Icon(
-                                    (_isSpeaking && _speakingMessageIndex == index)
+                                    (_isSpeaking &&
+                                            _speakingMessageIndex == index)
                                         ? Icons.volume_up_rounded
                                         : Icons.volume_mute_outlined,
                                     size: 14,
-                                    color: (_isSpeaking && _speakingMessageIndex == index)
+                                    color:
+                                        (_isSpeaking &&
+                                            _speakingMessageIndex == index)
                                         ? AppColors.accentEmeraldLight
-                                        : (isDark ? Colors.white60 : const Color(0xFF475569)),
+                                        : (isDark
+                                              ? Colors.white60
+                                              : const Color(0xFF475569)),
                                   ),
                                 ),
                               ),
@@ -806,16 +938,29 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
                             GestureDetector(
                               onTap: () => provider.retryLastFailedMessage(),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: Colors.redAccent.withValues(alpha: 0.15),
+                                  color: Colors.redAccent.withValues(
+                                    alpha: 0.15,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+                                  border: Border.all(
+                                    color: Colors.redAccent.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.refresh_rounded, size: 11, color: Colors.redAccent),
+                                    const Icon(
+                                      Icons.refresh_rounded,
+                                      size: 11,
+                                      color: Colors.redAccent,
+                                    ),
                                     const SizedBox(width: 2),
                                     Text(
                                       'Retry',
@@ -862,7 +1007,14 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('• ', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text(
+                  '• ',
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 Expanded(child: _parseFormattedInlineText(content)),
               ],
             ),
@@ -944,7 +1096,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
         spans.add(
           TextSpan(
             text: match.group(1),
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
           ),
         );
       } else if (match.group(2) != null) {
@@ -952,7 +1107,10 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
         spans.add(
           TextSpan(
             text: match.group(2),
-            style: const TextStyle(fontStyle: FontStyle.italic, color: Color(0xFF0F172A)),
+            style: const TextStyle(
+              fontStyle: FontStyle.italic,
+              color: Color(0xFF0F172A),
+            ),
           ),
         );
       }
