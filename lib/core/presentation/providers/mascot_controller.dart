@@ -237,16 +237,41 @@ class MascotController extends ChangeNotifier {
     triggerWorkoutCompletion();
   }
 
-  /// Trigger workout completion sequence: exercise (flex pose) -> recovery pose (sweating/tired) -> idle.
-  void triggerWorkoutCompletion() {
+  /// Trigger pushup workout animation sequence: pushup -> recovery pose (sweating/tired) -> idle.
+  void triggerPushup({Duration duration = const Duration(milliseconds: 3200)}) {
     _cancelReturnTimers();
-    _currentState = MascotState.exercise;
+    _currentState = MascotState.pushup;
     _lastActionTime = DateTime.now();
     notifyListeners();
 
-    // Step 1: Hold exercise/flex pose for 2.8s
+    _sequenceTimer = Timer(duration, () {
+      if (_currentState == MascotState.pushup) {
+        final recoveryOptions = [
+          MascotState.sweating,
+          MascotState.sweatingAndTired,
+          MascotState.tired,
+        ];
+        _currentState = recoveryOptions[_random.nextInt(recoveryOptions.length)];
+        notifyListeners();
+
+        _stateReturnTimer = Timer(const Duration(milliseconds: 2500), () {
+          resetToIdle();
+        });
+      }
+    });
+  }
+
+  /// Trigger workout completion sequence: exercise or pushup -> recovery pose (sweating/tired) -> idle.
+  void triggerWorkoutCompletion() {
+    _cancelReturnTimers();
+    // Randomly select between exercise (flex pose) and pushup workout animation
+    _currentState = _random.nextBool() ? MascotState.exercise : MascotState.pushup;
+    _lastActionTime = DateTime.now();
+    notifyListeners();
+
+    // Step 1: Hold exercise/pushup pose for 2.8s
     _sequenceTimer = Timer(const Duration(milliseconds: 2800), () {
-      if (_currentState == MascotState.exercise) {
+      if (_currentState == MascotState.exercise || _currentState == MascotState.pushup) {
         // Choose recovery state: sweating, tired, or sweatingAndTired
         final recoveryOptions = [
           MascotState.sweating,
@@ -264,7 +289,7 @@ class MascotController extends ChangeNotifier {
     });
   }
 
-  /// Trigger specific momentary pose (exercise, sweating, tired, sweatingAndTired, smiling).
+  /// Trigger specific momentary pose (exercise, pushup, sweating, tired, sweatingAndTired, smiling).
   void triggerPose(MascotState state, {Duration duration = const Duration(milliseconds: 2800)}) {
     _cancelReturnTimers();
     _currentState = state;
@@ -293,16 +318,19 @@ class MascotController extends ChangeNotifier {
         final now = DateTime.now();
         if (_lastActionTime == null || now.difference(_lastActionTime!).inSeconds > 5) {
           final roll = _random.nextDouble();
-          if (roll < 0.30) {
+          if (roll < 0.25) {
             // Waving smile greeting
             triggerPose(MascotState.smiling, duration: const Duration(milliseconds: 3000));
-          } else if (roll < 0.55) {
+          } else if (roll < 0.45) {
             // Marching walk animation
             triggerWalking();
-          } else if (roll < 0.75) {
+          } else if (roll < 0.65) {
+            // Pushup workout animation
+            triggerPushup();
+          } else if (roll < 0.80) {
             // Workout flex celebration
             triggerWorkoutCompletion();
-          } else if (roll < 0.90) {
+          } else if (roll < 0.92) {
             // Energetic run burst
             triggerRunning();
           } else {

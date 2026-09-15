@@ -348,6 +348,9 @@ class _MascotAiHubBottomSheetState extends State<MascotAiHubBottomSheet> {
                                   case MascotState.exercise:
                                     controller.triggerWorkoutCompletion();
                                     break;
+                                  case MascotState.pushup:
+                                    controller.triggerPushup();
+                                    break;
                                   default:
                                     controller.triggerPose(s, duration: const Duration(seconds: 4));
                                     break;

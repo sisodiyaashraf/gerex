@@ -61,9 +61,21 @@ void main() {
       expect(controller.activeConfig.frameCount, equals(6));
     });
 
-    test('triggerWorkoutCompletion initializes exercise state', () {
+    test('triggerPushup initializes pushup state', () {
+      controller.triggerPushup();
+      expect(controller.currentState, equals(MascotState.pushup));
+      expect(controller.activeConfig.columns, equals(3));
+      expect(controller.activeConfig.rows, equals(2));
+      expect(controller.activeConfig.frameCount, equals(6));
+    });
+
+    test('triggerWorkoutCompletion initializes exercise or pushup state', () {
       controller.triggerWorkoutCompletion();
-      expect(controller.currentState, equals(MascotState.exercise));
+      expect(
+        controller.currentState == MascotState.exercise ||
+            controller.currentState == MascotState.pushup,
+        isTrue,
+      );
       expect(controller.activeConfig.columns, equals(3));
       expect(controller.activeConfig.rows, equals(2));
     });

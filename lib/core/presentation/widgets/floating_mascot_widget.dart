@@ -203,7 +203,7 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     }
 
     _tapCount++;
-    final mode = _tapCount % 4;
+    final mode = _tapCount % 5;
 
     if (mode == 1) {
       mascotController.triggerWalking();
@@ -212,6 +212,8 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       mascotController.triggerRunning();
       _scheduleDisappearTimer();
     } else if (mode == 3) {
+      mascotController.triggerPushup();
+    } else if (mode == 4) {
       mascotController.triggerWorkoutCompletion();
     } else {
       _openHubSheet(mascotController);
