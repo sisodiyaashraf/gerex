@@ -156,8 +156,18 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   void _processCameraImage(CameraImage image) async {
-    if (_isProcessing || _isPausedByGesture) return;
     final now = DateTime.now();
+    
+    // Watchdog safety: unlock stuck processing state if > 1500ms elapse
+    if (_isProcessing) {
+      if (now.difference(_lastProcessedAt).inMilliseconds > 1500) {
+        _isProcessing = false;
+      } else {
+        return;
+      }
+    }
+    
+    if (_isPausedByGesture) return;
     if (now.difference(_lastProcessedAt).inMilliseconds < _throttleMs) return;
     _lastProcessedAt = now;
     _isProcessing = true;
@@ -169,21 +179,13 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       }
       final bytes = allBytes.done().buffer.asUint8List();
 
-      final InputImageFormat format = defaultTargetPlatform == TargetPlatform.android
+      InputImageFormat? format = InputImageFormatValue.fromRawValue(image.format.raw);
+      format ??= (defaultTargetPlatform == TargetPlatform.android
           ? InputImageFormat.nv21
-          : InputImageFormat.bgra8888;
+          : InputImageFormat.bgra8888);
 
       final int sensorOrientation = _cameraController?.description.sensorOrientation ?? 270;
-      InputImageRotation rotation;
-      if (sensorOrientation == 90) {
-        rotation = InputImageRotation.rotation90deg;
-      } else if (sensorOrientation == 180) {
-        rotation = InputImageRotation.rotation180deg;
-      } else if (sensorOrientation == 270) {
-        rotation = InputImageRotation.rotation270deg;
-      } else {
-        rotation = InputImageRotation.rotation0deg;
-      }
+      final InputImageRotation rotation = InputImageRotationValue.fromRawValue(sensorOrientation) ?? InputImageRotation.rotation0deg;
 
       final inputImage = InputImage.fromBytes(
         bytes: bytes,
@@ -191,19 +193,30 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           size: Size(image.width.toDouble(), image.height.toDouble()),
           rotation: rotation,
           format: format,
-          bytesPerRow: image.planes[0].bytesPerRow,
+          bytesPerRow: image.planes.isNotEmpty ? image.planes[0].bytesPerRow : image.width,
         ),
       );
 
       final poses = await _poseDetectorService.processImage(inputImage);
-      if (poses.isNotEmpty && mounted) {
-        final pose = poses.first;
-        final hands = _handLandmarkService.extractHandsFromPose(pose, _cameraPreviewSize);
-
-        _processHandGestures(hands, pose);
-        _updatePoseState(pose, hands);
+      if (mounted) {
+        if (poses.isNotEmpty) {
+          final pose = poses.first;
+          final hands = _handLandmarkService.extractHandsFromPose(pose, _cameraPreviewSize);
+          _processHandGestures(hands, pose);
+          _updatePoseState(pose, hands);
+        } else {
+          setState(() {
+            _feedbackMessage = 'No body detected — step into camera frame';
+            _isGoodForm = false;
+          });
+        }
       }
-    } catch (_) {
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _feedbackMessage = 'Scanning frame...';
+        });
+      }
     } finally {
       _isProcessing = false;
     }
