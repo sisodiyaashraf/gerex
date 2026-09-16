@@ -252,8 +252,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   void _processHandGestures(List<HandSkeleton> hands, Pose pose) {
     if (!_enableGesturePause) return;
     if (_resumeCooldownUntil != null &&
-        DateTime.now().isBefore(_resumeCooldownUntil!))
+        DateTime.now().isBefore(_resumeCooldownUntil!)) {
       return;
+    }
 
     for (final hand in hands) {
       final gesture = _handLandmarkService.detectGesture(hand);
@@ -545,8 +546,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       onChanged: (val) {
                         setState(() {
                           _isSimulationMode = val;
-                          if (!val && !_isCameraInitialized)
+                          if (!val && !_isCameraInitialized) {
                             _initializeCamera();
+                          }
                         });
                       },
                     ),
