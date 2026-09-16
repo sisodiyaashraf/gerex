@@ -533,4 +533,81 @@ class FormAnalyzer {
       progress: progress.clamp(0.0, 1.0),
     );
   }
+
+  /// Analyzes bicep curl form and rep counting.
+  static FormFeedback analyzeBicepCurl({
+    required Pose pose,
+    required String currentPhase,
+    required Function(String nextPhase) onPhaseChanged,
+    required Function() onRepCompleted,
+    double? wristRotationAngle,
+  }) {
+    final shoulder = getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+    final elbow = getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? getValidLandmark(pose, PoseLandmarkType.rightElbow);
+    final wrist = getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? getValidLandmark(pose, PoseLandmarkType.rightWrist);
+
+    if (shoulder == null || elbow == null || wrist == null) {
+      return FormFeedback(message: "Show upper body clearly", isGoodForm: false, progress: 0.0);
+    }
+
+    final elbowAngle = calculateAngle(shoulder, elbow, wrist);
+    final progress = ((170.0 - elbowAngle) / 110.0).clamp(0.0, 1.0);
+
+    bool wristFormOk = true;
+    String wristFeedback = "";
+    if (wristRotationAngle != null && wristRotationAngle > 35.0) {
+      wristFormOk = false;
+      wristFeedback = " Keep wrists straight!";
+    }
+
+    if (currentPhase == 'up' && elbowAngle < 70.0) {
+      onPhaseChanged('down');
+      return FormFeedback(message: "Top of curl! Squeeze bicep$wristFeedback", isGoodForm: wristFormOk, progress: 1.0);
+    } else if (currentPhase == 'down' && elbowAngle > 155.0) {
+      onPhaseChanged('up');
+      onRepCompleted();
+      return FormFeedback(message: "Rep complete! Lower with control$wristFeedback", isGoodForm: wristFormOk, progress: 0.0);
+    }
+
+    return FormFeedback(
+      message: currentPhase == 'up' ? "Curl weight upward$wristFeedback" : "Lower arm smoothly$wristFeedback",
+      isGoodForm: wristFormOk,
+      progress: progress,
+    );
+  }
+
+  /// Analyzes shoulder press form and rep counting.
+  static FormFeedback analyzeShoulderPress({
+    required Pose pose,
+    required String currentPhase,
+    required Function(String nextPhase) onPhaseChanged,
+    required Function() onRepCompleted,
+  }) {
+    final shoulder = getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+    final elbow = getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? getValidLandmark(pose, PoseLandmarkType.rightElbow);
+    final wrist = getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? getValidLandmark(pose, PoseLandmarkType.rightWrist);
+
+    if (shoulder == null || elbow == null || wrist == null) {
+      return FormFeedback(message: "Position arms in camera view", isGoodForm: false, progress: 0.0);
+    }
+
+    final elbowAngle = calculateAngle(shoulder, elbow, wrist);
+    final progress = ((elbowAngle - 80.0) / 90.0).clamp(0.0, 1.0);
+
+    if (currentPhase == 'up' && elbowAngle > 160.0 && wrist.y < shoulder.y) {
+      onPhaseChanged('down');
+      return FormFeedback(message: "Full overhead extension!", isGoodForm: true, progress: 1.0);
+    } else if (currentPhase == 'down' && elbowAngle < 90.0) {
+      onPhaseChanged('up');
+      onRepCompleted();
+      return FormFeedback(message: "Rep complete! Press upward", isGoodForm: true, progress: 0.0);
+    }
+
+    return FormFeedback(
+      message: currentPhase == 'up' ? "Press overhead" : "Lower to shoulder level",
+      isGoodForm: true,
+      progress: progress,
+    );
+  }
 }
+
