@@ -45,11 +45,21 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.1
   flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.6
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/images/app icon/gerex-app-icon.jpeg"
+
+flutter_native_splash:
+  color: "#12132A"
+  image: "assets/images/app icon/gerex splash_screen.jpeg"
+  android_12:
+    image: "assets/images/app icon/gerex splash_screen.jpeg"
+    icon_background_color: "#12132A"
+    color: "#12132A"
+
 
 flutter:
   uses-material-design: true
