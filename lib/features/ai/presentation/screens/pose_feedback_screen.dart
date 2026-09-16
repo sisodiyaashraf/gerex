@@ -50,7 +50,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   };
 
   // Target reps configuration
-  int _targetReps = 10;
+  final int _targetReps = 10;
 
   // Gesture State & Pause
   bool _isPausedByGesture = false;
@@ -78,7 +78,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   // Simulation demo controls
   double _simKneeAngle = 180.0;
-  double _simSpineAngle = 0.0;
+  final double _simSpineAngle = 0.0;
   double _simElbowAngle = 180.0;
   bool _simPalmGesture = false;
   bool _simThumbsUpGesture = false;
