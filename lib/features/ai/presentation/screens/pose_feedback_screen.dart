@@ -526,6 +526,45 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       ),
                     ),
 
+                  // 4.5 Paused by Gesture Overlay Banner
+                  if (_isPausedByGesture)
+                    Positioned(
+                      top: 180,
+                      left: 24,
+                      right: 40,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isPausedByGesture = false;
+                            _showGestureNotice('Detection Resumed');
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade900.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.amberAccent, width: 2),
+                            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10)],
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.pause_circle_filled_rounded, color: Colors.white, size: 22),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '✋ Detection Paused by Gesture — Tap to Resume',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // 5. Active Header UI & Notifications
                   if (!_isCalibrating)
                     Positioned(
@@ -876,7 +915,22 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                 _freestyleTally.updateAll((key, value) => 0);
               }),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: _isPausedByGesture ? Colors.orange.shade800 : const Color(0xFF0D807B)),
+                backgroundColor: _isPausedByGesture ? Colors.orange.shade50 : null,
+              ),
+              icon: Icon(_isPausedByGesture ? Icons.play_arrow_rounded : Icons.pause_rounded, color: _isPausedByGesture ? Colors.orange.shade800 : const Color(0xFF0D807B), size: 18),
+              label: Text(_isPausedByGesture ? 'Resume' : 'Pause', style: TextStyle(color: _isPausedByGesture ? Colors.orange.shade800 : const Color(0xFF0D807B), fontWeight: FontWeight.bold, fontSize: 12)),
+              onPressed: () {
+                setState(() {
+                  _isPausedByGesture = !_isPausedByGesture;
+                  _showGestureNotice(_isPausedByGesture ? '✋ AI Paused' : 'AI Resumed');
+                });
+              },
+            ),
+            const SizedBox(width: 8),
             Consumer<ProfileProvider>(
               builder: (context, profileProvider, _) {
                 final bool ghostEnabled = profileProvider.ghostTrainerEnabled;
