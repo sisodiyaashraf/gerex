@@ -542,6 +542,20 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                             _feedbackMessage,
                             _isGoodForm ? AppColors.accentEmeraldLight : Colors.orange,
                           ),
+                          const SizedBox(height: 6),
+
+                          // Live rep progress indicator
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: _repProgress,
+                              minHeight: 4,
+                              backgroundColor: Colors.white12,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _isGoodForm ? AppColors.accentEmeraldLight : Colors.orange,
+                              ),
+                            ),
+                          ),
 
                           // Multi-exercise Live Tally Panel (Freestyle Mode)
                           if (_isFreestyleMode) ...[
