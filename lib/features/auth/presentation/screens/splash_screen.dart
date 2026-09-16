@@ -37,40 +37,44 @@ class SplashScreen extends StatelessWidget {
                 children: [
                   Hero(
                     tag: 'app_splash_logo',
-                    child: Container(
-                      maxWidth: size.width * 0.75,
-                      maxHeight: size.height * 0.45,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accentEmeraldLight.withValues(alpha: 0.25),
-                            blurRadius: 32,
-                            spreadRadius: 4,
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: size.width * 0.75,
+                        maxHeight: size.height * 0.45,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: Image.asset(
-                          'assets/images/app icon/gerex splash_screen.jpeg',
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              padding: const EdgeInsets.all(32),
-                              color: AppColors.cardDarkGlass,
-                              child: const Icon(
-                                Icons.fitness_center_rounded,
-                                size: 80,
-                                color: AppColors.accentEmeraldLight,
-                              ),
-                            );
-                          },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accentEmeraldLight.withValues(alpha: 0.25),
+                              blurRadius: 32,
+                              spreadRadius: 4,
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: Image.asset(
+                            'assets/images/app icon/gerex splash_screen.jpeg',
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                padding: const EdgeInsets.all(32),
+                                color: AppColors.cardDarkGlass,
+                                child: const Icon(
+                                  Icons.fitness_center_rounded,
+                                  size: 80,
+                                  color: AppColors.accentEmeraldLight,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
