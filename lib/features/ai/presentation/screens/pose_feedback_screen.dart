@@ -6,6 +6,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../../data/services/pose_detector_service.dart';
 import '../../data/services/form_analyzer.dart';
 import '../../data/services/exercise_classifier.dart';
+import '../../data/services/hand_landmark_service.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -14,7 +15,7 @@ import '../../../profile/presentation/providers/profile_provider.dart';
 
 class PoseFeedbackScreen extends StatefulWidget {
   /// Optional: if provided, form-check mode targets this specific exercise.
-  final String? targetExercise; // 'squat', 'push_up', 'jumping_jack', 'plank', or 'custom'
+  final String? targetExercise; // 'squat', 'push_up', 'bicep_curl', 'shoulder_press', 'jumping_jack', 'plank'
   final Map<String, dynamic>? customPattern; // for custom exercise reference
 
   const PoseFeedbackScreen({
@@ -31,32 +32,56 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     with TickerProviderStateMixin {
   CameraController? _cameraController;
   final PoseDetectorService _poseDetectorService = PoseDetectorService();
-  
+  final HandLandmarkService _handLandmarkService = HandLandmarkService();
+
   bool _isCameraInitialized = false;
   bool _isSimulationMode = kIsWeb;
   bool _isCalibrating = true;
   bool _isProcessing = false;
-  
-  // Last detected pose landmarks (for skeleton painter)
+
+  // Freestyle vs Targeted Mode
+  late bool _isFreestyleMode;
+  final Map<String, int> _freestyleTally = {
+    'Push-up': 0,
+    'Squat': 0,
+    'Bicep Curl': 0,
+    'Shoulder Press': 0,
+    'Jumping Jack': 0,
+  };
+
+  // Target reps configuration
+  int _targetReps = 10;
+
+  // Gesture State & Pause
+  bool _isPausedByGesture = false;
+  String? _gestureNotice;
+  DateTime? _noticeDismissAt;
+
+  // Last detected pose & hand landmarks (for skeleton painter)
   Pose? _lastPose;
+  List<HandSkeleton> _lastHands = [];
   Size _cameraPreviewSize = Size.zero;
 
-  // Rep counting state
+  // Rep counting & Form State
   int _repCount = 0;
   String _currentPhase = 'up';
-  double _maxFlexion = 180.0; // track extreme reached this rep
+  double _maxFlexion = 180.0;
   String _feedbackMessage = 'Get into position...';
   bool _isGoodForm = true;
   double _repProgress = 0.0;
+  double _currentJointAngle = 180.0;
+  PoseLandmarkType _primaryJointType = PoseLandmarkType.leftKnee;
 
   // Classifier state
   String? _classifiedExercise;
   String? _mismatchNotice;
 
-  // Simulation demo angles
-  double _kneeAngle = 180.0;
-  double _spineAngle = 0.0;
-  double _elbowAngle = 180.0;
+  // Simulation demo controls
+  double _simKneeAngle = 180.0;
+  double _simSpineAngle = 0.0;
+  double _simElbowAngle = 180.0;
+  bool _simPalmGesture = false;
+  bool _simThumbsUpGesture = false;
 
   // Throttle
   DateTime _lastProcessedAt = DateTime.now();
@@ -69,6 +94,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   @override
   void initState() {
     super.initState();
+    _isFreestyleMode = widget.targetExercise == null;
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -82,7 +109,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       _initializeCamera();
     }
 
-    // Auto dismiss calibration state after 1.5 seconds
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         setState(() => _isCalibrating = false);
@@ -130,7 +156,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   void _processCameraImage(CameraImage image) async {
-    if (_isProcessing) return;
+    if (_isProcessing || _isPausedByGesture) return;
     final now = DateTime.now();
     if (now.difference(_lastProcessedAt).inMilliseconds < _throttleMs) return;
     _lastProcessedAt = now;
@@ -171,7 +197,11 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
       final poses = await _poseDetectorService.processImage(inputImage);
       if (poses.isNotEmpty && mounted) {
-        _updatePoseState(poses.first);
+        final pose = poses.first;
+        final hands = _handLandmarkService.extractHandsFromPose(pose, _cameraPreviewSize);
+
+        _processHandGestures(hands, pose);
+        _updatePoseState(pose, hands);
       }
     } catch (_) {
     } finally {
@@ -179,20 +209,67 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     }
   }
 
-  void _updatePoseState(Pose pose) {
-    final classifiedEx = ExerciseClassifier.classify(pose);
-    final targetEx = widget.targetExercise ?? classifiedEx;
+  void _processHandGestures(List<HandSkeleton> hands, Pose pose) {
+    for (final hand in hands) {
+      final gesture = _handLandmarkService.detectGesture(hand);
+      if (gesture == HandGesture.openPalm) {
+        setState(() {
+          _isPausedByGesture = !_isPausedByGesture;
+          _showGestureNotice(_isPausedByGesture ? '✋ Open Palm: Detection Paused' : '✋ Open Palm: Detection Resumed');
+        });
+        break;
+      } else if (gesture == HandGesture.thumbsUp) {
+        setState(() {
+          _showGestureNotice('👍 Thumbs Up: Set Completed!');
+        });
+        break;
+      }
+    }
+  }
 
-    // Check for mismatch notice
+  void _showGestureNotice(String msg) {
+    _gestureNotice = msg;
+    _noticeDismissAt = DateTime.now().add(const Duration(seconds: 3));
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _noticeDismissAt != null && DateTime.now().isAfter(_noticeDismissAt!)) {
+        setState(() => _gestureNotice = null);
+      }
+    });
+  }
+
+  void _updatePoseState(Pose pose, List<HandSkeleton> hands) {
+    final classifiedEx = ExerciseClassifier.classify(pose);
+
+    // Active Exercise determination
+    final activeKey = _isFreestyleMode
+        ? (classifiedEx ?? 'squat')
+        : (widget.targetExercise ?? classifiedEx ?? 'squat');
+
     String? mismatch;
-    if (widget.targetExercise != null &&
-        classifiedEx != null &&
-        classifiedEx != widget.targetExercise) {
-      mismatch = 'This looks more like a ${_exerciseName(classifiedEx)} than a ${_exerciseName(widget.targetExercise!)} — switch?';
+    if (!_isFreestyleMode && widget.targetExercise != null && classifiedEx != null && classifiedEx != widget.targetExercise) {
+      mismatch = 'This looks like ${_exerciseDisplayName(classifiedEx)} — switch?';
+    }
+
+    // Wrist rotation check for bicep curl
+    double? wristRotation;
+    if (hands.isNotEmpty) {
+      final elbow = pose.landmarks[PoseLandmarkType.leftElbow] ?? pose.landmarks[PoseLandmarkType.rightElbow];
+      wristRotation = _handLandmarkService.getWristRotationAngle(hands.first, elbow);
     }
 
     FormFeedback? feedback;
-    if (targetEx == 'squat') {
+    double currentAngle = 180.0;
+    PoseLandmarkType vertexJoint = PoseLandmarkType.leftKnee;
+
+    if (activeKey == 'squat') {
+      vertexJoint = PoseLandmarkType.leftKnee;
+      final hip = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftHip) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightHip);
+      final knee = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftKnee) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightKnee);
+      final ankle = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftAnkle) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightAnkle);
+      if (hip != null && knee != null && ankle != null) {
+        currentAngle = FormAnalyzer.calculateAngle(hip, knee, ankle);
+      }
+
       feedback = FormAnalyzer.analyzeSquat(
         pose: pose,
         currentPhase: _currentPhase,
@@ -201,9 +278,17 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           _currentPhase = p;
           if (p == 'down') _maxFlexion = 180.0;
         },
-        onRepCompleted: () => setState(() => _repCount++),
+        onRepCompleted: () => _handleRepCompleted('Squat'),
       );
-    } else if (targetEx == 'push_up') {
+    } else if (activeKey == 'push_up') {
+      vertexJoint = PoseLandmarkType.leftElbow;
+      final shoulder = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      final elbow = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
+      final wrist = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
+      if (shoulder != null && elbow != null && wrist != null) {
+        currentAngle = FormAnalyzer.calculateAngle(shoulder, elbow, wrist);
+      }
+
       feedback = FormAnalyzer.analyzePushUp(
         pose: pose,
         currentPhase: _currentPhase,
@@ -212,18 +297,52 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           _currentPhase = p;
           if (p == 'down') _maxFlexion = 180.0;
         },
-        onRepCompleted: () => setState(() => _repCount++),
+        onRepCompleted: () => _handleRepCompleted('Push-up'),
       );
-    } else if (targetEx == 'jumping_jack') {
+    } else if (activeKey == 'bicep_curl') {
+      vertexJoint = PoseLandmarkType.leftElbow;
+      final shoulder = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      final elbow = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
+      final wrist = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
+      if (shoulder != null && elbow != null && wrist != null) {
+        currentAngle = FormAnalyzer.calculateAngle(shoulder, elbow, wrist);
+      }
+
+      feedback = FormAnalyzer.analyzeBicepCurl(
+        pose: pose,
+        currentPhase: _currentPhase,
+        onPhaseChanged: (p) => _currentPhase = p,
+        onRepCompleted: () => _handleRepCompleted('Bicep Curl'),
+        wristRotationAngle: wristRotation,
+      );
+    } else if (activeKey == 'shoulder_press') {
+      vertexJoint = PoseLandmarkType.leftElbow;
+      final shoulder = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      final elbow = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
+      final wrist = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
+      if (shoulder != null && elbow != null && wrist != null) {
+        currentAngle = FormAnalyzer.calculateAngle(shoulder, elbow, wrist);
+      }
+
+      feedback = FormAnalyzer.analyzeShoulderPress(
+        pose: pose,
+        currentPhase: _currentPhase,
+        onPhaseChanged: (p) => _currentPhase = p,
+        onRepCompleted: () => _handleRepCompleted('Shoulder Press'),
+      );
+    } else if (activeKey == 'jumping_jack') {
+      vertexJoint = PoseLandmarkType.leftShoulder;
       feedback = FormAnalyzer.analyzeJumpingJack(
         pose: pose,
         currentPhase: _currentPhase,
         onPhaseChanged: (p) => _currentPhase = p,
-        onRepCompleted: () => setState(() => _repCount++),
+        onRepCompleted: () => _handleRepCompleted('Jumping Jack'),
       );
-    } else if (targetEx == 'plank') {
+    } else if (activeKey == 'plank') {
+      vertexJoint = PoseLandmarkType.leftHip;
       feedback = FormAnalyzer.analyzePlank(pose: pose);
     } else if (widget.customPattern != null) {
+      vertexJoint = PoseLandmarkType.leftKnee;
       feedback = FormAnalyzer.analyzeCustom(
         pose: pose,
         pattern: widget.customPattern!,
@@ -233,26 +352,38 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           _currentPhase = p;
           if (p == 'down') _maxFlexion = 180.0;
         },
-        onRepCompleted: () => setState(() => _repCount++),
+        onRepCompleted: () => _handleRepCompleted('Custom'),
       );
     }
 
     if (mounted) {
       setState(() {
         _lastPose = pose;
+        _lastHands = hands;
         _classifiedExercise = classifiedEx;
         _mismatchNotice = mismatch;
+        _currentJointAngle = currentAngle;
+        _primaryJointType = vertexJoint;
+
         if (feedback != null) {
           _feedbackMessage = feedback.message;
           _isGoodForm = feedback.isGoodForm;
           _repProgress = feedback.progress;
-          // Track max flexion during rep
           if (_currentPhase == 'down' && feedback.progress < _maxFlexion) {
             _maxFlexion = feedback.progress;
           }
         }
       });
     }
+  }
+
+  void _handleRepCompleted(String exerciseName) {
+    setState(() {
+      _repCount++;
+      if (_freestyleTally.containsKey(exerciseName)) {
+        _freestyleTally[exerciseName] = (_freestyleTally[exerciseName] ?? 0) + 1;
+      }
+    });
   }
 
   @override
@@ -267,9 +398,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final targetLabel = widget.targetExercise != null
-        ? _exerciseName(widget.targetExercise!)
-        : 'Auto-Detect';
+    final activeExerciseLabel = _isFreestyleMode
+        ? (_classifiedExercise != null ? _exerciseDisplayName(_classifiedExercise!) : 'Freestyle Detect')
+        : (widget.targetExercise != null ? _exerciseDisplayName(widget.targetExercise!) : 'Auto-Detect');
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -277,13 +408,33 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         title: Text(
-          'Live AI Detector — $targetLabel',
+          'Live AI Form Check — $activeExerciseLabel',
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
         actions: [
+          // Mode Selector (Targeted vs Freestyle)
+          ChoiceChip(
+            label: Text(
+              _isFreestyleMode ? 'Freestyle' : 'Targeted',
+              style: TextStyle(
+                color: _isFreestyleMode ? Colors.white : AppColors.accentEmeraldLight,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            selected: _isFreestyleMode,
+            selectedColor: AppColors.accentEmeraldLight.withValues(alpha: 0.3),
+            backgroundColor: Colors.white10,
+            onSelected: (val) {
+              setState(() {
+                _isFreestyleMode = val;
+              });
+            },
+          ),
+          const SizedBox(width: 8),
           Row(
             children: [
-              const Text('Simulate', style: TextStyle(fontSize: 12, color: Colors.white54)),
+              const Text('Simulate', style: TextStyle(fontSize: 11, color: Colors.white54)),
               Switch(
                 value: _isSimulationMode,
                 activeThumbColor: AppColors.accentEmeraldLight,
@@ -301,37 +452,46 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       body: LiquidBackground(
         child: Column(
           children: [
-            // Camera / Skeleton Viewport
+            // Camera / Overlay Viewport
             Expanded(
               flex: 3,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Background — camera or simulation
+                  // 1. Camera preview or simulation
                   _isSimulationMode
                       ? _buildSimulationGraphic(theme)
                       : _isCameraInitialized && _cameraController != null
                           ? CameraPreview(_cameraController!)
                           : const Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.accentEmeraldLight,
-                              ),
+                              child: CircularProgressIndicator(color: AppColors.accentEmeraldLight),
                             ),
 
-                  // Live skeleton overlay on real camera
+                  // 2. Full Connected Body Skeleton + Joint Readout + 21-point Hand Skeleton
                   if (!_isSimulationMode && _lastPose != null && _cameraPreviewSize != Size.zero)
                     CustomPaint(
                       painter: _SkeletonOverlayPainter(
                         pose: _lastPose!,
+                        hands: _lastHands,
                         imageSize: _cameraPreviewSize,
                         isGoodForm: _isGoodForm,
                         showGhostTrainer: Provider.of<ProfileProvider>(context).ghostTrainerEnabled,
                         exercise: widget.targetExercise ?? _classifiedExercise ?? 'custom',
                         phase: _currentPhase,
+                        measuredAngle: _currentJointAngle,
+                        jointType: _primaryJointType,
                       ),
                     ),
 
-                  // Calibrating overlay
+                  // 3. Vertical Gradient Progress Slider (Right Edge)
+                  Positioned(
+                    right: 8,
+                    top: 60,
+                    bottom: 60,
+                    child: _buildVerticalProgressSlider(),
+                  ),
+
+                  // 4. Calibration overlay
                   if (_isCalibrating)
                     Container(
                       color: Colors.black54,
@@ -344,12 +504,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                               CircularProgressIndicator(color: AppColors.accentEmeraldLight),
                               SizedBox(height: 12),
                               Text(
-                                'Calibrating AI...',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                                'Calibrating AI & Hand Landmarks...',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                             ],
                           ),
@@ -357,52 +513,67 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       ),
                     ),
 
+                  // 5. Active Header UI & Notifications
                   if (!_isCalibrating)
                     Positioned(
                       top: 12,
                       left: 12,
-                      right: 12,
+                      right: 28,
                       child: Column(
                         children: [
-                          // Rep counter glass badge
+                          // Top Status Row
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildInfoBadge('REPS', '$_repCount', AppColors.accentEmeraldLight),
+                              _buildRepCounterBadge(),
+                              _buildPhaseChip(_currentPhase),
                               if (_classifiedExercise != null)
-                                _buildInfoBadge('DETECTED', _exerciseName(_classifiedExercise!), Colors.amber),
+                                _buildInfoBadge('DETECTED', _exerciseDisplayName(_classifiedExercise!), Colors.amber),
                             ],
                           ),
                           const SizedBox(height: 8),
 
-                          // Form feedback card
+                          // Progress Ticks Dot Row
+                          _buildProgressDotsRow(),
+                          const SizedBox(height: 8),
+
+                          // Form Feedback Banner
                           _buildFeedbackCard(
                             _feedbackMessage,
                             _isGoodForm ? AppColors.accentEmeraldLight : Colors.orange,
                           ),
 
-                          // Rep progress bar
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: LinearProgressIndicator(
-                              value: _repProgress,
-                              minHeight: 6,
-                              backgroundColor: Colors.white12,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _isGoodForm ? AppColors.accentEmeraldLight : Colors.orange,
+                          // Multi-exercise Live Tally Panel (Freestyle Mode)
+                          if (_isFreestyleMode) ...[
+                            const SizedBox(height: 8),
+                            _buildFreestyleTallyPanel(),
+                          ],
+
+                          // Gesture Toast Notification Alert
+                          if (_gestureNotice != null) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentEmeraldLight.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8)],
+                              ),
+                              child: Text(
+                                _gestureNotice!,
+                                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                             ),
-                          ),
+                          ],
 
-                          // Mismatch notice
-                          if (_mismatchNotice != null)
+                          // Mismatch Notice
+                          if (!_isFreestyleMode && _mismatchNotice != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.15),
+                                  color: Colors.amber.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(color: Colors.amber, width: 1),
                                 ),
@@ -449,18 +620,159 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     );
   }
 
-  Widget _buildInfoBadge(String label, String value, Color color) {
+  Widget _buildRepCounterBadge() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color, width: 1.5),
+        color: Colors.black.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.accentEmeraldLight, width: 1.5),
       ),
       child: Column(
         children: [
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9, letterSpacing: 1)),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text('REPS', style: TextStyle(color: Colors.white54, fontSize: 9, letterSpacing: 1)),
+          Text(
+            '$_repCount/$_targetReps',
+            style: const TextStyle(color: AppColors.accentEmeraldLight, fontWeight: FontWeight.w900, fontSize: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhaseChip(String phase) {
+    final String label = phase.toUpperCase();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white30),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: AppColors.accentEmeraldLight,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressDotsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_targetReps, (index) {
+        final bool isCompleted = index < _repCount;
+        final bool isCurrent = index == _repCount;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isCurrent ? 14 : 10,
+          height: isCurrent ? 14 : 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isCompleted
+                ? AppColors.accentEmeraldLight
+                : isCurrent
+                    ? Colors.amber
+                    : Colors.white24,
+            boxShadow: isCompleted || isCurrent
+                ? [
+                    BoxShadow(
+                      color: (isCompleted ? AppColors.accentEmeraldLight : Colors.amber).withValues(alpha: 0.6),
+                      blurRadius: 6,
+                    )
+                  ]
+                : [],
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildVerticalProgressSlider() {
+    final double ratio = (_repCount / _targetReps).clamp(0.0, 1.0);
+    return Container(
+      width: 8,
+      decoration: BoxDecoration(
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          FractionallySizedBox(
+            heightFactor: ratio,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.accentEmeraldLight, Color(0xFF2DD4BF)],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFreestyleTallyPanel() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.teal.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: _freestyleTally.entries.map((e) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                e.key,
+                style: const TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '${e.value}',
+                style: const TextStyle(color: AppColors.accentEmeraldLight, fontSize: 13, fontWeight: FontWeight.w900),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildInfoBadge(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 1.2),
+      ),
+      child: Column(
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 1)),
+          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
         ],
       ),
     );
@@ -468,9 +780,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   Widget _buildFeedbackCard(String feedback, Color statusColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.75),
+        color: Colors.black.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: statusColor, width: 1.5),
       ),
@@ -488,7 +800,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
               style: TextStyle(
                 color: statusColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
           ),
@@ -501,25 +813,26 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.center_focus_strong_rounded, size: 40, color: Color(0xFF0D807B)),
-        const SizedBox(height: 12),
-        const Text(
-          'Live Detection Active',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Color(0xFF14181F),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.center_focus_strong_rounded, size: 28, color: Color(0xFF0D807B)),
+            const SizedBox(width: 8),
+            Text(
+              _isFreestyleMode ? 'Freestyle Circuit Mode' : 'Targeted Form Check',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF14181F)),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
-          widget.targetExercise != null
-              ? 'Form-check mode: ${_exerciseName(widget.targetExercise!)}. Position yourself fully in frame and begin.'
-              : 'Auto-detecting exercise from movement. Stand clearly in frame and perform any supported exercise.',
-          style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.6), fontSize: 12, height: 1.4),
+          _isFreestyleMode
+              ? 'AI is continuously identifying movements (Squats, Push-ups, Curls, Presses) & auto-tallying reps.'
+              : 'Targeting ${_exerciseDisplayName(widget.targetExercise ?? "Squat")}. ✋ Open palm pauses live camera stream. 👍 Thumbs-up completes set.',
+          style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.65), fontSize: 11, height: 1.3),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -527,12 +840,13 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFF0D807B)),
               ),
-              icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFF0D807B)),
-              label: const Text('Reset', style: TextStyle(color: Color(0xFF0D807B), fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFF0D807B), size: 18),
+              label: const Text('Reset', style: TextStyle(color: Color(0xFF0D807B), fontWeight: FontWeight.bold, fontSize: 12)),
               onPressed: () => setState(() {
                 _repCount = 0;
                 _currentPhase = 'up';
                 _maxFlexion = 180.0;
+                _freestyleTally.updateAll((key, value) => 0);
               }),
             ),
             const SizedBox(width: 12),
@@ -547,12 +861,14 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                   icon: Icon(
                     ghostEnabled ? Icons.visibility : Icons.visibility_off,
                     color: ghostEnabled ? Colors.teal : Colors.grey,
+                    size: 18,
                   ),
                   label: Text(
-                    'Ghost Outline',
+                    'Ghost Silhouette',
                     style: TextStyle(
                       color: ghostEnabled ? Colors.teal : Colors.grey,
                       fontWeight: FontWeight.bold,
+                      fontSize: 12,
                     ),
                   ),
                   onPressed: () {
@@ -568,33 +884,63 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   Widget _buildSimulationControls(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          'Simulation Controller',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14181F), fontSize: 15),
-        ),
-        const SizedBox(height: 16),
-        _buildSlider('Knee Angle', _kneeAngle, 70, 180, (val) {
-          setState(() => _kneeAngle = val);
-          _simulateSquatUpdate(val);
-        }),
-        _buildSlider('Spine Angle', _spineAngle, 0, 45, (val) {
-          setState(() => _spineAngle = val);
-        }),
-        _buildSlider('Elbow Angle', _elbowAngle, 60, 180, (val) {
-          setState(() => _elbowAngle = val);
-        }),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Simulation & Hand Gesture Controller',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14181F), fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          _buildSlider('Knee Angle', _simKneeAngle, 70, 180, (val) {
+            setState(() {
+              _simKneeAngle = val;
+              _currentJointAngle = val;
+              _simulateSquatUpdate(val);
+            });
+          }),
+          _buildSlider('Elbow Angle', _simElbowAngle, 60, 180, (val) {
+            setState(() {
+              _simElbowAngle = val;
+              _currentJointAngle = val;
+            });
+          }),
+          Row(
+            children: [
+              FilterChip(
+                label: const Text('✋ Open Palm Gesture', style: TextStyle(fontSize: 10)),
+                selected: _simPalmGesture,
+                onSelected: (val) {
+                  setState(() {
+                    _simPalmGesture = val;
+                    _isPausedByGesture = val;
+                    _showGestureNotice(val ? '✋ Open Palm: Detection Paused' : '✋ Open Palm: Detection Resumed');
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
+                label: const Text('👍 Thumbs Up Gesture', style: TextStyle(fontSize: 10)),
+                selected: _simThumbsUpGesture,
+                onSelected: (val) {
+                  setState(() {
+                    _simThumbsUpGesture = val;
+                    if (val) _showGestureNotice('👍 Thumbs Up: Set Completed!');
+                  });
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildSlider(String label, double value, double min, double max, ValueChanged<double> onChanged) {
     return Row(
       children: [
-        SizedBox(width: 90, child: Text(label, style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.7), fontSize: 12))),
+        SizedBox(width: 85, child: Text(label, style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.7), fontSize: 11))),
         Expanded(
           child: Slider(
             min: min, max: max, value: value,
@@ -603,13 +949,12 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
             onChanged: onChanged,
           ),
         ),
-        Text('${value.toStringAsFixed(0)}°', style: const TextStyle(color: Color(0xFF14181F), fontSize: 12)),
+        Text('${value.toStringAsFixed(0)}°', style: const TextStyle(color: Color(0xFF14181F), fontSize: 11, fontWeight: FontWeight.bold)),
       ],
     );
   }
 
   void _simulateSquatUpdate(double kneeAngle) {
-    // Mimic squat rep logic for demo
     if (kneeAngle < 100 && _currentPhase == 'up') {
       setState(() {
         _currentPhase = 'down';
@@ -620,35 +965,38 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     } else if (kneeAngle > 160 && _currentPhase == 'down') {
       setState(() {
         _currentPhase = 'up';
-        _repCount++;
+        _handleRepCompleted('Squat');
         _feedbackMessage = 'Rep $_repCount complete!';
         _isGoodForm = true;
         _repProgress = 0.0;
-      });
-    } else {
-      setState(() {
-        _repProgress = ((170 - kneeAngle) / 100).clamp(0.0, 1.0);
-        _feedbackMessage = kneeAngle < 130 ? 'Good squat!' : 'Lower your hips';
-        _isGoodForm = _spineAngle < 30;
       });
     }
   }
 
   Widget _buildSimulationGraphic(ThemeData theme) {
+    final hands = _handLandmarkService.generateSimulationHands(
+      const Size(200, 200),
+      _simPalmGesture,
+      _simThumbsUpGesture,
+    );
+
     return CustomPaint(
       painter: _StickmanPainter(
         theme: theme,
-        kneeAngle: _kneeAngle,
-        spineAngle: _spineAngle,
+        kneeAngle: _simKneeAngle,
+        spineAngle: _simSpineAngle,
         isGoodForm: _isGoodForm,
+        hands: hands,
       ),
     );
   }
 
-  String _exerciseName(String key) {
+  String _exerciseDisplayName(String key) {
     return {
       'squat': 'Squat',
       'push_up': 'Push-Up',
+      'bicep_curl': 'Bicep Curl',
+      'shoulder_press': 'Shoulder Press',
       'jumping_jack': 'Jumping Jack',
       'plank': 'Plank',
       'custom': 'Custom Exercise',
@@ -656,33 +1004,50 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 }
 
-/// Paints the live skeleton overlay on the camera preview for real-device mode.
+/// Upgraded CustomPainter for rendering full connected body skeleton, live joint angle readout chips, & 21-point hand skeleton overlay.
 class _SkeletonOverlayPainter extends CustomPainter {
   final Pose pose;
+  final List<HandSkeleton> hands;
   final Size imageSize;
   final bool isGoodForm;
   final bool showGhostTrainer;
   final String exercise;
   final String phase;
+  final double measuredAngle;
+  final PoseLandmarkType jointType;
 
   _SkeletonOverlayPainter({
     required this.pose,
+    required this.hands,
     required this.imageSize,
     required this.isGoodForm,
     this.showGhostTrainer = false,
     this.exercise = 'custom',
     this.phase = 'up',
+    required this.measuredAngle,
+    required this.jointType,
   });
 
-  static const _connections = [
+  static const _fullConnections = [
+    // Face outline / head
+    [PoseLandmarkType.nose, PoseLandmarkType.leftEye],
+    [PoseLandmarkType.nose, PoseLandmarkType.rightEye],
+    [PoseLandmarkType.leftEye, PoseLandmarkType.leftEar],
+    [PoseLandmarkType.rightEye, PoseLandmarkType.rightEar],
+
+    // Torso box
     [PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder],
+    [PoseLandmarkType.leftShoulder, PoseLandmarkType.leftHip],
+    [PoseLandmarkType.rightShoulder, PoseLandmarkType.rightHip],
+    [PoseLandmarkType.leftHip, PoseLandmarkType.rightHip],
+
+    // Arms
     [PoseLandmarkType.leftShoulder, PoseLandmarkType.leftElbow],
     [PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist],
     [PoseLandmarkType.rightShoulder, PoseLandmarkType.rightElbow],
     [PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist],
-    [PoseLandmarkType.leftShoulder, PoseLandmarkType.leftHip],
-    [PoseLandmarkType.rightShoulder, PoseLandmarkType.rightHip],
-    [PoseLandmarkType.leftHip, PoseLandmarkType.rightHip],
+
+    // Legs
     [PoseLandmarkType.leftHip, PoseLandmarkType.leftKnee],
     [PoseLandmarkType.leftKnee, PoseLandmarkType.leftAnkle],
     [PoseLandmarkType.rightHip, PoseLandmarkType.rightKnee],
@@ -691,124 +1056,130 @@ class _SkeletonOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Color boneColor = isGoodForm ? AppColors.accentEmeraldLight : Colors.orange;
-    final Color jointColor = isGoodForm ? const Color(0xFFBBF7E0) : Colors.amber;
+    final Color accentColor = isGoodForm ? AppColors.accentEmeraldLight : Colors.orange;
 
     final bonePaint = Paint()
-      ..color = boneColor.withValues(alpha: 0.85)
-      ..strokeWidth = 3.0
+      ..color = accentColor.withValues(alpha: 0.85)
+      ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round;
 
     final jointPaint = Paint()
-      ..color = jointColor
-      ..strokeWidth = 6.0
+      ..color = isGoodForm ? const Color(0xFFBBF7E0) : Colors.amber
+      ..strokeWidth = 7.0
       ..style = PaintingStyle.fill;
 
-    Offset toScreen(PoseLandmark lm) {
-      final double x = (1.0 - lm.x / imageSize.width) * size.width;
-      final double y = (lm.y / imageSize.height) * size.height;
+    Offset toScreen(double lx, double ly) {
+      final double x = (1.0 - lx / imageSize.width) * size.width;
+      final double y = (ly / imageSize.height) * size.height;
       return Offset(x, y);
     }
 
-    // Capture baseline landmark points mapped to screen coordinates
-    final Map<PoseLandmarkType, Offset> points = {};
-    for (final entry in pose.landmarks.entries) {
-      if (entry.value.likelihood > 0.5) {
-        points[entry.key] = toScreen(entry.value);
-      }
-    }
-
     // 1. Draw Ghost Silhouette if enabled
-    if (showGhostTrainer && points.isNotEmpty) {
-      final Map<PoseLandmarkType, Offset> ghostPoints = Map.from(points);
-      final ex = exercise.toLowerCase();
-
-      if (ex.contains('squat')) {
-        // Adjust knees and hips for squat targets
-        final leftHip = points[PoseLandmarkType.leftHip];
-        final leftAnkle = points[PoseLandmarkType.leftAnkle];
-        if (leftHip != null && leftAnkle != null) {
-          final double distance = (leftAnkle.dy - leftHip.dy).abs();
-          if (phase == 'down') {
-            ghostPoints[PoseLandmarkType.leftHip] = Offset(leftHip.dx + distance * 0.15, leftHip.dy + distance * 0.1);
-            ghostPoints[PoseLandmarkType.leftKnee] = Offset(leftHip.dx - distance * 0.18, leftHip.dy + distance * 0.5);
-          } else {
-            ghostPoints[PoseLandmarkType.leftKnee] = Offset(leftHip.dx, leftHip.dy + distance * 0.5);
-          }
-        }
-
-        final rightHip = points[PoseLandmarkType.rightHip];
-        final rightAnkle = points[PoseLandmarkType.rightAnkle];
-        if (rightHip != null && rightAnkle != null) {
-          final double distance = (rightAnkle.dy - rightHip.dy).abs();
-          if (phase == 'down') {
-            ghostPoints[PoseLandmarkType.rightHip] = Offset(rightHip.dx + distance * 0.15, rightHip.dy + distance * 0.1);
-            ghostPoints[PoseLandmarkType.rightKnee] = Offset(rightHip.dx - distance * 0.18, rightHip.dy + distance * 0.5);
-          } else {
-            ghostPoints[PoseLandmarkType.rightKnee] = Offset(rightHip.dx, rightHip.dy + distance * 0.5);
-          }
-        }
-      } else if (ex.contains('push_up') || ex.contains('pushup')) {
-        // Adjust elbows for pushup targets
-        final leftShoulder = points[PoseLandmarkType.leftShoulder];
-        final leftWrist = points[PoseLandmarkType.leftWrist];
-        if (leftShoulder != null && leftWrist != null) {
-          final double distance = (leftWrist.dx - leftShoulder.dx).abs();
-          if (phase == 'down') {
-            ghostPoints[PoseLandmarkType.leftElbow] = Offset((leftShoulder.dx + leftWrist.dx) / 2, leftShoulder.dy + distance * 0.35);
-          } else {
-            ghostPoints[PoseLandmarkType.leftElbow] = Offset((leftShoulder.dx + leftWrist.dx) / 2, (leftShoulder.dy + leftWrist.dy) / 2);
-          }
-        }
-
-        final rightShoulder = points[PoseLandmarkType.rightShoulder];
-        final rightWrist = points[PoseLandmarkType.rightWrist];
-        if (rightShoulder != null && rightWrist != null) {
-          final double distance = (rightWrist.dx - rightShoulder.dx).abs();
-          if (phase == 'down') {
-            ghostPoints[PoseLandmarkType.rightElbow] = Offset((rightShoulder.dx + rightWrist.dx) / 2, rightShoulder.dy + distance * 0.35);
-          } else {
-            ghostPoints[PoseLandmarkType.rightElbow] = Offset((rightShoulder.dx + rightWrist.dx) / 2, (rightShoulder.dy + rightWrist.dy) / 2);
-          }
-        }
-      }
-
+    if (showGhostTrainer) {
       final ghostPaint = Paint()
-        ..color = const Color(0xFF14B8A6).withValues(alpha: 0.35)
-        ..strokeWidth = 6.0
+        ..color = const Color(0xFF14B8A6).withValues(alpha: 0.3)
+        ..strokeWidth = 5.0
         ..strokeCap = StrokeCap.round;
 
-      final ghostJointPaint = Paint()
-        ..color = const Color(0xFF2DD4BF).withValues(alpha: 0.5)
-        ..strokeWidth = 10.0
-        ..style = PaintingStyle.fill;
+      for (final pair in _fullConnections) {
+        final a = pose.landmarks[pair[0]];
+        final b = pose.landmarks[pair[1]];
+        if (a != null && b != null && a.likelihood > 0.4 && b.likelihood > 0.4) {
+          canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), ghostPaint);
+        }
+      }
+    }
 
-      for (final pair in _connections) {
-        final a = ghostPoints[pair[0]];
-        final b = ghostPoints[pair[1]];
-        if (a != null && b != null) {
-          canvas.drawLine(a, b, ghostPaint);
+    // 2. Draw Full Connected User Body Skeleton
+    for (final pair in _fullConnections) {
+      final a = pose.landmarks[pair[0]];
+      final b = pose.landmarks[pair[1]];
+      if (a != null && b != null && a.likelihood > 0.4 && b.likelihood > 0.4) {
+        canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), bonePaint);
+      }
+    }
+
+    // Draw Joint Dots
+    for (final entry in pose.landmarks.entries) {
+      final lm = entry.value;
+      if (lm.likelihood > 0.4) {
+        canvas.drawCircle(toScreen(lm.x, lm.y), 5, jointPaint);
+      }
+    }
+
+    // 3. Draw Live Joint-Angle Floating Chip Readout
+    final targetJoint = pose.landmarks[jointType] ?? pose.landmarks[PoseLandmarkType.leftElbow];
+    if (targetJoint != null && targetJoint.likelihood > 0.4) {
+      final jointPos = toScreen(targetJoint.x, targetJoint.y);
+      final angleText = '${measuredAngle.toStringAsFixed(0)}°';
+
+      final TextSpan span = TextSpan(
+        text: angleText,
+        style: TextStyle(
+          color: isGoodForm ? AppColors.accentEmeraldLight : Colors.amber,
+          fontWeight: FontWeight.w900,
+          fontSize: 12,
+        ),
+      );
+      final TextPainter tp = TextPainter(
+        text: span,
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final RRect bgRRect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          jointPos.dx + 12,
+          jointPos.dy - 12,
+          tp.width + 16,
+          tp.height + 8,
+        ),
+        const Radius.circular(8),
+      );
+
+      final Paint bgPaint = Paint()..color = Colors.black.withValues(alpha: 0.85);
+      final Paint borderPaint = Paint()
+        ..color = isGoodForm ? AppColors.accentEmeraldLight : Colors.amber
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2;
+
+      canvas.drawRRect(bgRRect, bgPaint);
+      canvas.drawRRect(bgRRect, borderPaint);
+      tp.paint(canvas, Offset(jointPos.dx + 20, jointPos.dy - 8));
+    }
+
+    // 4. Draw 21-point Hand & Finger Skeleton Overlay
+    final handBonePaint = Paint()
+      ..color = const Color(0xFF2DD4BF).withValues(alpha: 0.9)
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+
+    final handJointPaint = Paint()
+      ..color = const Color(0xFFBBF7E0)
+      ..style = PaintingStyle.fill;
+
+    for (final hand in hands) {
+      if (hand.landmarks.length < 21) continue;
+
+      // Finger connection groups
+      final fingerIndices = [
+        [0, 1, 2, 3, 4], // Thumb
+        [0, 5, 6, 7, 8], // Index
+        [0, 9, 10, 11, 12], // Middle
+        [0, 13, 14, 15, 16], // Ring
+        [0, 17, 18, 19, 20], // Pinky
+        [5, 9, 13, 17], // Palm bridge
+      ];
+
+      for (final group in fingerIndices) {
+        for (int i = 0; i < group.length - 1; i++) {
+          final p1 = hand.landmarks[group[i]];
+          final p2 = hand.landmarks[group[i + 1]];
+          canvas.drawLine(toScreen(p1.x, p1.y), toScreen(p2.x, p2.y), handBonePaint);
         }
       }
 
-      for (final pt in ghostPoints.values) {
-        canvas.drawCircle(pt, 5.0, ghostJointPaint);
-      }
-    }
-
-    // 2. Draw actual user skeleton overlay
-    for (final pair in _connections) {
-      final a = pose.landmarks[pair[0]];
-      final b = pose.landmarks[pair[1]];
-      if (a != null && b != null && a.likelihood > 0.5 && b.likelihood > 0.5) {
-        canvas.drawLine(toScreen(a), toScreen(b), bonePaint);
-      }
-    }
-
-    for (final entry in pose.landmarks.entries) {
-      final lm = entry.value;
-      if (lm.likelihood > 0.5) {
-        canvas.drawCircle(toScreen(lm), 5, jointPaint);
+      for (final pt in hand.landmarks) {
+        canvas.drawCircle(toScreen(pt.x, pt.y), 3.0, handJointPaint);
       }
     }
   }
@@ -817,24 +1188,25 @@ class _SkeletonOverlayPainter extends CustomPainter {
   bool shouldRepaint(covariant _SkeletonOverlayPainter oldDelegate) => true;
 }
 
-/// Stick-figure simulation painter for demo/web mode.
+/// Simulation mode painter.
 class _StickmanPainter extends CustomPainter {
   final ThemeData theme;
   final double kneeAngle;
   final double spineAngle;
   final bool isGoodForm;
+  final List<HandSkeleton> hands;
 
   _StickmanPainter({
     required this.theme,
     required this.kneeAngle,
     required this.spineAngle,
     required this.isGoodForm,
+    required this.hands,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2 + 30);
-
+    final center = Offset(size.width / 2, size.height / 2 + 20);
     final Color boneColor = isGoodForm ? AppColors.accentEmeraldLight : Colors.orange;
 
     final paintJoint = Paint()
@@ -876,6 +1248,21 @@ class _StickmanPainter extends CustomPainter {
     canvas.drawCircle(knee, 5, paintJoint);
     canvas.drawCircle(hip, 5, paintJoint);
     canvas.drawCircle(shoulder, 5, paintJoint);
+
+    // Render hands in simulation mode
+    final handPaint = Paint()
+      ..color = const Color(0xFF2DD4BF)
+      ..strokeWidth = 2;
+
+    for (final hand in hands) {
+      for (int i = 0; i < hand.landmarks.length - 1; i++) {
+        canvas.drawLine(
+          Offset(hand.landmarks[i].x, hand.landmarks[i].y),
+          Offset(hand.landmarks[i + 1].x, hand.landmarks[i + 1].y),
+          handPaint,
+        );
+      }
+    }
   }
 
   @override
