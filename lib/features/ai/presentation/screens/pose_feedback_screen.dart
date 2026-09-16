@@ -15,7 +15,8 @@ import '../../../profile/presentation/providers/profile_provider.dart';
 
 class PoseFeedbackScreen extends StatefulWidget {
   /// Optional: if provided, form-check mode targets this specific exercise.
-  final String? targetExercise; // 'squat', 'push_up', 'bicep_curl', 'shoulder_press', 'jumping_jack', 'plank'
+  final String?
+  targetExercise; // 'squat', 'push_up', 'bicep_curl', 'shoulder_press', 'jumping_jack', 'plank'
   final Map<String, dynamic>? customPattern; // for custom exercise reference
 
   const PoseFeedbackScreen({
@@ -39,8 +40,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   bool _isCalibrating = true;
   bool _isProcessing = false;
 
-  // Freestyle vs Targeted Mode
-  late bool _isFreestyleMode;
+  // Freestyle vs Targeted Mode & Exercise Selector
+  bool _isFreestyleMode = false;
+  String _selectedExerciseKey = 'squat';
   final Map<String, int> _freestyleTally = {
     'Push-up': 0,
     'Squat': 0,
@@ -52,10 +54,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   // Target reps configuration
   final int _targetReps = 10;
 
-  // Gesture State & Pause
+  // Gesture State & Pause Cooldown
   bool _isPausedByGesture = false;
+  final bool _enableGesturePause =
+      false; // Off by default to avoid accidental pause loops during workout
+  DateTime? _resumeCooldownUntil;
   String? _gestureNotice;
   DateTime? _noticeDismissAt;
+
+  // UI Layout State
+  bool _showBottomPanel = false;
 
   // Last detected pose & hand landmarks (for skeleton painter)
   Pose? _lastPose;
@@ -95,6 +103,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   void initState() {
     super.initState();
     _isFreestyleMode = widget.targetExercise == null;
+    _selectedExerciseKey = widget.targetExercise ?? 'squat';
 
     _pulseController = AnimationController(
       vsync: this,
@@ -157,7 +166,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   void _processCameraImage(CameraImage image) async {
     final now = DateTime.now();
-    
+
     // Watchdog safety: unlock stuck processing state if > 1500ms elapse
     if (_isProcessing) {
       if (now.difference(_lastProcessedAt).inMilliseconds > 1500) {
@@ -166,7 +175,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
         return;
       }
     }
-    
+
     if (_isPausedByGesture) return;
     if (now.difference(_lastProcessedAt).inMilliseconds < _throttleMs) return;
     _lastProcessedAt = now;
@@ -179,13 +188,18 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       }
       final bytes = allBytes.done().buffer.asUint8List();
 
-      InputImageFormat? format = InputImageFormatValue.fromRawValue(image.format.raw);
+      InputImageFormat? format = InputImageFormatValue.fromRawValue(
+        image.format.raw,
+      );
       format ??= (defaultTargetPlatform == TargetPlatform.android
           ? InputImageFormat.nv21
           : InputImageFormat.bgra8888);
 
-      final int sensorOrientation = _cameraController?.description.sensorOrientation ?? 270;
-      final InputImageRotation rotation = InputImageRotationValue.fromRawValue(sensorOrientation) ?? InputImageRotation.rotation0deg;
+      final int sensorOrientation =
+          _cameraController?.description.sensorOrientation ?? 270;
+      final InputImageRotation rotation =
+          InputImageRotationValue.fromRawValue(sensorOrientation) ??
+          InputImageRotation.rotation0deg;
 
       final inputImage = InputImage.fromBytes(
         bytes: bytes,
@@ -193,7 +207,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           size: Size(image.width.toDouble(), image.height.toDouble()),
           rotation: rotation,
           format: format,
-          bytesPerRow: image.planes.isNotEmpty ? image.planes[0].bytesPerRow : image.width,
+          bytesPerRow: image.planes.isNotEmpty
+              ? image.planes[0].bytesPerRow
+              : image.width,
         ),
       );
 
@@ -201,7 +217,10 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       if (mounted) {
         if (poses.isNotEmpty) {
           final pose = poses.first;
-          final hands = _handLandmarkService.extractHandsFromPose(pose, _cameraPreviewSize);
+          final hands = _handLandmarkService.extractHandsFromPose(
+            pose,
+            _cameraPreviewSize,
+          );
           _processHandGestures(hands, pose);
           _updatePoseState(pose, hands);
         } else {
@@ -222,14 +241,32 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     }
   }
 
+  void _resumeDetection() {
+    setState(() {
+      _isPausedByGesture = false;
+      _resumeCooldownUntil = DateTime.now().add(const Duration(seconds: 4));
+      _showGestureNotice('AI Detection Resumed');
+    });
+  }
+
   void _processHandGestures(List<HandSkeleton> hands, Pose pose) {
+    if (!_enableGesturePause) return;
+    if (_resumeCooldownUntil != null &&
+        DateTime.now().isBefore(_resumeCooldownUntil!))
+      return;
+
     for (final hand in hands) {
       final gesture = _handLandmarkService.detectGesture(hand);
       if (gesture == HandGesture.openPalm) {
-        setState(() {
-          _isPausedByGesture = !_isPausedByGesture;
-          _showGestureNotice(_isPausedByGesture ? '✋ Open Palm: Detection Paused' : '✋ Open Palm: Detection Resumed');
-        });
+        final nose = pose.landmarks[PoseLandmarkType.nose];
+        if (hand.wrist != null && nose != null && hand.wrist!.y < nose.y + 30) {
+          if (!_isPausedByGesture) {
+            setState(() {
+              _isPausedByGesture = true;
+              _showGestureNotice('✋ Open Palm: Detection Paused');
+            });
+          }
+        }
         break;
       } else if (gesture == HandGesture.thumbsUp) {
         setState(() {
@@ -244,7 +281,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     _gestureNotice = msg;
     _noticeDismissAt = DateTime.now().add(const Duration(seconds: 3));
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && _noticeDismissAt != null && DateTime.now().isAfter(_noticeDismissAt!)) {
+      if (mounted &&
+          _noticeDismissAt != null &&
+          DateTime.now().isAfter(_noticeDismissAt!)) {
         setState(() => _gestureNotice = null);
       }
     });
@@ -255,19 +294,28 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
     // Active Exercise determination
     final activeKey = _isFreestyleMode
-        ? (classifiedEx ?? 'squat')
-        : (widget.targetExercise ?? classifiedEx ?? 'squat');
+        ? (classifiedEx ?? _selectedExerciseKey)
+        : _selectedExerciseKey;
 
     String? mismatch;
-    if (!_isFreestyleMode && widget.targetExercise != null && classifiedEx != null && classifiedEx != widget.targetExercise) {
-      mismatch = 'This looks like ${_exerciseDisplayName(classifiedEx)} — switch?';
+    if (!_isFreestyleMode &&
+        widget.targetExercise != null &&
+        classifiedEx != null &&
+        classifiedEx != widget.targetExercise) {
+      mismatch =
+          'This looks like ${_exerciseDisplayName(classifiedEx)} — switch?';
     }
 
     // Wrist rotation check for bicep curl
     double? wristRotation;
     if (hands.isNotEmpty) {
-      final elbow = pose.landmarks[PoseLandmarkType.leftElbow] ?? pose.landmarks[PoseLandmarkType.rightElbow];
-      wristRotation = _handLandmarkService.getWristRotationAngle(hands.first, elbow);
+      final elbow =
+          pose.landmarks[PoseLandmarkType.leftElbow] ??
+          pose.landmarks[PoseLandmarkType.rightElbow];
+      wristRotation = _handLandmarkService.getWristRotationAngle(
+        hands.first,
+        elbow,
+      );
     }
 
     FormFeedback? feedback;
@@ -276,9 +324,15 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
     if (activeKey == 'squat') {
       vertexJoint = PoseLandmarkType.leftKnee;
-      final hip = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftHip) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightHip);
-      final knee = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftKnee) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightKnee);
-      final ankle = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftAnkle) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightAnkle);
+      final hip =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftHip) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightHip);
+      final knee =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftKnee) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightKnee);
+      final ankle =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftAnkle) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightAnkle);
       if (hip != null && knee != null && ankle != null) {
         currentAngle = FormAnalyzer.calculateAngle(hip, knee, ankle);
       }
@@ -295,9 +349,15 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       );
     } else if (activeKey == 'push_up') {
       vertexJoint = PoseLandmarkType.leftElbow;
-      final shoulder = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
-      final elbow = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
-      final wrist = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
+      final shoulder =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      final elbow =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
+      final wrist =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
       if (shoulder != null && elbow != null && wrist != null) {
         currentAngle = FormAnalyzer.calculateAngle(shoulder, elbow, wrist);
       }
@@ -314,9 +374,15 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       );
     } else if (activeKey == 'bicep_curl') {
       vertexJoint = PoseLandmarkType.leftElbow;
-      final shoulder = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
-      final elbow = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
-      final wrist = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
+      final shoulder =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      final elbow =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
+      final wrist =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
       if (shoulder != null && elbow != null && wrist != null) {
         currentAngle = FormAnalyzer.calculateAngle(shoulder, elbow, wrist);
       }
@@ -330,9 +396,15 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       );
     } else if (activeKey == 'shoulder_press') {
       vertexJoint = PoseLandmarkType.leftElbow;
-      final shoulder = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
-      final elbow = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
-      final wrist = FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ?? FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
+      final shoulder =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftShoulder) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightShoulder);
+      final elbow =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftElbow) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightElbow);
+      final wrist =
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.leftWrist) ??
+          FormAnalyzer.getValidLandmark(pose, PoseLandmarkType.rightWrist);
       if (shoulder != null && elbow != null && wrist != null) {
         currentAngle = FormAnalyzer.calculateAngle(shoulder, elbow, wrist);
       }
@@ -394,7 +466,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     setState(() {
       _repCount++;
       if (_freestyleTally.containsKey(exerciseName)) {
-        _freestyleTally[exerciseName] = (_freestyleTally[exerciseName] ?? 0) + 1;
+        _freestyleTally[exerciseName] =
+            (_freestyleTally[exerciseName] ?? 0) + 1;
       }
     });
   }
@@ -412,8 +485,12 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final activeExerciseLabel = _isFreestyleMode
-        ? (_classifiedExercise != null ? _exerciseDisplayName(_classifiedExercise!) : 'Freestyle Detect')
-        : (widget.targetExercise != null ? _exerciseDisplayName(widget.targetExercise!) : 'Auto-Detect');
+        ? (_classifiedExercise != null
+              ? _exerciseDisplayName(_classifiedExercise!)
+              : 'Freestyle Detect')
+        : (widget.targetExercise != null
+              ? _exerciseDisplayName(widget.targetExercise!)
+              : 'Auto-Detect');
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -436,13 +513,17 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                   label: Text(
                     _isFreestyleMode ? 'Freestyle' : 'Targeted',
                     style: TextStyle(
-                      color: _isFreestyleMode ? Colors.white : AppColors.accentEmeraldLight,
+                      color: _isFreestyleMode
+                          ? Colors.white
+                          : AppColors.accentEmeraldLight,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   selected: _isFreestyleMode,
-                  selectedColor: AppColors.accentEmeraldLight.withValues(alpha: 0.3),
+                  selectedColor: AppColors.accentEmeraldLight.withValues(
+                    alpha: 0.3,
+                  ),
                   backgroundColor: Colors.white10,
                   onSelected: (val) {
                     setState(() {
@@ -454,14 +535,18 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Sim', style: TextStyle(fontSize: 10, color: Colors.white54)),
+                    const Text(
+                      'Sim',
+                      style: TextStyle(fontSize: 10, color: Colors.white54),
+                    ),
                     Switch(
                       value: _isSimulationMode,
                       activeThumbColor: AppColors.accentEmeraldLight,
                       onChanged: (val) {
                         setState(() {
                           _isSimulationMode = val;
-                          if (!val && !_isCameraInitialized) _initializeCamera();
+                          if (!val && !_isCameraInitialized)
+                            _initializeCamera();
                         });
                       },
                     ),
@@ -485,21 +570,30 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                   _isSimulationMode
                       ? _buildSimulationGraphic(theme)
                       : _isCameraInitialized && _cameraController != null
-                          ? CameraPreview(_cameraController!)
-                          : const Center(
-                              child: CircularProgressIndicator(color: AppColors.accentEmeraldLight),
-                            ),
+                      ? CameraPreview(_cameraController!)
+                      : const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.accentEmeraldLight,
+                          ),
+                        ),
 
                   // 2. Full Connected Body Skeleton + Joint Readout + 21-point Hand Skeleton
-                  if (!_isSimulationMode && _lastPose != null && _cameraPreviewSize != Size.zero)
+                  if (!_isSimulationMode &&
+                      _lastPose != null &&
+                      _cameraPreviewSize != Size.zero)
                     CustomPaint(
                       painter: _SkeletonOverlayPainter(
                         pose: _lastPose!,
                         hands: _lastHands,
                         imageSize: _cameraPreviewSize,
                         isGoodForm: _isGoodForm,
-                        showGhostTrainer: Provider.of<ProfileProvider>(context).ghostTrainerEnabled,
-                        exercise: widget.targetExercise ?? _classifiedExercise ?? 'custom',
+                        showGhostTrainer: Provider.of<ProfileProvider>(
+                          context,
+                        ).ghostTrainerEnabled,
+                        exercise:
+                            widget.targetExercise ??
+                            _classifiedExercise ??
+                            'custom',
                         phase: _currentPhase,
                         measuredAngle: _currentJointAngle,
                         jointType: _primaryJointType,
@@ -524,11 +618,17 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                           child: const Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              CircularProgressIndicator(color: AppColors.accentEmeraldLight),
+                              CircularProgressIndicator(
+                                color: AppColors.accentEmeraldLight,
+                              ),
                               SizedBox(height: 12),
                               Text(
                                 'Calibrating AI & Hand Landmarks...',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                             ],
                           ),
@@ -543,29 +643,42 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       left: 24,
                       right: 40,
                       child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isPausedByGesture = false;
-                            _showGestureNotice('Detection Resumed');
-                          });
-                        },
+                        onTap: _resumeDetection,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.amber.shade900.withValues(alpha: 0.95),
+                            color: Colors.amber.shade900.withValues(
+                              alpha: 0.95,
+                            ),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.amberAccent, width: 2),
-                            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10)],
+                            border: Border.all(
+                              color: Colors.amberAccent,
+                              width: 2,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black54, blurRadius: 10),
+                            ],
                           ),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.pause_circle_filled_rounded, color: Colors.white, size: 22),
+                              Icon(
+                                Icons.pause_circle_filled_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                               SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   '✋ Detection Paused by Gesture — Tap to Resume',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -591,10 +704,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                               children: [
                                 _buildRepCounterBadge(),
                                 const SizedBox(width: 6),
+                                _buildExerciseSelectorChip(),
+                                const SizedBox(width: 6),
                                 _buildPhaseChip(_currentPhase),
                                 const SizedBox(width: 6),
                                 if (_classifiedExercise != null)
-                                  _buildInfoBadge('DETECTED', _exerciseDisplayName(_classifiedExercise!), Colors.amber),
+                                  _buildInfoBadge(
+                                    'DETECTED',
+                                    _exerciseDisplayName(_classifiedExercise!),
+                                    Colors.amber,
+                                  ),
                               ],
                             ),
                           ),
@@ -607,7 +726,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                           // Form Feedback Banner
                           _buildFeedbackCard(
                             _feedbackMessage,
-                            _isGoodForm ? AppColors.accentEmeraldLight : Colors.orange,
+                            _isGoodForm
+                                ? AppColors.accentEmeraldLight
+                                : Colors.orange,
                           ),
                           const SizedBox(height: 6),
 
@@ -619,7 +740,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                               minHeight: 4,
                               backgroundColor: Colors.white12,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                _isGoodForm ? AppColors.accentEmeraldLight : Colors.orange,
+                                _isGoodForm
+                                    ? AppColors.accentEmeraldLight
+                                    : Colors.orange,
                               ),
                             ),
                           ),
@@ -634,15 +757,29 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                           if (_gestureNotice != null) ...[
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
-                                color: AppColors.accentEmeraldLight.withValues(alpha: 0.9),
+                                color: AppColors.accentEmeraldLight.withValues(
+                                  alpha: 0.9,
+                                ),
                                 borderRadius: BorderRadius.circular(20),
-                                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8)],
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 8,
+                                  ),
+                                ],
                               ),
                               child: Text(
                                 _gestureNotice!,
-                                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 13),
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ],
@@ -656,16 +793,26 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                 decoration: BoxDecoration(
                                   color: Colors.amber.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.amber, width: 1),
+                                  border: Border.all(
+                                    color: Colors.amber,
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.info_outline, color: Colors.amber, size: 14),
+                                    const Icon(
+                                      Icons.info_outline,
+                                      color: Colors.amber,
+                                      size: 14,
+                                    ),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         _mismatchNotice!,
-                                        style: const TextStyle(color: Colors.amber, fontSize: 11),
+                                        style: const TextStyle(
+                                          color: Colors.amber,
+                                          fontSize: 11,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -675,29 +822,243 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                         ],
                       ),
                     ),
+
+                  // 6. Floating Controls Toggle Chip (Bottom Center)
+                  Positioned(
+                    bottom: 12,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: InkWell(
+                        onTap: () => setState(
+                          () => _showBottomPanel = !_showBottomPanel,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppColors.accentEmeraldLight.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black38, blurRadius: 6),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _showBottomPanel
+                                    ? Icons.keyboard_arrow_down_rounded
+                                    : Icons.tune_rounded,
+                                color: AppColors.accentEmeraldLight,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _showBottomPanel
+                                    ? 'Hide Controls'
+                                    : 'Show Controls',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
 
-            // Bottom Control Panel
-            Expanded(
-              flex: 2,
-              child: Container(
+            // Bottom Control Panel (Hides when _showBottomPanel is false for 100% full screen view)
+            if (_showBottomPanel)
+              Container(
                 color: Colors.black,
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.35,
+                ),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                 child: PastelGradientCard(
                   type: PastelCardType.slate,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   borderRadius: 20,
                   child: _isSimulationMode
                       ? _buildSimulationControls(theme)
                       : _buildLivePanel(theme),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExerciseSelectorChip() {
+    final label = _exerciseDisplayName(_selectedExerciseKey);
+    return GestureDetector(
+      onTap: _showExercisePickerModal,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.accentEmeraldLight, width: 1.2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.fitness_center_rounded,
+              color: AppColors.accentEmeraldLight,
+              size: 14,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.accentEmeraldLight,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(width: 2),
+            const Icon(
+              Icons.arrow_drop_down_rounded,
+              color: AppColors.accentEmeraldLight,
+              size: 16,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showExercisePickerModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF14181F),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final exercises = [
+          {
+            'key': 'squat',
+            'name': 'Squat',
+            'icon': Icons.fitness_center_rounded,
+          },
+          {
+            'key': 'push_up',
+            'name': 'Push-Up',
+            'icon': Icons.sports_gymnastics_rounded,
+          },
+          {
+            'key': 'bicep_curl',
+            'name': 'Bicep Curl',
+            'icon': Icons.accessibility_new_rounded,
+          },
+          {
+            'key': 'shoulder_press',
+            'name': 'Shoulder Press',
+            'icon': Icons.accessibility_rounded,
+          },
+          {
+            'key': 'jumping_jack',
+            'name': 'Jumping Jack',
+            'icon': Icons.directions_run_rounded,
+          },
+          {
+            'key': 'plank',
+            'name': 'Plank',
+            'icon': Icons.horizontal_rule_rounded,
+          },
+        ];
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Choose Exercise to Track',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...exercises.map((ex) {
+                final String key = ex['key'] as String;
+                final bool isSelected =
+                    !_isFreestyleMode && _selectedExerciseKey == key;
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 2,
+                  ),
+                  leading: Icon(
+                    ex['icon'] as IconData,
+                    color: isSelected
+                        ? AppColors.accentEmeraldLight
+                        : Colors.white70,
+                  ),
+                  title: Text(
+                    ex['name'] as String,
+                    style: TextStyle(
+                      color: isSelected
+                          ? AppColors.accentEmeraldLight
+                          : Colors.white,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.accentEmeraldLight,
+                        )
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      _selectedExerciseKey = key;
+                      _isFreestyleMode = false;
+                      _repCount = 0;
+                      _currentPhase = 'up';
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -711,10 +1072,21 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       ),
       child: Column(
         children: [
-          const Text('REPS', style: TextStyle(color: Colors.white54, fontSize: 9, letterSpacing: 1)),
+          const Text(
+            'REPS',
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 9,
+              letterSpacing: 1,
+            ),
+          ),
           Text(
             '$_repCount/$_targetReps',
-            style: const TextStyle(color: AppColors.accentEmeraldLight, fontWeight: FontWeight.w900, fontSize: 18),
+            style: const TextStyle(
+              color: AppColors.accentEmeraldLight,
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
+            ),
           ),
         ],
       ),
@@ -744,7 +1116,11 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -768,14 +1144,18 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
             color: isCompleted
                 ? AppColors.accentEmeraldLight
                 : isCurrent
-                    ? Colors.amber
-                    : Colors.white24,
+                ? Colors.amber
+                : Colors.white24,
             boxShadow: isCompleted || isCurrent
                 ? [
                     BoxShadow(
-                      color: (isCompleted ? AppColors.accentEmeraldLight : Colors.amber).withValues(alpha: 0.6),
+                      color:
+                          (isCompleted
+                                  ? AppColors.accentEmeraldLight
+                                  : Colors.amber)
+                              .withValues(alpha: 0.6),
                       blurRadius: 6,
-                    )
+                    ),
                   ]
                 : [],
           ),
@@ -833,11 +1213,19 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                 children: [
                   Text(
                     e.key,
-                    style: const TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${e.value}',
-                    style: const TextStyle(color: AppColors.accentEmeraldLight, fontSize: 13, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      color: AppColors.accentEmeraldLight,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ],
               ),
@@ -858,8 +1246,22 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       ),
       child: Column(
         children: [
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 1)),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 8,
+              letterSpacing: 1,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -876,7 +1278,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       child: Row(
         children: [
           Icon(
-            _isGoodForm ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+            _isGoodForm
+                ? Icons.check_circle_rounded
+                : Icons.warning_amber_rounded,
             color: statusColor,
             size: 16,
           ),
@@ -897,91 +1301,163 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   Widget _buildLivePanel(ThemeData theme) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.center_focus_strong_rounded, size: 28, color: Color(0xFF0D807B)),
-            const SizedBox(width: 8),
-            Text(
-              _isFreestyleMode ? 'Freestyle Circuit Mode' : 'Targeted Form Check',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF14181F)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          _isFreestyleMode
-              ? 'AI is continuously identifying movements (Squats, Push-ups, Curls, Presses) & auto-tallying reps.'
-              : 'Targeting ${_exerciseDisplayName(widget.targetExercise ?? "Squat")}. ✋ Open palm pauses live camera stream. 👍 Thumbs-up completes set.',
-          style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.65), fontSize: 11, height: 1.3),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF0D807B)),
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.center_focus_strong_rounded,
+                size: 24,
+                color: Color(0xFF0D807B),
               ),
-              icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFF0D807B), size: 18),
-              label: const Text('Reset', style: TextStyle(color: Color(0xFF0D807B), fontWeight: FontWeight.bold, fontSize: 12)),
-              onPressed: () => setState(() {
-                _repCount = 0;
-                _currentPhase = 'up';
-                _maxFlexion = 180.0;
-                _freestyleTally.updateAll((key, value) => 0);
-              }),
-            ),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: _isPausedByGesture ? Colors.orange.shade800 : const Color(0xFF0D807B)),
-                backgroundColor: _isPausedByGesture ? Colors.orange.shade50 : null,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  _isFreestyleMode
+                      ? 'Freestyle Circuit Mode'
+                      : 'Targeted Form Check',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Color(0xFF14181F),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              icon: Icon(_isPausedByGesture ? Icons.play_arrow_rounded : Icons.pause_rounded, color: _isPausedByGesture ? Colors.orange.shade800 : const Color(0xFF0D807B), size: 18),
-              label: Text(_isPausedByGesture ? 'Resume' : 'Pause', style: TextStyle(color: _isPausedByGesture ? Colors.orange.shade800 : const Color(0xFF0D807B), fontWeight: FontWeight.bold, fontSize: 12)),
-              onPressed: () {
-                setState(() {
-                  _isPausedByGesture = !_isPausedByGesture;
-                  _showGestureNotice(_isPausedByGesture ? '✋ AI Paused' : 'AI Resumed');
-                });
-              },
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _isFreestyleMode
+                ? 'AI is continuously identifying movements (Squats, Push-ups, Curls, Presses) & auto-tallying reps.'
+                : 'Targeting ${_exerciseDisplayName(widget.targetExercise ?? "Squat")}. ✋ Open palm pauses live camera stream. 👍 Thumbs-up completes set.',
+            style: TextStyle(
+              color: const Color(0xFF14181F).withValues(alpha: 0.65),
+              fontSize: 11,
+              height: 1.2,
             ),
-            Consumer<ProfileProvider>(
-              builder: (context, profileProvider, _) {
-                final bool ghostEnabled = profileProvider.ghostTrainerEnabled;
-                return OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: ghostEnabled ? Colors.teal : Colors.grey),
-                    backgroundColor: ghostEnabled ? Colors.teal.withValues(alpha: 0.08) : null,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF0D807B)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
                   ),
-                  icon: Icon(
-                    ghostEnabled ? Icons.visibility : Icons.visibility_off,
-                    color: ghostEnabled ? Colors.teal : Colors.grey,
-                    size: 18,
+                ),
+                icon: const Icon(
+                  Icons.restart_alt_rounded,
+                  color: Color(0xFF0D807B),
+                  size: 16,
+                ),
+                label: const Text(
+                  'Reset',
+                  style: TextStyle(
+                    color: Color(0xFF0D807B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
-                  label: Text(
-                    'Ghost Silhouette',
-                    style: TextStyle(
-                      color: ghostEnabled ? Colors.teal : Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                ),
+                onPressed: () => setState(() {
+                  _repCount = 0;
+                  _currentPhase = 'up';
+                  _maxFlexion = 180.0;
+                  _freestyleTally.updateAll((key, value) => 0);
+                }),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: _isPausedByGesture
+                        ? Colors.orange.shade800
+                        : const Color(0xFF0D807B),
+                  ),
+                  backgroundColor: _isPausedByGesture
+                      ? Colors.orange.shade50
+                      : null,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                ),
+                icon: Icon(
+                  _isPausedByGesture
+                      ? Icons.play_arrow_rounded
+                      : Icons.pause_rounded,
+                  color: _isPausedByGesture
+                      ? Colors.orange.shade800
+                      : const Color(0xFF0D807B),
+                  size: 16,
+                ),
+                label: Text(
+                  _isPausedByGesture ? 'Resume' : 'Pause',
+                  style: TextStyle(
+                    color: _isPausedByGesture
+                        ? Colors.orange.shade800
+                        : const Color(0xFF0D807B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPausedByGesture = !_isPausedByGesture;
+                    _showGestureNotice(
+                      _isPausedByGesture ? '✋ AI Paused' : 'AI Resumed',
+                    );
+                  });
+                },
+              ),
+              Consumer<ProfileProvider>(
+                builder: (context, profileProvider, _) {
+                  final bool ghostEnabled = profileProvider.ghostTrainerEnabled;
+                  return OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: ghostEnabled ? Colors.teal : Colors.grey,
+                      ),
+                      backgroundColor: ghostEnabled
+                          ? Colors.teal.withValues(alpha: 0.08)
+                          : null,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    profileProvider.toggleGhostTrainer(!ghostEnabled);
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      ],
+                    icon: Icon(
+                      ghostEnabled ? Icons.visibility : Icons.visibility_off,
+                      color: ghostEnabled ? Colors.teal : Colors.grey,
+                      size: 16,
+                    ),
+                    label: Text(
+                      'Ghost Silhouette',
+                      style: TextStyle(
+                        color: ghostEnabled ? Colors.teal : Colors.grey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                    onPressed: () {
+                      profileProvider.toggleGhostTrainer(!ghostEnabled);
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -992,7 +1468,11 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
         children: [
           const Text(
             'Simulation & Hand Gesture Controller',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14181F), fontSize: 14),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF14181F),
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 8),
           _buildSlider('Knee Angle', _simKneeAngle, 70, 180, (val) {
@@ -1011,19 +1491,29 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           Row(
             children: [
               FilterChip(
-                label: const Text('✋ Open Palm Gesture', style: TextStyle(fontSize: 10)),
+                label: const Text(
+                  '✋ Open Palm Gesture',
+                  style: TextStyle(fontSize: 10),
+                ),
                 selected: _simPalmGesture,
                 onSelected: (val) {
                   setState(() {
                     _simPalmGesture = val;
                     _isPausedByGesture = val;
-                    _showGestureNotice(val ? '✋ Open Palm: Detection Paused' : '✋ Open Palm: Detection Resumed');
+                    _showGestureNotice(
+                      val
+                          ? '✋ Open Palm: Detection Paused'
+                          : '✋ Open Palm: Detection Resumed',
+                    );
                   });
                 },
               ),
               const SizedBox(width: 8),
               FilterChip(
-                label: const Text('👍 Thumbs Up Gesture', style: TextStyle(fontSize: 10)),
+                label: const Text(
+                  '👍 Thumbs Up Gesture',
+                  style: TextStyle(fontSize: 10),
+                ),
                 selected: _simThumbsUpGesture,
                 onSelected: (val) {
                   setState(() {
@@ -1039,19 +1529,43 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     );
   }
 
-  Widget _buildSlider(String label, double value, double min, double max, ValueChanged<double> onChanged) {
+  Widget _buildSlider(
+    String label,
+    double value,
+    double min,
+    double max,
+    ValueChanged<double> onChanged,
+  ) {
     return Row(
       children: [
-        SizedBox(width: 85, child: Text(label, style: TextStyle(color: const Color(0xFF14181F).withValues(alpha: 0.7), fontSize: 11))),
+        SizedBox(
+          width: 85,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: const Color(0xFF14181F).withValues(alpha: 0.7),
+              fontSize: 11,
+            ),
+          ),
+        ),
         Expanded(
           child: Slider(
-            min: min, max: max, value: value,
+            min: min,
+            max: max,
+            value: value,
             activeColor: const Color(0xFF0D807B),
             inactiveColor: const Color(0xFF14181F).withValues(alpha: 0.15),
             onChanged: onChanged,
           ),
         ),
-        Text('${value.toStringAsFixed(0)}°', style: const TextStyle(color: Color(0xFF14181F), fontSize: 11, fontWeight: FontWeight.bold)),
+        Text(
+          '${value.toStringAsFixed(0)}°',
+          style: const TextStyle(
+            color: Color(0xFF14181F),
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -1095,14 +1609,15 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   String _exerciseDisplayName(String key) {
     return {
-      'squat': 'Squat',
-      'push_up': 'Push-Up',
-      'bicep_curl': 'Bicep Curl',
-      'shoulder_press': 'Shoulder Press',
-      'jumping_jack': 'Jumping Jack',
-      'plank': 'Plank',
-      'custom': 'Custom Exercise',
-    }[key] ?? key;
+          'squat': 'Squat',
+          'push_up': 'Push-Up',
+          'bicep_curl': 'Bicep Curl',
+          'shoulder_press': 'Shoulder Press',
+          'jumping_jack': 'Jumping Jack',
+          'plank': 'Plank',
+          'custom': 'Custom Exercise',
+        }[key] ??
+        key;
   }
 }
 
@@ -1158,7 +1673,9 @@ class _SkeletonOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Color accentColor = isGoodForm ? AppColors.accentEmeraldLight : Colors.orange;
+    final Color accentColor = isGoodForm
+        ? AppColors.accentEmeraldLight
+        : Colors.orange;
 
     final bonePaint = Paint()
       ..color = accentColor.withValues(alpha: 0.85)
@@ -1186,7 +1703,10 @@ class _SkeletonOverlayPainter extends CustomPainter {
       for (final pair in _fullConnections) {
         final a = pose.landmarks[pair[0]];
         final b = pose.landmarks[pair[1]];
-        if (a != null && b != null && a.likelihood > 0.4 && b.likelihood > 0.4) {
+        if (a != null &&
+            b != null &&
+            a.likelihood > 0.4 &&
+            b.likelihood > 0.4) {
           canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), ghostPaint);
         }
       }
@@ -1210,7 +1730,8 @@ class _SkeletonOverlayPainter extends CustomPainter {
     }
 
     // 3. Draw Live Joint-Angle Floating Chip Readout
-    final targetJoint = pose.landmarks[jointType] ?? pose.landmarks[PoseLandmarkType.leftElbow];
+    final targetJoint =
+        pose.landmarks[jointType] ?? pose.landmarks[PoseLandmarkType.leftElbow];
     if (targetJoint != null && targetJoint.likelihood > 0.4) {
       final jointPos = toScreen(targetJoint.x, targetJoint.y);
       final angleText = '${measuredAngle.toStringAsFixed(0)}°';
@@ -1238,7 +1759,8 @@ class _SkeletonOverlayPainter extends CustomPainter {
         const Radius.circular(8),
       );
 
-      final Paint bgPaint = Paint()..color = Colors.black.withValues(alpha: 0.85);
+      final Paint bgPaint = Paint()
+        ..color = Colors.black.withValues(alpha: 0.85);
       final Paint borderPaint = Paint()
         ..color = isGoodForm ? AppColors.accentEmeraldLight : Colors.amber
         ..style = PaintingStyle.stroke
@@ -1276,7 +1798,11 @@ class _SkeletonOverlayPainter extends CustomPainter {
         for (int i = 0; i < group.length - 1; i++) {
           final p1 = hand.landmarks[group[i]];
           final p2 = hand.landmarks[group[i + 1]];
-          canvas.drawLine(toScreen(p1.x, p1.y), toScreen(p2.x, p2.y), handBonePaint);
+          canvas.drawLine(
+            toScreen(p1.x, p1.y),
+            toScreen(p2.x, p2.y),
+            handBonePaint,
+          );
         }
       }
 
@@ -1309,7 +1835,9 @@ class _StickmanPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2 + 20);
-    final Color boneColor = isGoodForm ? AppColors.accentEmeraldLight : Colors.orange;
+    final Color boneColor = isGoodForm
+        ? AppColors.accentEmeraldLight
+        : Colors.orange;
 
     final paintJoint = Paint()
       ..color = AppColors.accentEmeraldLight
