@@ -421,53 +421,63 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         title: Text(
-          'Live AI Form Check — $activeExerciseLabel',
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          'AI Form Check — $activeExerciseLabel',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          // Mode Selector (Targeted vs Freestyle)
-          ChoiceChip(
-            label: Text(
-              _isFreestyleMode ? 'Freestyle' : 'Targeted',
-              style: TextStyle(
-                color: _isFreestyleMode ? Colors.white : AppColors.accentEmeraldLight,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Mode Selector (Targeted vs Freestyle)
+                ChoiceChip(
+                  label: Text(
+                    _isFreestyleMode ? 'Freestyle' : 'Targeted',
+                    style: TextStyle(
+                      color: _isFreestyleMode ? Colors.white : AppColors.accentEmeraldLight,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  selected: _isFreestyleMode,
+                  selectedColor: AppColors.accentEmeraldLight.withValues(alpha: 0.3),
+                  backgroundColor: Colors.white10,
+                  onSelected: (val) {
+                    setState(() {
+                      _isFreestyleMode = val;
+                    });
+                  },
+                ),
+                const SizedBox(width: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Sim', style: TextStyle(fontSize: 10, color: Colors.white54)),
+                    Switch(
+                      value: _isSimulationMode,
+                      activeThumbColor: AppColors.accentEmeraldLight,
+                      onChanged: (val) {
+                        setState(() {
+                          _isSimulationMode = val;
+                          if (!val && !_isCameraInitialized) _initializeCamera();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
-            selected: _isFreestyleMode,
-            selectedColor: AppColors.accentEmeraldLight.withValues(alpha: 0.3),
-            backgroundColor: Colors.white10,
-            onSelected: (val) {
-              setState(() {
-                _isFreestyleMode = val;
-              });
-            },
-          ),
-          const SizedBox(width: 8),
-          Row(
-            children: [
-              const Text('Simulate', style: TextStyle(fontSize: 11, color: Colors.white54)),
-              Switch(
-                value: _isSimulationMode,
-                activeThumbColor: AppColors.accentEmeraldLight,
-                onChanged: (val) {
-                  setState(() {
-                    _isSimulationMode = val;
-                    if (!val && !_isCameraInitialized) _initializeCamera();
-                  });
-                },
-              ),
-            ],
           ),
         ],
       ),
       body: LiquidBackground(
         child: Column(
           children: [
-            // Camera / Overlay Viewport
+            // Full Screen Camera / Overlay Viewport
             Expanded(
-              flex: 3,
+              flex: 5,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -573,15 +583,20 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       right: 28,
                       child: Column(
                         children: [
-                          // Top Status Row
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildRepCounterBadge(),
-                              _buildPhaseChip(_currentPhase),
-                              if (_classifiedExercise != null)
-                                _buildInfoBadge('DETECTED', _exerciseDisplayName(_classifiedExercise!), Colors.amber),
-                            ],
+                          // Top Status Row (horizontal scroll prevents any overflow)
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildRepCounterBadge(),
+                                const SizedBox(width: 6),
+                                _buildPhaseChip(_currentPhase),
+                                const SizedBox(width: 6),
+                                if (_classifiedExercise != null)
+                                  _buildInfoBadge('DETECTED', _exerciseDisplayName(_classifiedExercise!), Colors.amber),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 8),
 
@@ -609,8 +624,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                             ),
                           ),
 
-                          // Multi-exercise Live Tally Panel (Freestyle Mode)
-                          if (_isFreestyleMode) ...[
+                          // Multi-exercise Live Tally Panel (Freestyle Mode — hidden when AI is actively detecting for full screen view)
+                          if (_isFreestyleMode && _lastPose == null) ...[
                             const SizedBox(height: 8),
                             _buildFreestyleTallyPanel(),
                           ],
@@ -806,23 +821,29 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.teal.withValues(alpha: 0.5)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: _freestyleTally.entries.map((e) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                e.key,
-                style: const TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: _freestyleTally.entries.map((e) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    e.key,
+                    style: const TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '${e.value}',
+                    style: const TextStyle(color: AppColors.accentEmeraldLight, fontSize: 13, fontWeight: FontWeight.w900),
+                  ),
+                ],
               ),
-              Text(
-                '${e.value}',
-                style: const TextStyle(color: AppColors.accentEmeraldLight, fontSize: 13, fontWeight: FontWeight.w900),
-              ),
-            ],
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -899,8 +920,10 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
@@ -915,7 +938,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                 _freestyleTally.updateAll((key, value) => 0);
               }),
             ),
-            const SizedBox(width: 8),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: _isPausedByGesture ? Colors.orange.shade800 : const Color(0xFF0D807B)),
@@ -930,7 +952,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                 });
               },
             ),
-            const SizedBox(width: 8),
             Consumer<ProfileProvider>(
               builder: (context, profileProvider, _) {
                 final bool ghostEnabled = profileProvider.ghostTrainerEnabled;
