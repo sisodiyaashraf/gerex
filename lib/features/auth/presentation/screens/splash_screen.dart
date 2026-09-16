@@ -7,86 +7,61 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final size = mediaQuery.size;
-
-    return GerexScaffold(
+    return Scaffold(
       body: Stack(
-        alignment: Alignment.center,
+        fit: StackFit.expand,
         children: [
-          // Background subtle ambient radial glow
-          Positioned.fill(
+          // Full-screen background image covering all edges
+          Image.asset(
+            'assets/images/app icon/gerex splash_screen.jpeg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: AppColors.bgDarkPrimary,
+                child: const Center(
+                  child: Icon(
+                    Icons.fitness_center_rounded,
+                    size: 80,
+                    color: AppColors.accentEmeraldLight,
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Subtle gradient overlay at the bottom for smooth indicator readability
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 160,
             child: Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.85,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
                   colors: [
-                    Color(0x3350C19D), // Subtle emerald glow
                     Colors.transparent,
+                    Colors.black.withValues(alpha: 0.6),
                   ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
             ),
           ),
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Hero(
-                    tag: 'app_splash_logo',
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: size.width * 0.75,
-                        maxHeight: size.height * 0.45,
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.accentEmeraldLight.withValues(alpha: 0.25),
-                              blurRadius: 32,
-                              spreadRadius: 4,
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: Image.asset(
-                            'assets/images/app icon/gerex splash_screen.jpeg',
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                padding: const EdgeInsets.all(32),
-                                color: AppColors.cardDarkGlass,
-                                child: const Icon(
-                                  Icons.fitness_center_rounded,
-                                  size: 80,
-                                  color: AppColors.accentEmeraldLight,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.accentEmeraldLight,
-                    ),
-                    strokeWidth: 3,
-                  ),
-                ],
+
+          // Bottom progress indicator
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 48,
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.accentEmeraldLight,
+                ),
+                strokeWidth: 3,
               ),
             ),
           ),
