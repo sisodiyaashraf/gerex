@@ -91,9 +91,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   bool _simPalmGesture = false;
   bool _simThumbsUpGesture = false;
 
-  // Throttle
+  // Throttle (25ms = up to 40 FPS high-speed detection)
   DateTime _lastProcessedAt = DateTime.now();
-  static const _throttleMs = 60;
+  static const _throttleMs = 25;
 
   // Animation for calibration pulse
   late AnimationController _pulseController;
@@ -182,11 +182,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     _isProcessing = true;
 
     try {
-      final WriteBuffer allBytes = WriteBuffer();
-      for (final Plane plane in image.planes) {
-        allBytes.putUint8List(plane.bytes);
+      int totalBytes = 0;
+      for (final plane in image.planes) {
+        totalBytes += plane.bytes.length;
       }
-      final bytes = allBytes.done().buffer.asUint8List();
+      final bytes = Uint8List(totalBytes);
+      int offset = 0;
+      for (final plane in image.planes) {
+        bytes.setRange(offset, offset + plane.bytes.length, plane.bytes);
+        offset += plane.bytes.length;
+      }
 
       InputImageFormat? format = InputImageFormatValue.fromRawValue(
         image.format.raw,
@@ -708,6 +713,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                 const SizedBox(width: 6),
                                 _buildExerciseSelectorChip(),
                                 const SizedBox(width: 6),
+                                _buildExerciseGuideChip(),
+                                const SizedBox(width: 6),
                                 _buildPhaseChip(_currentPhase),
                                 const SizedBox(width: 6),
                                 if (_classifiedExercise != null)
@@ -946,6 +953,35 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     );
   }
 
+  Widget _buildExerciseGuideChip() {
+    return GestureDetector(
+      onTap: () => _showExerciseGuideModal(_selectedExerciseKey),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.amber.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.amber, width: 1.2),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.menu_book_rounded, color: Colors.amber, size: 14),
+            SizedBox(width: 4),
+            Text(
+              'Guide',
+              style: TextStyle(
+                color: Colors.amber,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showExercisePickerModal() {
     showModalBottomSheet(
       context: context,
@@ -1040,20 +1076,36 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                           : FontWeight.normal,
                     ),
                   ),
-                  trailing: isSelected
-                      ? const Icon(
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.info_outline_rounded,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showExerciseGuideModal(key);
+                        },
+                      ),
+                      if (isSelected)
+                        const Icon(
                           Icons.check_circle_rounded,
                           color: AppColors.accentEmeraldLight,
-                        )
-                      : null,
+                        ),
+                    ],
+                  ),
                   onTap: () {
                     setState(() {
                       _selectedExerciseKey = key;
                       _isFreestyleMode = false;
                       _repCount = 0;
-                      _currentPhase = 'up';
+                      _maxFlexion = 180.0;
                     });
                     Navigator.pop(context);
+                    _showExerciseGuideModal(key);
                   },
                 );
               }),
@@ -1620,6 +1672,269 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           'custom': 'Custom Exercise',
         }[key] ??
         key;
+  }
+
+  static final Map<String, Map<String, dynamic>> _exerciseGuides = {
+    'squat': {
+      'title': 'Squat Form Guide',
+      'icon': Icons.fitness_center_rounded,
+      'targetAngle': 'Knee flex ≤ 95° at bottom',
+      'setup':
+          'Stand tall with feet shoulder-width apart, toes turned slightly outward (5-15°). Keep your chest upright and core tight.',
+      'execution':
+          'Initiate movement by pushing hips back as if sitting in a chair. Bend knees until thighs are parallel to floor (<95° knee angle). Press through heels to stand tall.',
+      'aiCues':
+          'AI tracks hip-knee-ankle angle continuously. Green skeleton indicates optimal depth and erect posture.',
+      'mistakes':
+          '• Knees collapsing inward (valgus)\n• Heels lifting off floor\n• Excessive forward torso leaning',
+    },
+    'push_up': {
+      'title': 'Push-Up Form Guide',
+      'icon': Icons.sports_gymnastics_rounded,
+      'targetAngle': 'Elbow flex ≤ 90° at bottom',
+      'setup':
+          'Place hands slightly wider than shoulders. Form a straight rigid line from shoulders through hips to ankles in high plank.',
+      'execution':
+          'Lower body as a single unit by bending elbows to 90° or lower. Keep elbows at ~45° angle relative to torso. Press up firmly.',
+      'aiCues':
+          'AI evaluates shoulder-elbow-wrist angle and spine linearity to ensure complete reps.',
+      'mistakes':
+          '• Hips sagging toward ground\n• Piking hips upward into inverted V\n• Incomplete elbow bending (half reps)',
+    },
+    'bicep_curl': {
+      'title': 'Bicep Curl Form Guide',
+      'icon': Icons.accessibility_new_rounded,
+      'targetAngle': 'Elbow flex ≤ 50° top, ~180° bottom',
+      'setup':
+          'Stand tall with arms fully extended down by sides, palms facing forward (supinated grip), shoulders pulled back.',
+      'execution':
+          'Flex elbows to curl weight upward while keeping elbows pinned to ribcage. Squeeze biceps at peak (<50° angle) and lower under control.',
+      'aiCues':
+          'AI measures elbow flexion range & checks wrist rotation/alignment with 21 hand landmarks.',
+      'mistakes':
+          '• Swinging body for momentum\n• Elbows flaring out or moving forward\n• Cutting bottom extension short',
+    },
+    'shoulder_press': {
+      'title': 'Overhead Press Form Guide',
+      'icon': Icons.accessibility_rounded,
+      'targetAngle': 'Arm extension ≥ 165° overhead',
+      'setup':
+          'Hold weights or hands at ear/shoulder height, elbows bent at 90°, core and glutes engaged.',
+      'execution':
+          'Press straight overhead until arms are extended overhead without arching lower back. Return under control to shoulder level.',
+      'aiCues':
+          'AI measures overhead arm angle & checks shoulder height symmetry in real time.',
+      'mistakes':
+          '• Excessive lower back arching\n• Asymmetrical press (one arm higher)\n• Stopping short of full overhead lockout',
+    },
+    'jumping_jack': {
+      'title': 'Jumping Jack Guide',
+      'icon': Icons.directions_run_rounded,
+      'targetAngle': 'Arm abduction > 140° overhead',
+      'setup':
+          'Stand upright with feet together and arms hanging relaxed by your sides.',
+      'execution':
+          'Jump feet out laterally beyond shoulders while raising arms in wide arc overhead. Jump back to starting position dynamically.',
+      'aiCues':
+          'AI detects full arm overhead swing and wide stance jumps for rep counting.',
+      'mistakes':
+          '• Half-arm swings below head height\n• Short foot jumps\n• Irregular, jerky rhythm',
+    },
+    'plank': {
+      'title': 'Plank Form Guide',
+      'icon': Icons.horizontal_rule_rounded,
+      'targetAngle': 'Spine alignment ~180° straight line',
+      'setup':
+          'Place forearms on ground under shoulders. Extend legs straight back resting on toes.',
+      'execution':
+          'Contract core, glutes, and quad muscles to maintain rigid straight line from neck to heels. Hold steady without moving.',
+      'aiCues':
+          'AI analyzes shoulder-hip-ankle line to detect hip drop or hip pike warnings.',
+      'mistakes':
+          '• Dropping lower back and hips\n• Raising hips into inverted V\n• Holding breath',
+    },
+  };
+
+  void _showExerciseGuideModal(String exerciseKey) {
+    final guide = _exerciseGuides[exerciseKey] ?? _exerciseGuides['squat']!;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF14181F),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentEmeraldLight.withValues(
+                            alpha: 0.2,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          guide['icon'] as IconData,
+                          color: AppColors.accentEmeraldLight,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            guide['title'] as String,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Target: ${guide['targetAngle'] as String}',
+                            style: const TextStyle(
+                              color: AppColors.accentEmeraldLight,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(color: Colors.white12, height: 24),
+
+              // Scrollable Instructions & Tips
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGuideSection(
+                        '1. Starting Stance',
+                        guide['setup'] as String,
+                        Icons.accessibility_new_rounded,
+                        Colors.lightBlueAccent,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildGuideSection(
+                        '2. Movement Execution',
+                        guide['execution'] as String,
+                        Icons.fitness_center_rounded,
+                        AppColors.accentEmeraldLight,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildGuideSection(
+                        '3. Real-Time AI Feedback Cues',
+                        guide['aiCues'] as String,
+                        Icons.center_focus_strong_rounded,
+                        Colors.amber,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildGuideSection(
+                        '4. Common Mistakes to Avoid',
+                        guide['mistakes'] as String,
+                        Icons.warning_amber_rounded,
+                        Colors.orangeAccent,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentEmeraldLight,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  icon: const Icon(Icons.play_circle_fill_rounded),
+                  label: const Text(
+                    'Start AI Form Check Now',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGuideSection(
+    String title,
+    String content,
+    IconData icon,
+    Color accentColor,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: accentColor, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  color: accentColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            content,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
