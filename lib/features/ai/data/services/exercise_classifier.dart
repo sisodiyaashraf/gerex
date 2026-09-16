@@ -57,7 +57,24 @@ class ExerciseClassifier {
       }
     }
 
-    // D. Jumping Jack signature: arms high up + legs wide
+    // D. Bicep Curl signature: standing upright + active elbow flexion (< 100°) while upper arm stays near torso
+    if (leftShoulder != null && leftElbow != null && leftWrist != null) {
+      final spineLean = FormAnalyzer.calculateLeanAngle(leftShoulder, leftHip);
+      final shoulderAngle = FormAnalyzer.calculateAngle(leftHip, leftShoulder, leftElbow);
+      if (spineLean < 35.0 && shoulderAngle < 45.0 && elbowAngle < 100.0) {
+        return 'bicep_curl';
+      }
+    }
+
+    // E. Shoulder Press signature: hands/wrists above head level while standing upright
+    if (leftShoulder != null && leftWrist != null) {
+      final spineLean = FormAnalyzer.calculateLeanAngle(leftShoulder, leftHip);
+      if (spineLean < 35.0 && leftWrist.y < leftShoulder.y - 30.0) {
+        return 'shoulder_press';
+      }
+    }
+
+    // F. Jumping Jack signature: arms high up + legs wide
     if (leftShoulder != null && leftElbow != null) {
       final armAngle = FormAnalyzer.calculateAngle(leftHip, leftShoulder, leftElbow);
       final rightHip = pose.landmarks[PoseLandmarkType.rightHip];
@@ -78,3 +95,4 @@ class ExerciseClassifier {
     return null;
   }
 }
+
