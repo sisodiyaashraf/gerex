@@ -186,28 +186,26 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   void _processCameraImage(CameraImage image) async {
+    // Non-blocking guard: drop incoming frames immediately if detector is busy
+    if (_isProcessing) return;
+
     final now = DateTime.now();
-
-    // Watchdog safety: unlock stuck processing state if > 1500ms elapse
-    if (_isProcessing) {
-      if (now.difference(_lastProcessedAt).inMilliseconds > 1500) {
-        _isProcessing = false;
-      } else {
-        return;
-      }
-    }
-
     if (_isPausedByGesture) return;
-    if (now.difference(_lastProcessedAt).inMilliseconds < _throttleMs) return;
+    if (now.difference(_lastProcessedAt).inMilliseconds < 30) return;
     _lastProcessedAt = now;
     _isProcessing = true;
 
     try {
-      final WriteBuffer allBytes = WriteBuffer();
-      for (final plane in image.planes) {
-        allBytes.putUint8List(plane.bytes);
+      Uint8List bytes;
+      if (image.planes.length == 1) {
+        bytes = image.planes[0].bytes;
+      } else {
+        final WriteBuffer allBytes = WriteBuffer();
+        for (final plane in image.planes) {
+          allBytes.putUint8List(plane.bytes);
+        }
+        bytes = allBytes.done().buffer.asUint8List();
       }
-      final bytes = allBytes.done().buffer.asUint8List();
 
       InputImageFormat? format = InputImageFormatValue.fromRawValue(
         image.format.raw,
@@ -245,14 +243,17 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           _processHandGestures(hands, pose);
           _updatePoseState(pose, hands);
         } else {
-          setState(() {
-            _feedbackMessage = 'No body detected — step into camera frame';
-            _isGoodForm = false;
-          });
+          _poseOverlayNotifier.value = null;
+          if (_feedbackMessage != 'No body detected — step into camera frame') {
+            setState(() {
+              _feedbackMessage = 'No body detected — step into camera frame';
+              _isGoodForm = false;
+            });
+          }
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && _feedbackMessage != 'Scanning frame...') {
         setState(() {
           _feedbackMessage = 'Scanning frame...';
         });
