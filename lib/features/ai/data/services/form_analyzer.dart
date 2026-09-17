@@ -124,11 +124,25 @@ class FormAnalyzer {
     final ankle = useLeft ? leftAnkle : rightAnkle;
     final shoulder = useLeft ? getValidLandmark(pose, PoseLandmarkType.leftShoulder) : getValidLandmark(pose, PoseLandmarkType.rightShoulder);
 
-    if (hip == null || knee == null || ankle == null) {
-      return FormFeedback(message: "Stand sideways to show full profile", isGoodForm: false, progress: 0.0);
+    if (hip == null || knee == null) {
+      return FormFeedback(
+        message: "Step back so legs & full body are in frame",
+        isGoodForm: false,
+        progress: 0.0,
+      );
     }
 
-    final kneeAngle = calculateAngle(hip, knee, ankle);
+    // Fallback if ankle is cropped off at bottom of camera preview
+    final PoseLandmark effectiveAnkle = ankle ??
+        PoseLandmark(
+          type: useLeft ? PoseLandmarkType.leftAnkle : PoseLandmarkType.rightAnkle,
+          x: knee.x,
+          y: knee.y + 150.0,
+          z: knee.z,
+          likelihood: 0.5,
+        );
+
+    final kneeAngle = calculateAngle(hip, knee, effectiveAnkle);
     final spineLean = shoulder != null ? calculateLeanAngle(shoulder, hip) : 0.0;
 
     // Face/Head Check
@@ -136,9 +150,9 @@ class FormAnalyzer {
     bool isHeadNeutral = true;
     String headWarning = "";
     if (nose != null && shoulder != null) {
-      if (nose.y > shoulder.y) {
+      if (nose.y > shoulder.y + 50) {
         isHeadNeutral = false;
-        headWarning = "Look straight, do not look down!";
+        headWarning = "Keep head up & look straight ahead!";
       }
     }
 
