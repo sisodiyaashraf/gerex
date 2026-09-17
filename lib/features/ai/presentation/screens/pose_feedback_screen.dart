@@ -88,6 +88,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   // Last detected pose & hand landmarks (for skeleton painter)
   Pose? _lastPose;
+  List<HandSkeleton> _lastHands = [];
   Size _cameraPreviewSize = Size.zero;
 
   // Rep counting & Form State
@@ -97,6 +98,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   String _feedbackMessage = 'Get into position...';
   bool _isGoodForm = true;
   double _repProgress = 0.0;
+  double _currentJointAngle = 180.0;
+  PoseLandmarkType _primaryJointType = PoseLandmarkType.leftKnee;
 
   // Classifier state
   String? _classifiedExercise;
@@ -188,7 +191,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
     final now = DateTime.now();
     if (_isPausedByGesture) return;
-    if (now.difference(_lastProcessedAt).inMilliseconds < 30) return;
+    if (now.difference(_lastProcessedAt).inMilliseconds < _throttleMs) return;
     _lastProcessedAt = now;
     _isProcessing = true;
 
