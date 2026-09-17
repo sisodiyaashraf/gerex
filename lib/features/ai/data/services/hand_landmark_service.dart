@@ -134,7 +134,15 @@ class HandLandmarkService {
     final double px = -dy * (side == 'left' ? -1 : 1);
     final double py = dx * (side == 'left' ? -1 : 1);
 
-    const double handScale = 45.0;
+    // Dynamic hand scale based on user distance (wrist-to-elbow forearm length)
+    double handScale = 45.0;
+    if (elbow != null) {
+      final double armLen = sqrt(pow(wx - elbow.x, 2) + pow(wy - elbow.y, 2));
+      if (armLen > 0) {
+        handScale = (armLen * 0.38).clamp(20.0, 120.0);
+      }
+    }
+
     final List<HandLandmarkPoint> points = List.filled(
       21,
       HandLandmarkPoint(index: 0, x: wx, y: wy),
@@ -144,10 +152,10 @@ class HandLandmarkService {
     points[0] = HandLandmarkPoint(index: 0, x: wx, y: wy, confidence: wrist.likelihood);
 
     // 1-4: Thumb
-    final double tx = thumbTip != null && thumbTip.likelihood > 0.4
+    final double tx = thumbTip != null && thumbTip.likelihood > 0.35
         ? thumbTip.x
         : wx + px * handScale * 0.7 - dx * handScale * 0.3;
-    final double ty = thumbTip != null && thumbTip.likelihood > 0.4
+    final double ty = thumbTip != null && thumbTip.likelihood > 0.35
         ? thumbTip.y
         : wy + py * handScale * 0.7 - dy * handScale * 0.3;
 
@@ -162,9 +170,9 @@ class HandLandmarkService {
 
     // Finger vectors relative to wrist
     _buildFingerPoints(points, 5, wx, wy, dx + px * 0.35, dy + py * 0.35, handScale * 1.1, indexTip);
-    _buildFingerPoints(points, 9, wx, wy, dx, dy, handScale * 1.25, null);
-    _buildFingerPoints(points, 13, wx, wy, dx - px * 0.3, dy - py * 0.3, handScale * 1.15, null);
-    _buildFingerPoints(points, 17, wx, wy, dx - px * 0.6, dy - py * 0.6, handScale * 0.95, pinkyTip);
+    _buildFingerPoints(points, 9, wx, wy, dx + px * 0.1, dy + py * 0.1, handScale * 1.25, null);
+    _buildFingerPoints(points, 13, wx, wy, dx - px * 0.25, dy - py * 0.25, handScale * 1.15, null);
+    _buildFingerPoints(points, 17, wx, wy, dx - px * 0.55, dy - py * 0.55, handScale * 0.95, pinkyTip);
 
     return HandSkeleton(side: side, landmarks: points, confidence: wrist.likelihood);
   }
