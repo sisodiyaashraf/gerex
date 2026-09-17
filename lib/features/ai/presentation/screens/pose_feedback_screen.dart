@@ -88,7 +88,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   // Last detected pose & hand landmarks (for skeleton painter)
   Pose? _lastPose;
-  List<HandSkeleton> _lastHands = [];
   Size _cameraPreviewSize = Size.zero;
 
   // Rep counting & Form State
@@ -98,8 +97,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   String _feedbackMessage = 'Get into position...';
   bool _isGoodForm = true;
   double _repProgress = 0.0;
-  double _currentJointAngle = 180.0;
-  PoseLandmarkType _primaryJointType = PoseLandmarkType.leftKnee;
 
   // Classifier state
   String? _classifiedExercise;
@@ -112,9 +109,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   bool _simPalmGesture = false;
   bool _simThumbsUpGesture = false;
 
-  // Throttle (45ms = ~22 FPS optimal for live pose + hand tracking without hangs)
+  // Throttle (30ms = ~33 FPS optimal for live pose + hand tracking without hangs)
   DateTime _lastProcessedAt = DateTime.now();
-  static const _throttleMs = 45;
+  static const _throttleMs = 30;
 
   // Animation for calibration pulse
   late AnimationController _pulseController;
