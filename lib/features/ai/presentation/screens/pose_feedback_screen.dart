@@ -88,6 +88,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   // Last detected pose & hand landmarks (for skeleton painter)
   Pose? _lastPose;
+  // ignore: unused_field
   List<HandSkeleton> _lastHands = [];
   Size _cameraPreviewSize = Size.zero;
 
@@ -98,7 +99,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   String _feedbackMessage = 'Get into position...';
   bool _isGoodForm = true;
   double _repProgress = 0.0;
+  // ignore: unused_field
   double _currentJointAngle = 180.0;
+  // ignore: unused_field
   PoseLandmarkType _primaryJointType = PoseLandmarkType.leftKnee;
 
   // Classifier state
