@@ -13,6 +13,26 @@ import 'package:gerex/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 
+class PoseOverlayData {
+  final Pose pose;
+  final List<HandSkeleton> hands;
+  final bool isGoodForm;
+  final double currentJointAngle;
+  final PoseLandmarkType primaryJointType;
+  final String currentPhase;
+  final String exercise;
+
+  const PoseOverlayData({
+    required this.pose,
+    required this.hands,
+    required this.isGoodForm,
+    required this.currentJointAngle,
+    required this.primaryJointType,
+    required this.currentPhase,
+    required this.exercise,
+  });
+}
+
 class PoseFeedbackScreen extends StatefulWidget {
   /// Optional: if provided, form-check mode targets this specific exercise.
   final String?
@@ -34,6 +54,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   CameraController? _cameraController;
   final PoseDetectorService _poseDetectorService = PoseDetectorService();
   final HandLandmarkService _handLandmarkService = HandLandmarkService();
+  final ValueNotifier<PoseOverlayData?> _poseOverlayNotifier = ValueNotifier(null);
 
   bool _isCameraInitialized = false;
   bool _isSimulationMode = kIsWeb;
