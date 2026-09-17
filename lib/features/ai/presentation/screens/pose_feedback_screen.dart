@@ -91,9 +91,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   bool _simPalmGesture = false;
   bool _simThumbsUpGesture = false;
 
-  // Throttle (25ms = up to 40 FPS high-speed detection)
+  // Throttle (45ms = ~22 FPS optimal for live pose + hand tracking without hangs)
   DateTime _lastProcessedAt = DateTime.now();
-  static const _throttleMs = 25;
+  static const _throttleMs = 45;
 
   // Animation for calibration pulse
   late AnimationController _pulseController;
@@ -182,16 +182,11 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     _isProcessing = true;
 
     try {
-      int totalBytes = 0;
+      final WriteBuffer allBytes = WriteBuffer();
       for (final plane in image.planes) {
-        totalBytes += plane.bytes.length;
+        allBytes.putUint8List(plane.bytes);
       }
-      final bytes = Uint8List(totalBytes);
-      int offset = 0;
-      for (final plane in image.planes) {
-        bytes.setRange(offset, offset + plane.bytes.length, plane.bytes);
-        offset += plane.bytes.length;
-      }
+      final bytes = allBytes.done().buffer.asUint8List();
 
       InputImageFormat? format = InputImageFormatValue.fromRawValue(
         image.format.raw,
