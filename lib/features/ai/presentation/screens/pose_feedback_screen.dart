@@ -572,35 +572,53 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                   _isSimulationMode
                       ? _buildSimulationGraphic(theme)
                       : _isCameraInitialized && _cameraController != null
-                      ? CameraPreview(_cameraController!)
+                      ? ClipRect(
+                          child: SizedBox.expand(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: _cameraPreviewSize.width,
+                                height: _cameraPreviewSize.height,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    CameraPreview(_cameraController!),
+                                    if (_lastPose != null)
+                                      CustomPaint(
+                                        painter: _SkeletonOverlayPainter(
+                                          pose: _lastPose!,
+                                          hands: _lastHands,
+                                          imageSize: _cameraPreviewSize,
+                                          isFrontCamera:
+                                              _cameraController
+                                                      ?.description
+                                                      .lensDirection ==
+                                                  CameraLensDirection.front,
+                                          isGoodForm: _isGoodForm,
+                                          showGhostTrainer:
+                                              Provider.of<ProfileProvider>(
+                                                context,
+                                              ).ghostTrainerEnabled,
+                                          exercise:
+                                              widget.targetExercise ??
+                                              _classifiedExercise ??
+                                              'custom',
+                                          phase: _currentPhase,
+                                          measuredAngle: _currentJointAngle,
+                                          jointType: _primaryJointType,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
                       : const Center(
                           child: CircularProgressIndicator(
                             color: AppColors.accentEmeraldLight,
                           ),
                         ),
-
-                  // 2. Full Connected Body Skeleton + Joint Readout + 21-point Hand Skeleton
-                  if (!_isSimulationMode &&
-                      _lastPose != null &&
-                      _cameraPreviewSize != Size.zero)
-                    CustomPaint(
-                      painter: _SkeletonOverlayPainter(
-                        pose: _lastPose!,
-                        hands: _lastHands,
-                        imageSize: _cameraPreviewSize,
-                        isGoodForm: _isGoodForm,
-                        showGhostTrainer: Provider.of<ProfileProvider>(
-                          context,
-                        ).ghostTrainerEnabled,
-                        exercise:
-                            widget.targetExercise ??
-                            _classifiedExercise ??
-                            'custom',
-                        phase: _currentPhase,
-                        measuredAngle: _currentJointAngle,
-                        jointType: _primaryJointType,
-                      ),
-                    ),
 
                   // 3. Vertical Gradient Progress Slider (Right Edge)
                   Positioned(
@@ -1951,6 +1969,7 @@ class _SkeletonOverlayPainter extends CustomPainter {
   final Pose pose;
   final List<HandSkeleton> hands;
   final Size imageSize;
+  final bool isFrontCamera;
   final bool isGoodForm;
   final bool showGhostTrainer;
   final String exercise;
@@ -1962,6 +1981,7 @@ class _SkeletonOverlayPainter extends CustomPainter {
     required this.pose,
     required this.hands,
     required this.imageSize,
+    this.isFrontCamera = true,
     required this.isGoodForm,
     this.showGhostTrainer = false,
     this.exercise = 'custom',
@@ -1976,6 +1996,10 @@ class _SkeletonOverlayPainter extends CustomPainter {
     [PoseLandmarkType.nose, PoseLandmarkType.rightEye],
     [PoseLandmarkType.leftEye, PoseLandmarkType.leftEar],
     [PoseLandmarkType.rightEye, PoseLandmarkType.rightEar],
+    [PoseLandmarkType.leftEye, PoseLandmarkType.rightEye],
+    [PoseLandmarkType.leftMouth, PoseLandmarkType.rightMouth],
+    [PoseLandmarkType.nose, PoseLandmarkType.leftMouth],
+    [PoseLandmarkType.nose, PoseLandmarkType.rightMouth],
 
     // Torso box
     [PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder],
@@ -2012,8 +2036,14 @@ class _SkeletonOverlayPainter extends CustomPainter {
       ..strokeWidth = 7.0
       ..style = PaintingStyle.fill;
 
+    final faceJointPaint = Paint()
+      ..color = const Color(0xFFFFD54F)
+      ..style = PaintingStyle.fill;
+
     Offset toScreen(double lx, double ly) {
-      final double x = (1.0 - lx / imageSize.width) * size.width;
+      final double x = isFrontCamera
+          ? (1.0 - lx / imageSize.width) * size.width
+          : (lx / imageSize.width) * size.width;
       final double y = (ly / imageSize.height) * size.height;
       return Offset(x, y);
     }
@@ -2047,10 +2077,29 @@ class _SkeletonOverlayPainter extends CustomPainter {
     }
 
     // Draw Joint Dots
+    const faceTypes = {
+      PoseLandmarkType.nose,
+      PoseLandmarkType.leftEyeInner,
+      PoseLandmarkType.leftEye,
+      PoseLandmarkType.leftEyeOuter,
+      PoseLandmarkType.rightEyeInner,
+      PoseLandmarkType.rightEye,
+      PoseLandmarkType.rightEyeOuter,
+      PoseLandmarkType.leftEar,
+      PoseLandmarkType.rightEar,
+      PoseLandmarkType.leftMouth,
+      PoseLandmarkType.rightMouth,
+    };
+
     for (final entry in pose.landmarks.entries) {
       final lm = entry.value;
       if (lm.likelihood > 0.4) {
-        canvas.drawCircle(toScreen(lm.x, lm.y), 5, jointPaint);
+        final pos = toScreen(lm.x, lm.y);
+        if (faceTypes.contains(entry.key)) {
+          canvas.drawCircle(pos, 3.5, faceJointPaint);
+        } else {
+          canvas.drawCircle(pos, 5.0, jointPaint);
+        }
       }
     }
 
