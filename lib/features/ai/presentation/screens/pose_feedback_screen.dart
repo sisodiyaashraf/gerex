@@ -985,9 +985,10 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   void _showExercisePickerModal() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: const Color(0xFF14181F),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         final exercises = [
@@ -1023,93 +1024,105 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           },
         ];
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Choose Exercise to Track',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ...exercises.map((ex) {
-                final String key = ex['key'] as String;
-                final bool isSelected =
-                    !_isFreestyleMode && _selectedExerciseKey == key;
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 2,
-                  ),
-                  leading: Icon(
-                    ex['icon'] as IconData,
-                    color: isSelected
-                        ? AppColors.accentEmeraldLight
-                        : Colors.white70,
-                  ),
-                  title: Text(
-                    ex['name'] as String,
-                    style: TextStyle(
-                      color: isSelected
-                          ? AppColors.accentEmeraldLight
-                          : Colors.white,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.info_outline_rounded,
-                          color: Colors.amber,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _showExerciseGuideModal(key);
-                        },
+        return SafeArea(
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.75,
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Choose Exercise to Track',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      if (isSelected)
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.accentEmeraldLight,
-                        ),
-                    ],
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: exercises.map((ex) {
+                        final String key = ex['key'] as String;
+                        final bool isSelected =
+                            !_isFreestyleMode && _selectedExerciseKey == key;
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 0,
+                          ),
+                          leading: Icon(
+                            ex['icon'] as IconData,
+                            color: isSelected
+                                ? AppColors.accentEmeraldLight
+                                : Colors.white70,
+                          ),
+                          title: Text(
+                            ex['name'] as String,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? AppColors.accentEmeraldLight
+                                  : Colors.white,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.info_outline_rounded,
+                                  color: Colors.amber,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _showExerciseGuideModal(key);
+                                },
+                              ),
+                              if (isSelected)
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.accentEmeraldLight,
+                                ),
+                            ],
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _selectedExerciseKey = key;
+                              _isFreestyleMode = false;
+                              _repCount = 0;
+                              _maxFlexion = 180.0;
+                            });
+                            Navigator.pop(context);
+                            _showExerciseGuideModal(key);
+                          },
+                        );
+                      }).toList(),
+                    ),
                   ),
-                  onTap: () {
-                    setState(() {
-                      _selectedExerciseKey = key;
-                      _isFreestyleMode = false;
-                      _repCount = 0;
-                      _maxFlexion = 180.0;
-                    });
-                    Navigator.pop(context);
-                    _showExerciseGuideModal(key);
-                  },
-                );
-              }),
-            ],
+                ),
+              ],
+            ),
           ),
         );
       },
