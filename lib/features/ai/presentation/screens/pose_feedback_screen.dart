@@ -464,7 +464,26 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       );
     }
 
-    if (mounted) {
+    if (!mounted) return;
+
+    // Zero-latency isolated repaint of pose overlay painter
+    _poseOverlayNotifier.value = PoseOverlayData(
+      pose: pose,
+      hands: hands,
+      isGoodForm: feedback?.isGoodForm ?? true,
+      currentJointAngle: currentAngle,
+      primaryJointType: vertexJoint,
+      currentPhase: _currentPhase,
+      exercise: widget.targetExercise ?? classifiedEx ?? 'custom',
+    );
+
+    // Only invoke setState when text/badge UI state changes to keep UI 60 FPS
+    final bool msgChanged = feedback != null && feedback.message != _feedbackMessage;
+    final bool isGoodFormChanged = feedback != null && feedback.isGoodForm != _isGoodForm;
+    final bool exChanged = classifiedEx != _classifiedExercise;
+    final bool progressChanged = feedback != null && (feedback.progress - _repProgress).abs() > 0.05;
+
+    if (msgChanged || isGoodFormChanged || exChanged || progressChanged) {
       setState(() {
         _lastPose = pose;
         _lastHands = hands;
