@@ -516,6 +516,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   @override
   void dispose() {
+    _poseOverlayNotifier.dispose();
     _cameraController?.stopImageStream();
     _cameraController?.dispose();
     _poseDetectorService.dispose();
@@ -538,62 +539,45 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        elevation: 0,
         title: Text(
-          'AI Form Check — $activeExerciseLabel',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          overflow: TextOverflow.ellipsis,
+          activeExerciseLabel,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsets.only(right: 12),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                // Mode Selector (Targeted vs Freestyle)
-                ChoiceChip(
-                  label: Text(
-                    _isFreestyleMode ? 'Freestyle' : 'Targeted',
-                    style: TextStyle(
-                      color: _isFreestyleMode
-                          ? Colors.white
-                          : AppColors.accentEmeraldLight,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const Text(
+                  'Sim',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
-                  selected: _isFreestyleMode,
-                  selectedColor: AppColors.accentEmeraldLight.withValues(
-                    alpha: 0.3,
-                  ),
-                  backgroundColor: Colors.white10,
-                  onSelected: (val) {
-                    setState(() {
-                      _isFreestyleMode = val;
-                    });
-                  },
                 ),
-                const SizedBox(width: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Sim',
-                      style: TextStyle(fontSize: 10, color: Colors.white54),
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: _isSimulationMode,
+                    activeTrackColor: AppColors.accentEmeraldLight.withValues(
+                      alpha: 0.5,
                     ),
-                    Switch(
-                      value: _isSimulationMode,
-                      activeThumbColor: AppColors.accentEmeraldLight,
-                      onChanged: (val) {
-                        setState(() {
-                          _isSimulationMode = val;
-                          if (!val && !_isCameraInitialized) {
-                            _initializeCamera();
-                          }
-                        });
-                      },
-                    ),
-                  ],
+                    activeThumbColor: AppColors.accentEmeraldLight,
+                    onChanged: (val) {
+                      setState(() {
+                        _isSimulationMode = val;
+                        if (!val && !_isCameraInitialized) {
+                          _initializeCamera();
+                        }
+                      });
+                    },
+                  ),
                 ),
               ],
             ),
@@ -624,31 +608,38 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                   fit: StackFit.expand,
                                   children: [
                                     CameraPreview(_cameraController!),
-                                    if (_lastPose != null)
-                                      CustomPaint(
-                                        painter: _SkeletonOverlayPainter(
-                                          pose: _lastPose!,
-                                          hands: _lastHands,
-                                          imageSize: _cameraPreviewSize,
-                                          isFrontCamera:
-                                              _cameraController
-                                                      ?.description
-                                                      .lensDirection ==
-                                                  CameraLensDirection.front,
-                                          isGoodForm: _isGoodForm,
-                                          showGhostTrainer:
-                                              Provider.of<ProfileProvider>(
-                                                context,
-                                              ).ghostTrainerEnabled,
-                                          exercise:
-                                              widget.targetExercise ??
-                                              _classifiedExercise ??
-                                              'custom',
-                                          phase: _currentPhase,
-                                          measuredAngle: _currentJointAngle,
-                                          jointType: _primaryJointType,
-                                        ),
-                                      ),
+                                    ValueListenableBuilder<PoseOverlayData?>(
+                                      valueListenable: _poseOverlayNotifier,
+                                      builder: (context, overlayData, _) {
+                                        if (overlayData == null) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return CustomPaint(
+                                          painter: _SkeletonOverlayPainter(
+                                            pose: overlayData.pose,
+                                            hands: overlayData.hands,
+                                            imageSize: _cameraPreviewSize,
+                                            isFrontCamera:
+                                                _cameraController
+                                                        ?.description
+                                                        .lensDirection ==
+                                                    CameraLensDirection.front,
+                                            isGoodForm: overlayData.isGoodForm,
+                                            showGhostTrainer:
+                                                Provider.of<ProfileProvider>(
+                                                  context,
+                                                  listen: false,
+                                                ).ghostTrainerEnabled,
+                                            exercise: overlayData.exercise,
+                                            phase: overlayData.currentPhase,
+                                            measuredAngle:
+                                                overlayData.currentJointAngle,
+                                            jointType:
+                                                overlayData.primaryJointType,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
                               ),
