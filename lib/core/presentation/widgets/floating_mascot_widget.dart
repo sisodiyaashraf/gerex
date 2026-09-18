@@ -154,7 +154,10 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     }
 
     final double distance = (_targetX - _startX).abs();
-    final int moveMs = (distance / (trackWidth > 0 ? trackWidth : 1) * 700 + 400).toInt();
+    final bool isRunning = mascotController.currentState == MascotState.running;
+    final int speedFactor = isRunning ? 320 : 700;
+    final int baseOffset = isRunning ? 220 : 400;
+    final int moveMs = (distance / (trackWidth > 0 ? trackWidth : 1) * speedFactor + baseOffset).toInt();
 
     _moveController.duration = Duration(milliseconds: moveMs);
 
@@ -186,9 +189,9 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
       // Trigger sweating & tired recovery animation ONLY on multiple nav clicks!
       mascotController.triggerPose(
         MascotState.sweatingAndTired,
-        duration: const Duration(milliseconds: 1600),
+        duration: const Duration(milliseconds: 1800),
       );
-      _scheduleDisappearTimer(holdMs: 1600);
+      _scheduleDisappearTimer(holdMs: 1800);
     } else {
       // Single click navigation -> happy idle pose!
       mascotController.resetToIdle();
@@ -207,10 +210,10 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
 
     if (mode == 1) {
       mascotController.triggerWalking();
-      _scheduleDisappearTimer();
+      _scheduleDisappearTimer(holdMs: 2800);
     } else if (mode == 2) {
       mascotController.triggerRunning();
-      _scheduleDisappearTimer();
+      _scheduleDisappearTimer(holdMs: 2200);
     } else if (mode == 3) {
       mascotController.triggerPushup();
     } else if (mode == 4) {
