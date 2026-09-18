@@ -96,13 +96,16 @@ class _SpriteAnimatorState extends State<SpriteAnimator>
   @override
   void didUpdateWidget(covariant SpriteAnimator oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.assetPath != widget.assetPath) {
-      _loadSpriteSheet();
-    }
-    if (oldWidget.frameCount != widget.frameCount ||
+    if (oldWidget.assetPath != widget.assetPath ||
+        oldWidget.frameCount != widget.frameCount ||
         oldWidget.frameDuration != widget.frameDuration ||
         oldWidget.loop != widget.loop) {
+      if (oldWidget.assetPath != widget.assetPath) {
+        _loadSpriteSheet();
+      }
       _controller.duration = widget.frameDuration * widget.frameCount;
+      _controller.stop();
+      _controller.reset();
       if (widget.loop) {
         _controller.repeat();
       } else {
