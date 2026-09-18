@@ -129,6 +129,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
 
   @override
   void dispose() {
+    _isAnalyzing = false;
+    if (_cameraController?.value.isStreamingImages == true) {
+      try {
+        _cameraController?.stopImageStream();
+      } catch (_) {}
+    }
     _cameraController?.dispose();
     _poseDetectorService.dispose();
     _simulationTimer?.cancel();
