@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('Check border bleed for 3x2 grid on sweating copy', () async {
+  test('Find optimal grid for sweating copy', () async {
     final file = File('assets/images/robot_mascot/gerex_robot_sweating copy.png');
     final bytes = file.readAsBytesSync();
     final codec = await ui.instantiateImageCodec(bytes);
@@ -17,30 +17,37 @@ void main() {
     final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     final rgba = byteData!.buffer.asUint8List();
 
-    final cols = 3;
-    final rows = 2;
-    final frameW = width / cols;
-    final frameH = height / rows;
+    final combos = [
+      [1, 1], [2, 1], [3, 1], [4, 1], [6, 1],
+      [1, 2], [2, 2], [3, 2], [4, 2], [6, 2],
+      [1, 3], [2, 3], [3, 3]
+    ];
 
-    for (int i = 0; i < 6; i++) {
-      final col = i % cols;
-      final row = i ~/ cols;
+    for (var combo in combos) {
+      final cols = combo[0];
+      final rows = combo[1];
+      final totalFrames = cols * rows;
+      final frameW = width / cols;
+      final frameH = height / rows;
 
-      final startX = (col * frameW).toInt();
-      final endX = ((col + 1) * frameW).toInt();
-      final startY = (row * frameH).toInt();
-      final endY = ((row + 1) * frameH).toInt();
+      int totalBorderBleed = 0;
+      for (int i = 0; i < totalFrames; i++) {
+        final col = i % cols;
+        final row = i ~/ cols;
 
-      int leftBorderBleed = 0;
-      int rightBorderBleed = 0;
-      for (int y = startY; y < endY; y++) {
-        final leftAlpha = rgba[(y * width + startX) * 4 + 3];
-        final rightAlpha = rgba[(y * width + (endX - 1)) * 4 + 3];
-        if (leftAlpha > 30) leftBorderBleed++;
-        if (rightAlpha > 30) rightBorderBleed++;
+        final startX = (col * frameW).toInt();
+        final endX = ((col + 1) * frameW).toInt();
+        final startY = (row * frameH).toInt();
+        final endY = ((row + 1) * frameH).toInt();
+
+        for (int y = startY; y < endY; y++) {
+          final leftAlpha = rgba[(y * width + startX) * 4 + 3];
+          final rightAlpha = rgba[(y * width + (endX - 1)) * 4 + 3];
+          if (leftAlpha > 30) totalBorderBleed++;
+          if (rightAlpha > 30) totalBorderBleed++;
+        }
       }
-
-      print('Frame $i: leftBleed=$leftBorderBleed, rightBleed=$rightBorderBleed');
+      print('Combo ${cols}x${rows} (total ${totalFrames} frames): totalBorderBleed = $totalBorderBleed');
     }
   });
 }
