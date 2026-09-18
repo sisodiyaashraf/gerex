@@ -181,8 +181,9 @@ class MascotController extends ChangeNotifier {
     _tabSwitchTimestamps.add(now);
     _tabSwitchTimestamps.removeWhere((t) => now.difference(t).inMilliseconds > 2500);
 
-    // If 2 or more tab switches in 2.5s, trigger running (which leads to tired/sweating pose)
-    final bool isMultipleNav = _tabSwitchTimestamps.length >= 2;
+    // Trigger running animation if distance >= 2 tabs or rapid consecutive clicks
+    final bool isFarDistance = (_targetTabIndex - tabIndex).abs() >= 2;
+    final bool isMultipleNav = _tabSwitchTimestamps.length >= 2 || isFarDistance;
     _targetTabIndex = tabIndex;
     _currentState = isMultipleNav ? MascotState.running : MascotState.walking;
     _navTriggerCount++;
