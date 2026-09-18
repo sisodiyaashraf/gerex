@@ -482,7 +482,6 @@ class _GerexAnimatedListTileState extends State<GerexAnimatedListTile>
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
