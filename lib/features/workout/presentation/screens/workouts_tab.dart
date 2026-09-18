@@ -74,7 +74,6 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
     final activity = Provider.of<ActivityProvider>(context);
     final notifications = Provider.of<NotificationProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
-    final hrProvider = Provider.of<HeartRateProvider>(context);
 
     final displayName = auth.user?.userMetadata?['full_name'] ??
         auth.user?.userMetadata?['name'] ??

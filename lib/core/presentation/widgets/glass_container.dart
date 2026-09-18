@@ -152,6 +152,42 @@ class GlassContainer extends StatelessWidget {
 
     final double resolvedRadius = borderRadius;
 
+    final innerContent = CustomPaint(
+      foregroundPainter: GlassDecorationPainter(
+        radius: resolvedRadius,
+        borderWidth: borderWidth,
+        borderGradient: borderGradient ??
+            (isDark
+                ? LinearGradient(
+                    colors: [
+                      (resolvedGlowColor ?? AppColors.accentEmeraldLight).withValues(alpha: 0.25),
+                      AppColors.cardDarkGlass.withValues(alpha: 0.4),
+                    ],
+                  )
+                : LinearGradient(
+                    colors: [
+                      (resolvedGlowColor ?? Colors.black).withValues(alpha: 0.08),
+                      (resolvedGlowColor ?? Colors.black).withValues(alpha: 0.02),
+                    ],
+                  )),
+        isDark: isDark,
+      ),
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          gradient: resolvedGradient,
+          color: resolvedGradient != null
+              ? null
+              : (color ??
+                  (isDark
+                      ? AppColors.cardDarkGlass.withValues(alpha: 0.88)
+                      : Colors.white.withValues(alpha: 0.9))),
+          borderRadius: BorderRadius.circular(resolvedRadius),
+        ),
+        child: child,
+      ),
+    );
+
     return Container(
       margin: margin,
       decoration: BoxDecoration(
@@ -172,44 +208,12 @@ class GlassContainer extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(resolvedRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: CustomPaint(
-            foregroundPainter: GlassDecorationPainter(
-              radius: resolvedRadius,
-              borderWidth: borderWidth,
-              borderGradient: borderGradient ??
-                  (isDark
-                      ? LinearGradient(
-                          colors: [
-                            (resolvedGlowColor ?? AppColors.accentEmeraldLight).withValues(alpha: 0.25),
-                            AppColors.cardDarkGlass.withValues(alpha: 0.4),
-                          ],
-                        )
-                      : LinearGradient(
-                          colors: [
-                            (resolvedGlowColor ?? Colors.black).withValues(alpha: 0.08),
-                            (resolvedGlowColor ?? Colors.black).withValues(alpha: 0.02),
-                          ],
-                        )),
-              isDark: isDark,
-            ),
-            child: Container(
-              padding: padding,
-              decoration: BoxDecoration(
-                gradient: resolvedGradient,
-                color: resolvedGradient != null
-                    ? null
-                    : (color ??
-                        (isDark
-                            ? AppColors.cardDarkGlass.withValues(alpha: 0.88)
-                            : Colors.white.withValues(alpha: 0.9))),
-                borderRadius: BorderRadius.circular(resolvedRadius),
-              ),
-              child: child,
-            ),
-          ),
-        ),
+        child: blur > 0.0
+            ? BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                child: innerContent,
+              )
+            : innerContent,
       ),
     );
   }
