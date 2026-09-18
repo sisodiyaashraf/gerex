@@ -345,21 +345,19 @@ class _GerexAnimatedListTileState extends State<GerexAnimatedListTile>
               offset: Offset(_dragOffset, 0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: isDark ? GerexGradients.darkGlassCard : null,
-                      color: isDark ? null : Colors.white.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: _isPressed
-                            ? AppColors.accentEmeraldLight
-                            : defaultBorderColor,
-                        width: _isPressed ? 1.5 : 1.0,
-                      ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: isDark ? GerexGradients.darkGlassCard : null,
+                    color: isDark ? null : Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _isPressed
+                          ? AppColors.accentEmeraldLight
+                          : defaultBorderColor,
+                      width: _isPressed ? 1.5 : 1.0,
                     ),
-                    child: Column(
+                  ),
+                  child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Main ListTile contents
