@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('Find optimal grid for sweating copy', () async {
+  test('Compare 2x2 vs 2x3 vs 4x1 for sweating copy image', () async {
     final file = File('assets/images/robot_mascot/gerex_robot_sweating copy.png');
     final bytes = file.readAsBytesSync();
     final codec = await ui.instantiateImageCodec(bytes);
@@ -17,37 +17,47 @@ void main() {
     final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     final rgba = byteData!.buffer.asUint8List();
 
-    final combos = [
-      [1, 1], [2, 1], [3, 1], [4, 1], [6, 1],
-      [1, 2], [2, 2], [3, 2], [4, 2], [6, 2],
-      [1, 3], [2, 3], [3, 3]
-    ];
+    print('--- 2x2 Grid (2 cols x 2 rows = 4 frames) ---');
+    for (int r = 0; r < 2; r++) {
+      for (int c = 0; c < 2; c++) {
+        final fw = width / 2;
+        final fh = height / 2;
+        int activePx = 0;
+        for (int y = (r * fh).toInt(); y < ((r + 1) * fh).toInt(); y++) {
+          for (int x = (c * fw).toInt(); x < ((c + 1) * fw).toInt(); x++) {
+            if (rgba[(y * width + x) * 4 + 3] > 10) activePx++;
+          }
+        }
+        print('2x2 Cell ($r, $c): $activePx active pixels');
+      }
+    }
 
-    for (var combo in combos) {
-      final cols = combo[0];
-      final rows = combo[1];
-      final totalFrames = cols * rows;
-      final frameW = width / cols;
-      final frameH = height / rows;
+    print('--- 2x3 Grid (2 cols x 3 rows = 6 frames) ---');
+    for (int r = 0; r < 3; r++) {
+      for (int c = 0; c < 2; c++) {
+        final fw = width / 2;
+        final fh = height / 3;
+        int activePx = 0;
+        for (int y = (r * fh).toInt(); y < ((r + 1) * fh).toInt(); y++) {
+          for (int x = (c * fw).toInt(); x < ((c + 1) * fw).toInt(); x++) {
+            if (rgba[(y * width + x) * 4 + 3] > 10) activePx++;
+          }
+        }
+        print('2x3 Cell ($r, $c): $activePx active pixels');
+      }
+    }
 
-      int totalBorderBleed = 0;
-      for (int i = 0; i < totalFrames; i++) {
-        final col = i % cols;
-        final row = i ~/ cols;
-
-        final startX = (col * frameW).toInt();
-        final endX = ((col + 1) * frameW).toInt();
-        final startY = (row * frameH).toInt();
-        final endY = ((row + 1) * frameH).toInt();
-
-        for (int y = startY; y < endY; y++) {
-          final leftAlpha = rgba[(y * width + startX) * 4 + 3];
-          final rightAlpha = rgba[(y * width + (endX - 1)) * 4 + 3];
-          if (leftAlpha > 30) totalBorderBleed++;
-          if (rightAlpha > 30) totalBorderBleed++;
+    print('--- 4x1 Grid (4 cols x 1 row = 4 frames) ---');
+    for (int c = 0; c < 4; c++) {
+      final fw = width / 4;
+      final fh = height / 1;
+      int activePx = 0;
+      for (int y = 0; y < fh.toInt(); y++) {
+        for (int x = (c * fw).toInt(); x < ((c + 1) * fw).toInt(); x++) {
+          if (rgba[(y * width + x) * 4 + 3] > 10) activePx++;
         }
       }
-      print('Combo ${cols}x${rows} (total ${totalFrames} frames): totalBorderBleed = $totalBorderBleed');
+      print('4x1 Cell (0, $c): $activePx active pixels');
     }
   });
 }
