@@ -48,7 +48,7 @@ class GerexStaggeredListView extends StatefulWidget {
 class _GerexStaggeredListViewState extends State<GerexStaggeredListView> {
   late ScrollController _scrollController;
   bool _isLocalController = false;
-  double _scrollOffset = 0.0;
+  final ValueNotifier<double> _scrollOffsetNotifier = ValueNotifier<double>(0.0);
 
   @override
   void initState() {
@@ -63,16 +63,15 @@ class _GerexStaggeredListViewState extends State<GerexStaggeredListView> {
   }
 
   void _onScroll() {
-    if (mounted && _scrollController.hasClients) {
-      setState(() {
-        _scrollOffset = _scrollController.offset;
-      });
+    if (_scrollController.hasClients) {
+      _scrollOffsetNotifier.value = _scrollController.offset;
     }
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
+    _scrollOffsetNotifier.dispose();
     if (_isLocalController) {
       _scrollController.dispose();
     }
@@ -99,10 +98,10 @@ class _GerexStaggeredListViewState extends State<GerexStaggeredListView> {
           return staggerWrapped;
         }
 
-        // Return cheap mathematical parallax item wrapper with current offset
+        // Return cheap mathematical parallax item wrapper with ValueNotifier
         return _ParallaxItem(
           index: index,
-          scrollOffset: _scrollOffset,
+          scrollOffsetNotifier: _scrollOffsetNotifier,
           estimatedItemHeight: widget.estimatedItemHeight,
           enableParallax: widget.enableParallax,
           child: staggerWrapped,
@@ -127,14 +126,14 @@ class _GerexStaggeredListViewState extends State<GerexStaggeredListView> {
 // Stateless mathematical parallax depth calculations avoiding expensive listeners and layout queries
 class _ParallaxItem extends StatelessWidget {
   final int index;
-  final double scrollOffset;
+  final ValueNotifier<double> scrollOffsetNotifier;
   final Widget child;
   final double estimatedItemHeight;
   final bool enableParallax;
 
   const _ParallaxItem({
     required this.index,
-    required this.scrollOffset,
+    required this.scrollOffsetNotifier,
     required this.child,
     required this.estimatedItemHeight,
     required this.enableParallax,
@@ -146,38 +145,39 @@ class _ParallaxItem extends StatelessWidget {
       return child;
     }
 
-    // Determine scale and opacity based on mathematical viewport center distance
     final double viewportHeight = MediaQuery.of(context).size.height;
-    
-    // Position of this item in the scrollable content
+    final double maxDistance = viewportHeight / 2;
     final double itemTop = index * estimatedItemHeight;
     final double itemCenter = itemTop + (estimatedItemHeight / 2);
-    
-    // Viewport scroll center position
-    final double viewportCenter = scrollOffset + (viewportHeight / 2);
-    
-    // Absolute distance from screen center
-    final double distanceFromCenter = (itemCenter - viewportCenter).abs();
-    
-    // Boundary of scroll area where effect starts (half viewport height)
-    final double maxDistance = viewportHeight / 2;
-    
-    // Fraction goes from 0.0 (exact center) to 1.0 (screen edges)
-    final double fraction = (distanceFromCenter / maxDistance).clamp(0.0, 1.0);
 
-    // Scale from 1.0 (center) down to 0.96 (edge) - max 4% reduction
-    final double scale = 1.0 - (fraction * 0.04);
-    
-    // Fade from 1.0 (center) down to 0.60 (edge)
-    final double opacity = 1.0 - (fraction * 0.40);
+    return ValueListenableBuilder<double>(
+      valueListenable: scrollOffsetNotifier,
+      builder: (context, scrollOffset, childWidget) {
+        // Viewport scroll center position
+        final double viewportCenter = scrollOffset + (viewportHeight / 2);
+        
+        // Absolute distance from screen center
+        final double distanceFromCenter = (itemCenter - viewportCenter).abs();
+        
+        // Fraction goes from 0.0 (exact center) to 1.0 (screen edges)
+        final double fraction = (distanceFromCenter / maxDistance).clamp(0.0, 1.0);
 
-    return Transform.scale(
-      scale: scale,
-      alignment: Alignment.center,
-      child: Opacity(
-        opacity: opacity,
-        child: child,
-      ),
+        // Scale from 1.0 (center) down to 0.96 (edge) - max 4% reduction
+        final double scale = 1.0 - (fraction * 0.04);
+        
+        // Fade from 1.0 (center) down to 0.60 (edge)
+        final double opacity = 1.0 - (fraction * 0.40);
+
+        return Transform.scale(
+          scale: scale,
+          alignment: Alignment.center,
+          child: Opacity(
+            opacity: opacity,
+            child: childWidget,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
