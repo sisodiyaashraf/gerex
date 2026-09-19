@@ -119,13 +119,13 @@ class _MascotAiHubBottomSheetState extends State<MascotAiHubBottomSheet> {
                           shape: BoxShape.circle,
                           color: Color(0xFF0F172A),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: SpriteAnimator(
-                            assetPath: 'assets/images/robot_mascot/gerex_robot_smiling.png',
-                            frameCount: 4,
-                            columns: 4,
-                            rows: 1,
-                            mascotStateName: 'smiling',
+                            assetPath: MascotState.smiling.assetPath,
+                            frameCount: MascotState.smiling.frameCount,
+                            columns: MascotState.smiling.columns,
+                            rows: MascotState.smiling.rows,
+                            mascotStateName: MascotState.smiling.name,
                             width: 38,
                             height: 38,
                           ),
