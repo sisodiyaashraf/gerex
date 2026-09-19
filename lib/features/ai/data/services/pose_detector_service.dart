@@ -14,15 +14,28 @@ class PoseDetectorService {
         model: PoseDetectionModel.base,
       );
       _poseDetector = PoseDetector(options: options);
+      if (kDebugMode) {
+        print('[PoseDetectorService] ML Kit PoseDetector initialized in stream mode.');
+      }
     }
   }
 
   Future<List<Pose>> processImage(InputImage inputImage) async {
     if (_poseDetector == null) return [];
-    return _poseDetector!.processImage(inputImage);
+    final stopwatch = Stopwatch()..start();
+    final poses = await _poseDetector!.processImage(inputImage);
+    stopwatch.stop();
+    if (kDebugMode) {
+      print('[PoseDetectorService] Processed frame in ${stopwatch.elapsedMilliseconds}ms (${poses.length} pose(s) detected)');
+    }
+    return poses;
   }
 
   void dispose() {
     _poseDetector?.close();
+    _poseDetector = null;
+    if (kDebugMode) {
+      print('[PoseDetectorService] ML Kit PoseDetector closed.');
+    }
   }
 }
