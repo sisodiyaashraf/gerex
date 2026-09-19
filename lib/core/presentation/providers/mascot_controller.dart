@@ -308,30 +308,28 @@ class MascotController extends ChangeNotifier {
   }
 
   /// Frequent subtle random action scheduler during quiet app usage so the robot feels alive.
+  /// Only uses stationary gestures (smiling, exercise, pushup, sweating, tired) and never walks/runs in place.
   void _startRandomIdleActionScheduler() {
     _randomIdleActionTimer?.cancel();
-    _randomIdleActionTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
+    _randomIdleActionTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       if (_currentState == MascotState.idle) {
         final now = DateTime.now();
-        if (_lastActionTime == null || now.difference(_lastActionTime!).inSeconds > 5) {
+        if (_lastActionTime == null || now.difference(_lastActionTime!).inSeconds > 10) {
           final roll = _random.nextDouble();
-          if (roll < 0.25) {
+          if (roll < 0.30) {
             // Waving smile greeting
             triggerPose(MascotState.smiling, duration: const Duration(milliseconds: 3000));
-          } else if (roll < 0.45) {
-            // Marching walk animation
-            triggerWalking();
-          } else if (roll < 0.65) {
-            // Pushup workout animation
-            triggerPushup();
-          } else if (roll < 0.80) {
+          } else if (roll < 0.55) {
             // Workout flex celebration
-            triggerWorkoutCompletion();
-          } else if (roll < 0.92) {
-            // Energetic run burst
-            triggerRunning();
+            triggerPose(MascotState.exercise, duration: const Duration(milliseconds: 2800));
+          } else if (roll < 0.75) {
+            // Pushup workout set
+            triggerPushup(duration: const Duration(milliseconds: 2800));
+          } else if (roll < 0.90) {
+            // Sweat wipe recovery pose
+            triggerPose(MascotState.sweating, duration: const Duration(milliseconds: 2500));
           } else {
-            // Tired recovery pose
+            // Tired resting pose
             triggerPose(MascotState.tired, duration: const Duration(milliseconds: 2800));
           }
         }
