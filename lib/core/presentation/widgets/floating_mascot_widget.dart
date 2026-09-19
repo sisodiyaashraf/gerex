@@ -209,16 +209,22 @@ class _FloatingMascotWidgetState extends State<FloatingMascotWidget>
     final mode = _tapCount % 5;
 
     if (mode == 1) {
-      mascotController.triggerWalking();
-      _scheduleDisappearTimer(holdMs: 2800);
+      // Tap 1: Friendly greeting wave
+      mascotController.triggerWave();
     } else if (mode == 2) {
-      mascotController.triggerRunning();
-      _scheduleDisappearTimer(holdMs: 2200);
+      // Tap 2: Workout flex celebration
+      mascotController.triggerFlexAnimation();
     } else if (mode == 3) {
+      // Tap 3: Pushup workout set
       mascotController.triggerPushup();
     } else if (mode == 4) {
-      mascotController.triggerWorkoutCompletion();
+      // Tap 4: Workout sweat wipe recovery pose
+      mascotController.triggerPose(
+        MascotState.sweating,
+        duration: const Duration(milliseconds: 2500),
+      );
     } else {
+      // Tap 5: Open Mascot AI Coach Hub Sheet
       _openHubSheet(mascotController);
     }
   }
