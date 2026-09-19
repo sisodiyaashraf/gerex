@@ -9,11 +9,11 @@ All sprite sheet PNG files have a **transparent background** and uniform 512x512
 | Slot File Name | Action State | Total Frames | Grid Layout (Cols x Rows) | Frame Dimensions | Sheet Dimensions | Default Frame Duration | Loop |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | `gerex_robot_idle.png` | Idle (breathing/blinking) | 1 | 1 x 1 | 1254 x 1254 px | 1254 x 1254 px | 200ms | Yes |
-| `gerex_robot_smiling.png` | Wave / Smile greeting | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 140ms | Yes |
+| `gerex_robot_smiling.png` | Wave / Smile greeting | 4 | 4 x 1 | 384 x 1024 px | 1536 x 1024 px | 140ms | Yes |
 | `gerex_robot_walking.png` | Walking (tab transition) | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 120ms | Yes |
-| `gerex_robot_running.png` | Running (fast navigation) | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 80ms | Yes |
+| `gerex_robot_running.png` | Running (fast navigation) | 8 | 4 x 2 | 384 x 512 px | 1536 x 1024 px | 80ms | Yes |
 | `gerex_robot_exercise.png` | Flex / Gym celebration | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 130ms | No |
-| `gerex_robot_sweating.png` | Sweating recovery | 6 | 3 x 2 | 204 x 204 px | 612 x 408 px | 140ms | Yes |
+| `gerex_robot_sweating.png` | Sweating recovery | 4 | 4 x 1 | 153 x 408 px | 612 x 408 px | 140ms | Yes |
 | `gerex_robot_sweating_and_tired.png` | Sweating & Tired recovery | 6 | 3 x 2 | 512 x 512 px | 1536 x 1024 px | 130ms | Yes |
 | `gerex_robot_tired.png` | Tired resting pose | 1 | 1 x 1 | 1024 x 1024 px | 1024 x 1024 px | 180ms | Yes |
 | `gerex_robot_pushup.png` | Pushup workout animation | 6 | 3 x 2 | 204 x 204 px | 612 x 408 px | 140ms | Yes |
