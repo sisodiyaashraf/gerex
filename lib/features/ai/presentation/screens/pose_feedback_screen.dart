@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../../data/services/pose_detector_service.dart';
 import '../../data/services/form_analyzer.dart';
@@ -50,7 +51,7 @@ class PoseFeedbackScreen extends StatefulWidget {
 }
 
 class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   CameraController? _cameraController;
   final PoseDetectorService _poseDetectorService = PoseDetectorService();
   final HandLandmarkService _handLandmarkService = HandLandmarkService();
@@ -126,6 +127,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
     _isFreestyleMode = widget.targetExercise == null;
     _selectedExerciseKey = widget.targetExercise ?? 'squat';
 
@@ -149,11 +153,44 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     });
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      _stopAndDisposeCamera();
+      if (mounted) {
+        setState(() => _isCameraInitialized = false);
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      if (!_isSimulationMode) {
+        _initializeCamera();
+      }
+    }
+  }
+
+  Future<void> _stopAndDisposeCamera() async {
+    if (_cameraController != null) {
+      try {
+        if (_cameraController!.value.isStreamingImages) {
+          await _cameraController!.stopImageStream();
+        }
+        await _cameraController!.dispose();
+      } catch (_) {}
+      _cameraController = null;
+    }
+  }
+
   Future<void> _initializeCamera() async {
     try {
+      await _stopAndDisposeCamera();
+
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        setState(() => _isSimulationMode = true);
+        if (mounted) setState(() => _isSimulationMode = true);
         return;
       }
 
@@ -174,11 +211,12 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       await _cameraController!.initialize();
       if (!mounted) return;
 
+      final previewSize = _cameraController!.value.previewSize;
       setState(() {
         _isCameraInitialized = true;
         _cameraPreviewSize = Size(
-          _cameraController!.value.previewSize?.height ?? 480,
-          _cameraController!.value.previewSize?.width ?? 640,
+          previewSize?.height ?? 480,
+          previewSize?.width ?? 640,
         );
       });
 
@@ -189,11 +227,10 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   void _processCameraImage(CameraImage image) async {
-    // Non-blocking guard: drop incoming frames immediately if detector is busy
-    if (_isProcessing) return;
+    // Non-blocking early guard: drop incoming frame immediately if detector is busy
+    if (_isProcessing || _isPausedByGesture || !mounted) return;
 
     final now = DateTime.now();
-    if (_isPausedByGesture) return;
     if (now.difference(_lastProcessedAt).inMilliseconds < _throttleMs) return;
     _lastProcessedAt = now;
     _isProcessing = true;
@@ -217,11 +254,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           ? InputImageFormat.nv21
           : InputImageFormat.bgra8888);
 
-      final int sensorOrientation =
-          _cameraController?.description.sensorOrientation ?? 270;
-      final InputImageRotation rotation =
-          InputImageRotationValue.fromRawValue(sensorOrientation) ??
-          InputImageRotation.rotation0deg;
+      final InputImageRotation rotation = _computeInputImageRotation(
+        _cameraController?.description,
+      );
 
       final inputImage = InputImage.fromBytes(
         bytes: bytes,
@@ -264,6 +299,14 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     } finally {
       _isProcessing = false;
     }
+  }
+
+  InputImageRotation _computeInputImageRotation(CameraDescription? camera) {
+    if (camera == null) return InputImageRotation.rotation270deg;
+    final sensorOrientation = camera.sensorOrientation;
+    final int rotationCompensation = sensorOrientation % 360;
+    return InputImageRotationValue.fromRawValue(rotationCompensation) ??
+        InputImageRotation.rotation270deg;
   }
 
   void _resumeDetection() {
@@ -519,9 +562,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
+    _stopAndDisposeCamera();
     _poseOverlayNotifier.dispose();
-    _cameraController?.stopImageStream();
-    _cameraController?.dispose();
     _poseDetectorService.dispose();
     _pulseController.dispose();
     super.dispose();
@@ -2076,10 +2126,17 @@ class _SkeletonOverlayPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     Offset toScreen(double lx, double ly) {
+      final double imageW = imageSize.width > 0 ? imageSize.width : size.width;
+      final double imageH = imageSize.height > 0 ? imageSize.height : size.height;
+
+      final double normX = (lx / imageW).clamp(0.0, 1.0);
+      final double normY = (ly / imageH).clamp(0.0, 1.0);
+
       final double x = isFrontCamera
-          ? (1.0 - lx / imageSize.width) * size.width
-          : (lx / imageSize.width) * size.width;
-      final double y = (ly / imageSize.height) * size.height;
+          ? (1.0 - normX) * size.width
+          : normX * size.width;
+      final double y = normY * size.height;
+
       return Offset(x, y);
     }
 
@@ -2095,8 +2152,8 @@ class _SkeletonOverlayPainter extends CustomPainter {
         final b = pose.landmarks[pair[1]];
         if (a != null &&
             b != null &&
-            a.likelihood > 0.4 &&
-            b.likelihood > 0.4) {
+            a.likelihood > 0.45 &&
+            b.likelihood > 0.45) {
           canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), ghostPaint);
         }
       }
@@ -2106,7 +2163,7 @@ class _SkeletonOverlayPainter extends CustomPainter {
     for (final pair in _fullConnections) {
       final a = pose.landmarks[pair[0]];
       final b = pose.landmarks[pair[1]];
-      if (a != null && b != null && a.likelihood > 0.4 && b.likelihood > 0.4) {
+      if (a != null && b != null && a.likelihood > 0.45 && b.likelihood > 0.45) {
         canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), bonePaint);
       }
     }
