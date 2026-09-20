@@ -54,10 +54,10 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#12132A"
-  image: "assets/images/app icon/gerex splash_screen.jpeg"
+  background_image: "assets/images/app icon/gerex splash_screen.jpeg"
   fullscreen: true
   android_12:
-    image: "assets/images/app icon/gerex splash_screen.jpeg"
+    background_image: "assets/images/app icon/gerex splash_screen.jpeg"
     icon_background_color: "#12132A"
     color: "#12132A"
 
