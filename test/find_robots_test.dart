@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
@@ -74,7 +76,9 @@ void main() {
           final startX = (c * w).toInt();
           final endX = ((c + 1) * w).toInt();
           int count = 0;
-          for (int x = startX; x < endX; x++) count += colPixels[x];
+          for (int x = startX; x < endX; x++) {
+            count += colPixels[x];
+          }
           print('    Col $c [$startX..$endX]: $count non-alpha pixels');
         }
       }
@@ -86,7 +90,9 @@ void main() {
           final startY = (r * h).toInt();
           final endY = ((r + 1) * h).toInt();
           int count = 0;
-          for (int y = startY; y < endY; y++) count += rowPixels[y];
+          for (int y = startY; y < endY; y++) {
+            count += rowPixels[y];
+          }
           print('    Row $r [$startY..$endY]: $count non-alpha pixels');
         }
       }
