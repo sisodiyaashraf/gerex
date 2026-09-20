@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +28,7 @@ void main() {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
       expect(byteData, isNotNull);
 
-      print('Testing MascotState.${state.name}: ${image.width}x${image.height} -> Grid ${cols}x${rows}, ${count} frames (${frameW.toStringAsFixed(1)}x${frameH.toStringAsFixed(1)})');
+      print('Testing MascotState.${state.name}: ${image.width}x${image.height} -> Grid ${cols}x$rows, $count frames (${frameW.toStringAsFixed(1)}x${frameH.toStringAsFixed(1)})');
 
       for (int i = 0; i < count; i++) {
         final col = i % cols;
