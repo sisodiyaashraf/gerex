@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
@@ -46,7 +48,6 @@ void main() {
         final frameH = image.height / rows;
 
         List<int> framePixels = [];
-        double variance = 0;
 
         for (int r = 0; r < rows; r++) {
           for (int c = 0; c < cols; c++) {
@@ -68,12 +69,10 @@ void main() {
 
         final mean = framePixels.reduce((a, b) => a + b) / framePixels.length;
         if (mean > 0) {
-          final sumSqDiff = framePixels.map((p) => (p - mean) * (p - mean)).reduce((a, b) => a + b);
-          variance = sumSqDiff / framePixels.length;
           final stdDev = List<double>.from(framePixels.map((p) => (p - mean).abs())).reduce((a, b) => a > b ? a : b);
           final stdDevPercent = (stdDev / mean) * 100;
 
-          print('  Grid ${cols}x${rows} (${frameW.toInt()}x${frameH.toInt()} per frame): max deviation from mean = ${stdDevPercent.toStringAsFixed(1)}%. Frames pixel counts: $framePixels');
+          print('  Grid ${cols}x$rows (${frameW.toInt()}x${frameH.toInt()} per frame): max deviation from mean = ${stdDevPercent.toStringAsFixed(1)}%. Frames pixel counts: $framePixels');
         }
       }
     }
