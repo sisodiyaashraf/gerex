@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
@@ -33,8 +35,8 @@ void main() {
       print('========================================');
 
       // Test 3x2 grid layout (cols: 3, rows: 2)
-      final int numCols = 3;
-      final int numRows = 2;
+      const int numCols = 3;
+      const int numRows = 2;
       final double frameW = image.width / numCols;
       final double frameH = image.height / numRows;
 
