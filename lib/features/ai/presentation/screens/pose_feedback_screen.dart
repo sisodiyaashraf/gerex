@@ -1430,6 +1430,55 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     );
   }
 
+  Widget _buildPerformanceTierChip() {
+    Color tierColor = AppColors.accentEmeraldLight;
+    if (_perfConfig.tier == PerformanceTier.medium) {
+      tierColor = Colors.amber;
+    } else if (_perfConfig.tier == PerformanceTier.low) {
+      tierColor = Colors.orangeAccent;
+    }
+
+    final String latencyText = _lastInferenceMs > 0 ? '${_lastInferenceMs}ms' : 'AI';
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (_perfConfig.tier == PerformanceTier.high) {
+            _perfConfig = PerformanceTierConfig.forTier(PerformanceTier.medium);
+          } else if (_perfConfig.tier == PerformanceTier.medium) {
+            _perfConfig = PerformanceTierConfig.forTier(PerformanceTier.low);
+          } else {
+            _perfConfig = PerformanceTierConfig.forTier(PerformanceTier.high);
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: const EdgeInsets.only(right: 6),
+        decoration: BoxDecoration(
+          color: tierColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: tierColor, width: 1.0),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.bolt_rounded, color: tierColor, size: 12),
+            const SizedBox(width: 3),
+            Text(
+              '${_perfConfig.tier.name.toUpperCase()} ($latencyText)',
+              style: GoogleFonts.shareTechMono(
+                color: tierColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildRepCounterBadge() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -1440,9 +1489,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             'REPS',
-            style: TextStyle(
+            style: GoogleFonts.shareTechMono(
               color: Colors.white54,
               fontSize: 9,
               letterSpacing: 1,
@@ -1450,7 +1499,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           ),
           Text(
             '$_repCount/$_targetReps',
-            style: const TextStyle(
+            style: GoogleFonts.shareTechMono(
               color: AppColors.accentEmeraldLight,
               fontWeight: FontWeight.w900,
               fontSize: 18,
