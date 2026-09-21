@@ -257,6 +257,12 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     _pulseController.dispose();
     _scanLineController.dispose();
     _radarPulseController.dispose();
