@@ -158,12 +158,12 @@ class HUDScanLinePainter extends CustomPainter {
     // Glowing vertical gradient trailing the scanline
     const double glowHeight = 35.0;
     final Rect glowRect = Rect.fromLTRB(0, max(0, y - glowHeight), size.width, y);
-    _gradientGlowPaint.shader = LinearGradient(
+    _gradientGlowPaint.shader = const LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        scanColor.withValues(alpha: 0.0),
-        scanColor.withValues(alpha: 0.25),
+        Colors.transparent,
+        Color(0x4000F5A0),
       ],
     ).createShader(glowRect);
 
