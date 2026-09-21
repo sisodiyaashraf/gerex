@@ -184,7 +184,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   void _updateParticles() {
     if (_activeParticles.isEmpty) return;
-    final double dt = 0.016;
+    const double dt = 0.016;
     for (final p in _activeParticles) {
       p.update(dt);
     }
