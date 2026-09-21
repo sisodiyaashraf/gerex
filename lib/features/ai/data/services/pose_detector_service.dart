@@ -4,6 +4,9 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 class PoseDetectorService {
   PoseDetector? _poseDetector;
+  int _lastInferenceMs = 0;
+
+  int get lastInferenceMs => _lastInferenceMs;
 
   PoseDetectorService();
 
@@ -25,8 +28,9 @@ class PoseDetectorService {
     final stopwatch = Stopwatch()..start();
     final poses = await _poseDetector!.processImage(inputImage);
     stopwatch.stop();
+    _lastInferenceMs = stopwatch.elapsedMilliseconds;
     if (kDebugMode) {
-      print('[PoseDetectorService] Processed frame in ${stopwatch.elapsedMilliseconds}ms (${poses.length} pose(s) detected)');
+      print('[PoseDetectorService] Processed frame in ${_lastInferenceMs}ms (${poses.length} pose(s) detected)');
     }
     return poses;
   }
