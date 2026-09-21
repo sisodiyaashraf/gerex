@@ -125,7 +125,7 @@ class HUDCornerBracketsPainter extends CustomPainter {
     drawBracket(br);
 
     // Subtle corner targeting dots
-    canvas.drawCircle(Offset(margin + 4, margin + 4), 2.5, _dotPaint);
+    canvas.drawCircle(const Offset(20.0, 20.0), 2.5, _dotPaint);
     canvas.drawCircle(Offset(w - margin - 4, margin + 4), 2.5, _dotPaint);
     canvas.drawCircle(Offset(margin + 4, h - margin - 4), 2.5, _dotPaint);
     canvas.drawCircle(Offset(w - margin - 4, h - margin - 4), 2.5, _dotPaint);
