@@ -321,12 +321,43 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     }
   }
 
+  Uint8List _downsampleNV21(Uint8List nv21, int width, int height) {
+    final int newW = width ~/ 2;
+    final int newH = height ~/ 2;
+    final int ySize = width * height;
+    final int newYSize = newW * newH;
+    final Uint8List result = Uint8List(newYSize + (newYSize ~/ 2));
+
+    int outIdx = 0;
+    for (int r = 0; r < height; r += 2) {
+      final int rowOffset = r * width;
+      for (int c = 0; c < width; c += 2) {
+        if (outIdx < newYSize && (rowOffset + c) < ySize) {
+          result[outIdx++] = nv21[rowOffset + c];
+        }
+      }
+    }
+
+    int vuOutIdx = newYSize;
+    final int vuStart = ySize;
+    for (int r = 0; r < (height ~/ 2); r += 2) {
+      final int vuRowOffset = vuStart + r * width;
+      for (int c = 0; c < width; c += 4) {
+        if (vuRowOffset + c + 1 < nv21.length && vuOutIdx + 1 < result.length) {
+          result[vuOutIdx++] = nv21[vuRowOffset + c];
+          result[vuOutIdx++] = nv21[vuRowOffset + c + 1];
+        }
+      }
+    }
+    return result;
+  }
+
   void _processCameraImage(CameraImage image) async {
     // Non-blocking early guard: drop incoming frame immediately if detector is busy
     if (_isProcessing || _isPausedByGesture || !mounted) return;
 
     final now = DateTime.now();
-    if (now.difference(_lastProcessedAt).inMilliseconds < _throttleMs) return;
+    if (now.difference(_lastProcessedAt).inMilliseconds < _perfConfig.inferenceThrottleMs) return;
     _lastProcessedAt = now;
     _isProcessing = true;
 
@@ -349,6 +380,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           ? InputImageFormat.nv21
           : InputImageFormat.bgra8888);
 
+      Size metadataSize = Size(image.width.toDouble(), image.height.toDouble());
+      int bytesPerRow = image.planes.isNotEmpty ? image.planes[0].bytesPerRow : image.width;
+
+      // Real Performance Optimization: Downsample high-res camera frames for inference while retaining full-res preview
+      if (format == InputImageFormat.nv21 && image.width >= 640) {
+        bytes = _downsampleNV21(bytes, image.width, image.height);
+        metadataSize = Size((image.width ~/ 2).toDouble(), (image.height ~/ 2).toDouble());
+        bytesPerRow = image.width ~/ 2;
+      }
+
       final InputImageRotation rotation = _computeInputImageRotation(
         _cameraController?.description,
       );
@@ -356,16 +397,16 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       final inputImage = InputImage.fromBytes(
         bytes: bytes,
         metadata: InputImageMetadata(
-          size: Size(image.width.toDouble(), image.height.toDouble()),
+          size: metadataSize,
           rotation: rotation,
           format: format,
-          bytesPerRow: image.planes.isNotEmpty
-              ? image.planes[0].bytesPerRow
-              : image.width,
+          bytesPerRow: bytesPerRow,
         ),
       );
 
       final poses = await _poseDetectorService.processImage(inputImage);
+      _lastInferenceMs = _poseDetectorService.lastInferenceMs;
+
       if (mounted) {
         if (poses.isNotEmpty) {
           final pose = poses.first;
