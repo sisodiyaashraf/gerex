@@ -706,23 +706,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-
-    _stopAndDisposeCamera();
-    _poseOverlayNotifier.dispose();
-    _poseDetectorService.dispose();
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final activeExerciseLabel = _isFreestyleMode
