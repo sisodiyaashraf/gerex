@@ -254,6 +254,19 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     }
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pulseController.dispose();
+    _scanLineController.dispose();
+    _radarPulseController.dispose();
+    _particleTicker.dispose();
+    _stopAndDisposeCamera();
+    _poseDetectorService.dispose();
+    _poseOverlayNotifier.dispose();
+    super.dispose();
+  }
+
   Future<void> _stopAndDisposeCamera() async {
     if (_cameraController != null) {
       try {
