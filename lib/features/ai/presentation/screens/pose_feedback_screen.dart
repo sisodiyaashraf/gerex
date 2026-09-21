@@ -741,6 +741,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           ),
         ),
         actions: [
+          _buildPerformanceTierChip(),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Row(
@@ -800,37 +801,47 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                   fit: StackFit.expand,
                                   children: [
                                     CameraPreview(_cameraController!),
-                                    ValueListenableBuilder<PoseOverlayData?>(
-                                      valueListenable: _poseOverlayNotifier,
-                                      builder: (context, overlayData, _) {
-                                        if (overlayData == null) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return CustomPaint(
-                                          painter: _SkeletonOverlayPainter(
-                                            pose: overlayData.pose,
-                                            hands: overlayData.hands,
-                                            imageSize: _cameraPreviewSize,
-                                            isFrontCamera:
-                                                _cameraController
-                                                        ?.description
-                                                        .lensDirection ==
-                                                    CameraLensDirection.front,
-                                            isGoodForm: overlayData.isGoodForm,
-                                            showGhostTrainer:
-                                                Provider.of<ProfileProvider>(
-                                                  context,
-                                                  listen: false,
-                                                ).ghostTrainerEnabled,
-                                            exercise: overlayData.exercise,
-                                            phase: overlayData.currentPhase,
-                                            measuredAngle:
-                                                overlayData.currentJointAngle,
-                                            jointType:
-                                                overlayData.primaryJointType,
-                                          ),
-                                        );
-                                      },
+                                    // Isolated RepaintBoundary for high-frequency pose skeleton overlay
+                                    RepaintBoundary(
+                                      child: AnimatedBuilder(
+                                        animation: _radarPulseController,
+                                        builder: (context, _) {
+                                          return ValueListenableBuilder<PoseOverlayData?>(
+                                            valueListenable: _poseOverlayNotifier,
+                                            builder: (context, overlayData, _) {
+                                              if (overlayData == null) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              return CustomPaint(
+                                                painter: _SkeletonOverlayPainter(
+                                                  pose: overlayData.pose,
+                                                  hands: overlayData.hands,
+                                                  imageSize: _cameraPreviewSize,
+                                                  isFrontCamera:
+                                                      _cameraController
+                                                              ?.description
+                                                              .lensDirection ==
+                                                          CameraLensDirection.front,
+                                                  isGoodForm: overlayData.isGoodForm,
+                                                  showGhostTrainer:
+                                                      Provider.of<ProfileProvider>(
+                                                        context,
+                                                        listen: false,
+                                                      ).ghostTrainerEnabled,
+                                                  exercise: overlayData.exercise,
+                                                  phase: overlayData.currentPhase,
+                                                  measuredAngle:
+                                                      overlayData.currentJointAngle,
+                                                  jointType:
+                                                      overlayData.primaryJointType,
+                                                  perfConfig: _perfConfig,
+                                                  pulseValue: _radarPulseController.value,
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -843,6 +854,59 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                             color: AppColors.accentEmeraldLight,
                           ),
                         ),
+
+                  // 2. HUD Live Form Quality Circular Status Ring
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: HUDFormQualityRingPainter(
+                          isGoodForm: _isGoodForm,
+                          confidence: _repProgress > 0 ? _repProgress : 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 2.5 Sci-Fi HUD Corner Brackets (Targeting Reticle)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: HUDCornerBracketsPainter(
+                          bracketColor: _isGoodForm ? AppColors.accentEmeraldLight : Colors.amber,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 2.6 Rep Completion Particle Burst Layer
+                  if (_activeParticles.isNotEmpty)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: RepaintBoundary(
+                          child: CustomPaint(
+                            painter: ParticleBurstPainter(particles: _activeParticles),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // 2.7 Calibration Scan-Line Sweeping Effect
+                  if (_isCalibrating && _perfConfig.enableScanLine)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: AnimatedBuilder(
+                          animation: _scanLineController,
+                          builder: (context, _) {
+                            return CustomPaint(
+                              painter: HUDScanLinePainter(
+                                progress: _scanLineController.value,
+                                scanColor: AppColors.accentEmeraldLight,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
 
                   // 3. Vertical Gradient Progress Slider (Right Edge)
                   Positioned(
