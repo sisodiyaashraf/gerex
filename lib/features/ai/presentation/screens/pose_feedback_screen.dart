@@ -2188,7 +2188,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 }
 
-/// Upgraded CustomPainter for rendering full connected body skeleton, live joint angle readout chips, & 21-point hand skeleton overlay.
+/// Upgraded CustomPainter for rendering full connected glowing neon skeleton, pulsing joint radar nodes, monospace angle readout chips, & 21-point hand skeleton overlay.
 class _SkeletonOverlayPainter extends CustomPainter {
   final Pose pose;
   final List<HandSkeleton> hands;
@@ -2200,6 +2200,8 @@ class _SkeletonOverlayPainter extends CustomPainter {
   final String phase;
   final double measuredAngle;
   final PoseLandmarkType jointType;
+  final PerformanceTierConfig perfConfig;
+  final double pulseValue;
 
   _SkeletonOverlayPainter({
     required this.pose,
@@ -2212,7 +2214,42 @@ class _SkeletonOverlayPainter extends CustomPainter {
     this.phase = 'up',
     required this.measuredAngle,
     required this.jointType,
+    required this.perfConfig,
+    required this.pulseValue,
   });
+
+  // Cached Paint objects to avoid per-frame allocations
+  static final Paint _glowBonePaint = Paint()
+    ..strokeCap = StrokeCap.round
+    ..style = PaintingStyle.stroke;
+
+  static final Paint _coreBonePaint = Paint()
+    ..strokeCap = StrokeCap.round
+    ..style = PaintingStyle.stroke;
+
+  static final Paint _jointPaint = Paint()..style = PaintingStyle.fill;
+  static final Paint _faceJointPaint = Paint()..style = PaintingStyle.fill;
+
+  static final Paint _pulseRingPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
+
+  static final Paint _ghostPaint = Paint()
+    ..color = const Color(0xFF14B8A6).withValues(alpha: 0.3)
+    ..strokeWidth = 5.0
+    ..strokeCap = StrokeCap.round;
+
+  static final Paint _handBonePaint = Paint()
+    ..color = const Color(0xFF2DD4BF).withValues(alpha: 0.9)
+    ..strokeWidth = 2.0
+    ..strokeCap = StrokeCap.round;
+
+  static final Paint _handJointPaint = Paint()
+    ..color = const Color(0xFFBBF7E0)
+    ..style = PaintingStyle.fill;
+
+  static final Paint _chipBgPaint = Paint()..color = Colors.black.withValues(alpha: 0.88);
+  static final Paint _chipBorderPaint = Paint()..style = PaintingStyle.stroke..strokeWidth = 1.2;
 
   static const _fullConnections = [
     // Face outline / head
@@ -2250,19 +2287,17 @@ class _SkeletonOverlayPainter extends CustomPainter {
         ? AppColors.accentEmeraldLight
         : Colors.orange;
 
-    final bonePaint = Paint()
-      ..color = accentColor.withValues(alpha: 0.85)
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round;
+    _glowBonePaint.color = accentColor.withValues(alpha: 0.35);
+    _glowBonePaint.strokeWidth = 7.5;
+    _glowBonePaint.maskFilter = perfConfig.enableGlowBlur
+        ? const MaskFilter.blur(BlurStyle.normal, 4.5)
+        : null;
 
-    final jointPaint = Paint()
-      ..color = isGoodForm ? const Color(0xFFBBF7E0) : Colors.amber
-      ..strokeWidth = 7.0
-      ..style = PaintingStyle.fill;
+    _coreBonePaint.color = accentColor;
+    _coreBonePaint.strokeWidth = 3.2;
 
-    final faceJointPaint = Paint()
-      ..color = const Color(0xFFFFD54F)
-      ..style = PaintingStyle.fill;
+    _jointPaint.color = isGoodForm ? const Color(0xFFBBF7E0) : Colors.amber;
+    _faceJointPaint.color = const Color(0xFFFFD54F);
 
     Offset toScreen(double lx, double ly) {
       final double imageW = imageSize.width > 0 ? imageSize.width : size.width;
@@ -2281,11 +2316,6 @@ class _SkeletonOverlayPainter extends CustomPainter {
 
     // 1. Draw Ghost Silhouette if enabled
     if (showGhostTrainer) {
-      final ghostPaint = Paint()
-        ..color = const Color(0xFF14B8A6).withValues(alpha: 0.3)
-        ..strokeWidth = 5.0
-        ..strokeCap = StrokeCap.round;
-
       for (final pair in _fullConnections) {
         final a = pose.landmarks[pair[0]];
         final b = pose.landmarks[pair[1]];
@@ -2293,21 +2323,26 @@ class _SkeletonOverlayPainter extends CustomPainter {
             b != null &&
             a.likelihood > 0.45 &&
             b.likelihood > 0.45) {
-          canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), ghostPaint);
+          canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), _ghostPaint);
         }
       }
     }
 
-    // 2. Draw Full Connected User Body Skeleton
+    // 2. Draw Full Connected User Body Skeleton with Neon Glow
     for (final pair in _fullConnections) {
       final a = pose.landmarks[pair[0]];
       final b = pose.landmarks[pair[1]];
       if (a != null && b != null && a.likelihood > 0.45 && b.likelihood > 0.45) {
-        canvas.drawLine(toScreen(a.x, a.y), toScreen(b.x, b.y), bonePaint);
+        final p1 = toScreen(a.x, a.y);
+        final p2 = toScreen(b.x, b.y);
+        // Outer glow stroke pass
+        canvas.drawLine(p1, p2, _glowBonePaint);
+        // Core sharp neon stroke pass
+        canvas.drawLine(p1, p2, _coreBonePaint);
       }
     }
 
-    // Draw Joint Dots
+    // 3. Draw Joint Dots & Radar Pulse Rings
     const faceTypes = {
       PoseLandmarkType.nose,
       PoseLandmarkType.leftEyeInner,
@@ -2322,19 +2357,43 @@ class _SkeletonOverlayPainter extends CustomPainter {
       PoseLandmarkType.rightMouth,
     };
 
+    const radarJoints = {
+      PoseLandmarkType.leftShoulder,
+      PoseLandmarkType.rightShoulder,
+      PoseLandmarkType.leftElbow,
+      PoseLandmarkType.rightElbow,
+      PoseLandmarkType.leftWrist,
+      PoseLandmarkType.rightWrist,
+      PoseLandmarkType.leftHip,
+      PoseLandmarkType.rightHip,
+      PoseLandmarkType.leftKnee,
+      PoseLandmarkType.rightKnee,
+      PoseLandmarkType.leftAnkle,
+      PoseLandmarkType.rightAnkle,
+    };
+
     for (final entry in pose.landmarks.entries) {
       final lm = entry.value;
       if (lm.likelihood > 0.4) {
         final pos = toScreen(lm.x, lm.y);
         if (faceTypes.contains(entry.key)) {
-          canvas.drawCircle(pos, 3.5, faceJointPaint);
+          canvas.drawCircle(pos, 3.0, _faceJointPaint);
         } else {
-          canvas.drawCircle(pos, 5.0, jointPaint);
+          canvas.drawCircle(pos, 5.0, _jointPaint);
+
+          // Futuristic radar pulse ping ring around key joints
+          if (perfConfig.enablePulsingJoints && radarJoints.contains(entry.key)) {
+            final double pulseRadius = 5.0 + (14.0 * pulseValue);
+            final double pulseAlpha = (1.0 - pulseValue).clamp(0.0, 1.0) * 0.75;
+            _pulseRingPaint.color = accentColor.withValues(alpha: pulseAlpha);
+            _pulseRingPaint.strokeWidth = 1.5;
+            canvas.drawCircle(pos, pulseRadius, _pulseRingPaint);
+          }
         }
       }
     }
 
-    // 3. Draw Live Joint-Angle Floating Chip Readout
+    // 4. Draw Live Joint-Angle Floating Chip Readout with Monospace HUD Font
     final targetJoint =
         pose.landmarks[jointType] ?? pose.landmarks[PoseLandmarkType.leftElbow];
     if (targetJoint != null && targetJoint.likelihood > 0.4) {
@@ -2343,10 +2402,10 @@ class _SkeletonOverlayPainter extends CustomPainter {
 
       final TextSpan span = TextSpan(
         text: angleText,
-        style: TextStyle(
+        style: GoogleFonts.shareTechMono(
           color: isGoodForm ? AppColors.accentEmeraldLight : Colors.amber,
-          fontWeight: FontWeight.w900,
-          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
         ),
       );
       final TextPainter tp = TextPainter(
@@ -2364,32 +2423,17 @@ class _SkeletonOverlayPainter extends CustomPainter {
         const Radius.circular(8),
       );
 
-      final Paint bgPaint = Paint()
-        ..color = Colors.black.withValues(alpha: 0.85);
-      final Paint borderPaint = Paint()
-        ..color = isGoodForm ? AppColors.accentEmeraldLight : Colors.amber
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2;
+      _chipBorderPaint.color = isGoodForm ? AppColors.accentEmeraldLight : Colors.amber;
 
-      canvas.drawRRect(bgRRect, bgPaint);
-      canvas.drawRRect(bgRRect, borderPaint);
+      canvas.drawRRect(bgRRect, _chipBgPaint);
+      canvas.drawRRect(bgRRect, _chipBorderPaint);
       tp.paint(canvas, Offset(jointPos.dx + 20, jointPos.dy - 8));
     }
 
-    // 4. Draw 21-point Hand & Finger Skeleton Overlay
-    final handBonePaint = Paint()
-      ..color = const Color(0xFF2DD4BF).withValues(alpha: 0.9)
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final handJointPaint = Paint()
-      ..color = const Color(0xFFBBF7E0)
-      ..style = PaintingStyle.fill;
-
+    // 5. Draw 21-point Hand & Finger Skeleton Overlay
     for (final hand in hands) {
       if (hand.landmarks.length < 21) continue;
 
-      // Finger connection groups
       final fingerIndices = [
         [0, 1, 2, 3, 4], // Thumb
         [0, 5, 6, 7, 8], // Index
@@ -2406,19 +2450,29 @@ class _SkeletonOverlayPainter extends CustomPainter {
           canvas.drawLine(
             toScreen(p1.x, p1.y),
             toScreen(p2.x, p2.y),
-            handBonePaint,
+            _handBonePaint,
           );
         }
       }
 
       for (final pt in hand.landmarks) {
-        canvas.drawCircle(toScreen(pt.x, pt.y), 3.0, handJointPaint);
+        canvas.drawCircle(toScreen(pt.x, pt.y), 3.0, _handJointPaint);
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _SkeletonOverlayPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _SkeletonOverlayPainter oldDelegate) {
+    return pose != oldDelegate.pose ||
+        hands.length != oldDelegate.hands.length ||
+        isGoodForm != oldDelegate.isGoodForm ||
+        measuredAngle != oldDelegate.measuredAngle ||
+        phase != oldDelegate.phase ||
+        pulseValue != oldDelegate.pulseValue ||
+        showGhostTrainer != oldDelegate.showGhostTrainer ||
+        imageSize != oldDelegate.imageSize ||
+        perfConfig.tier != oldDelegate.perfConfig.tier;
+  }
 }
 
 /// Simulation mode painter.
@@ -2428,6 +2482,20 @@ class _StickmanPainter extends CustomPainter {
   final double spineAngle;
   final bool isGoodForm;
   final List<HandSkeleton> hands;
+
+  // Cached paints for simulation stickman
+  static final Paint _paintJoint = Paint()
+    ..color = AppColors.accentEmeraldLight
+    ..strokeWidth = 8
+    ..strokeCap = StrokeCap.round;
+
+  static final Paint _paintBone = Paint()
+    ..strokeWidth = 4
+    ..strokeCap = StrokeCap.round;
+
+  static final Paint _handPaint = Paint()
+    ..color = const Color(0xFF2DD4BF)
+    ..strokeWidth = 2;
 
   _StickmanPainter({
     required this.theme,
@@ -2440,19 +2508,9 @@ class _StickmanPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2 + 20);
-    final Color boneColor = isGoodForm
+    _paintBone.color = isGoodForm
         ? AppColors.accentEmeraldLight
         : Colors.orange;
-
-    final paintJoint = Paint()
-      ..color = AppColors.accentEmeraldLight
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-
-    final paintBone = Paint()
-      ..color = boneColor
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
 
     final hip = center;
     final radKnee = (kneeAngle * pi) / 180.0;
@@ -2475,31 +2533,31 @@ class _StickmanPainter extends CustomPainter {
       shoulder.dy - 22.0,
     );
 
-    canvas.drawLine(foot, knee, paintBone);
-    canvas.drawLine(knee, hip, paintBone);
-    canvas.drawLine(hip, shoulder, paintBone);
-    canvas.drawCircle(head, 16, paintBone);
-    canvas.drawCircle(foot, 5, paintJoint);
-    canvas.drawCircle(knee, 5, paintJoint);
-    canvas.drawCircle(hip, 5, paintJoint);
-    canvas.drawCircle(shoulder, 5, paintJoint);
-
-    // Render hands in simulation mode
-    final handPaint = Paint()
-      ..color = const Color(0xFF2DD4BF)
-      ..strokeWidth = 2;
+    canvas.drawLine(foot, knee, _paintBone);
+    canvas.drawLine(knee, hip, _paintBone);
+    canvas.drawLine(hip, shoulder, _paintBone);
+    canvas.drawCircle(head, 16, _paintBone);
+    canvas.drawCircle(foot, 5, _paintJoint);
+    canvas.drawCircle(knee, 5, _paintJoint);
+    canvas.drawCircle(hip, 5, _paintJoint);
+    canvas.drawCircle(shoulder, 5, _paintJoint);
 
     for (final hand in hands) {
       for (int i = 0; i < hand.landmarks.length - 1; i++) {
         canvas.drawLine(
           Offset(hand.landmarks[i].x, hand.landmarks[i].y),
           Offset(hand.landmarks[i + 1].x, hand.landmarks[i + 1].y),
-          handPaint,
+          _handPaint,
         );
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _StickmanPainter oldDelegate) {
+    return kneeAngle != oldDelegate.kneeAngle ||
+        spineAngle != oldDelegate.spineAngle ||
+        isGoodForm != oldDelegate.isGoodForm ||
+        hands.length != oldDelegate.hands.length;
+  }
 }
