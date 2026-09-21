@@ -694,6 +694,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
             (_freestyleTally[exerciseName] ?? 0) + 1;
       }
     });
+    if (_lastPose != null) {
+      _triggerRepParticleBurst(_lastPose!);
+    }
   }
 
   @override
