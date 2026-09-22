@@ -782,11 +782,23 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
             );
           }),
         ] else ...[
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 32.0),
-              child: Text('No active challenges found.'),
-            ),
+          Consumer<ConnectivityProvider>(
+            builder: (context, connectivity, _) {
+              if (!connectivity.isOnline && provider.challenges.isEmpty) {
+                return ErrorStateWidget(
+                  title: 'Leaderboards & Challenges Offline',
+                  message: 'Social challenges and online leaderboards require an active internet connection.',
+                  icon: Icons.wifi_off_rounded,
+                  onRetry: () => provider.fetchChallenges(),
+                );
+              }
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32.0),
+                  child: Text('No active challenges found.'),
+                ),
+              );
+            },
           ),
         ],
         const SizedBox(height: 24),
