@@ -14,6 +14,8 @@ import '../../../exercise/presentation/widgets/exercise_image_widget.dart';
 import 'package:gerex/features/exercise/domain/entities/exercise.dart';
 import '../providers/challenge_provider.dart';
 import '../../domain/entities/challenge.dart';
+import 'package:gerex/core/widgets/error_state_widget.dart';
+import 'package:gerex/core/providers/connectivity_provider.dart';
 
 class SelectChallengeScreen extends StatefulWidget {
   const SelectChallengeScreen({super.key});
