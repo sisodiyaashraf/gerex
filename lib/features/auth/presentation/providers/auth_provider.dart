@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../../domain/repositories/auth_repository.dart';
 import '../../../../core/config/rate_limit_config.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/providers/connectivity_provider.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -72,6 +74,15 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+
+    try {
+      final connectivity = di.sl<ConnectivityProvider>();
+      if (!connectivity.isOnline) {
+        _errorMessage = 'Google Sign-In requires an active internet connection. Try Developer / Demo Login when offline.';
+        notifyListeners();
+        return false;
+      }
+    } catch (_) {}
 
     _setLoading(true);
     _clearError();
