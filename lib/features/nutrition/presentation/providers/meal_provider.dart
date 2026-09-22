@@ -5,6 +5,7 @@ import '../../data/recipes_seed.dart';
 import 'package:gerex/core/utils/logger.dart';
 import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:gerex/core/providers/notification_provider.dart';
+import 'package:gerex/core/services/pending_sync_service.dart';
 
 class MealProvider extends ChangeNotifier {
   final SharedPreferences _prefs;
