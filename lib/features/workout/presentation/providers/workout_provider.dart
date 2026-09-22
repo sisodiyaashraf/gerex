@@ -10,6 +10,7 @@ import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/features/metrics/presentation/providers/metrics_provider.dart';
 import 'package:gerex/core/services/voice_coach_service.dart';
 import 'package:gerex/core/presentation/providers/mascot_controller.dart';
+import 'package:gerex/core/services/pending_sync_service.dart';
 
 class PrCelebrationEvent {
   final String exerciseName;
