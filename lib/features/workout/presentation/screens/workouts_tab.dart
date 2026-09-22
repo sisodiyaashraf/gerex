@@ -207,6 +207,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
               padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  const OfflineCacheHeaderChip(),
                   if (workoutProvider.isSessionActive) ...[
                     PastelGradientCard(
                       type: PastelCardType.rose,
