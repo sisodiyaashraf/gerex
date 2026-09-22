@@ -517,11 +517,42 @@ class WorkoutProvider extends ChangeNotifier {
         return true;
       },
       onFailure: (failure) {
-        SecureLogger.logError('saveWorkoutSession failed', failure.message);
-        _errorMessage = SecureLogger.sanitizeException(failure.message);
+        SecureLogger.logError('saveWorkoutSession failed (offline queueing active)', failure.message);
+        PendingSyncService.queueWrite(
+          type: 'workout_log',
+          data: {
+            'id': session.id.isEmpty ? 'session_${DateTime.now().millisecondsSinceEpoch}' : session.id,
+            'name': session.name,
+            'started_at': session.startedAt.toIso8601String(),
+            'completed_at': session.completedAt.toIso8601String(),
+            'duration_seconds': session.durationSeconds,
+            'workout_id': session.workoutId,
+          },
+        );
+        _sessions.insert(0, session);
+        _stopSessionState();
+        _errorMessage = null;
         _isLoading = false;
         notifyListeners();
-        return false;
+        try {
+          di.sl<MetricsProvider>().computeStreaks(_sessions);
+        } catch (_) {}
+        try {
+          di.sl<NotificationProvider>().sendNotification(
+            'Workout Completed!',
+            'Fantastic! You completed "${session.name}" in ${session.durationSeconds ~/ 60} minutes.',
+          );
+        } catch (_) {}
+        try {
+          di.sl<NotificationProvider>().scheduleReengagementReminder();
+        } catch (_) {}
+        try {
+          di.sl<VoiceCoachService>().speakTrigger('finish');
+        } catch (_) {}
+        try {
+          di.sl<MascotController>().triggerFlexAnimation();
+        } catch (_) {}
+        return true;
       },
     );
   }
@@ -591,10 +622,25 @@ class WorkoutProvider extends ChangeNotifier {
         return true;
       },
       onFailure: (failure) {
-        _errorMessage = failure.message;
+        SecureLogger.logError('logCustomWorkoutSession failed (offline queueing active)', failure.message);
+        PendingSyncService.queueWrite(
+          type: 'workout_log',
+          data: {
+            'id': session.id.isEmpty ? 'session_${DateTime.now().millisecondsSinceEpoch}' : session.id,
+            'name': session.name,
+            'started_at': session.startedAt.toIso8601String(),
+            'completed_at': session.completedAt.toIso8601String(),
+            'duration_seconds': session.durationSeconds,
+          },
+        );
+        _sessions.insert(0, session);
+        _errorMessage = null;
         _isLoading = false;
         notifyListeners();
-        return false;
+        try {
+          di.sl<MetricsProvider>().computeStreaks(_sessions);
+        } catch (_) {}
+        return true;
       },
     );
   }
