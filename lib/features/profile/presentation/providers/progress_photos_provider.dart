@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../domain/entities/progress_photo.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/utils/logger.dart';
+import 'package:gerex/core/services/pending_sync_service.dart';
 
 class ProgressPhotosProvider extends ChangeNotifier {
   final SupabaseClient _supabase;
@@ -164,6 +165,15 @@ class ProgressPhotosProvider extends ChangeNotifier {
 
       _photos.insert(0, newPhoto);
       await _saveLocalPhotos();
+      PendingSyncService.queueWrite(
+        type: 'photo_upload',
+        data: {
+          'id': newPhoto.id,
+          'file_path': remotePath,
+          'local_path': image.path,
+          'pose': pose,
+        },
+      );
       _calculateNextReminder();
       _isUploading = false;
       notifyListeners();
