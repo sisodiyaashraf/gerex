@@ -523,8 +523,8 @@ class WorkoutProvider extends ChangeNotifier {
           data: {
             'id': session.id.isEmpty ? 'session_${DateTime.now().millisecondsSinceEpoch}' : session.id,
             'name': session.name,
-            'started_at': session.startedAt.toIso8601String(),
-            'completed_at': session.completedAt.toIso8601String(),
+            'started_at': session.startedAt?.toIso8601String(),
+            'completed_at': session.completedAt?.toIso8601String(),
             'duration_seconds': session.durationSeconds,
             'workout_id': session.workoutId,
           },
@@ -628,8 +628,8 @@ class WorkoutProvider extends ChangeNotifier {
           data: {
             'id': session.id.isEmpty ? 'session_${DateTime.now().millisecondsSinceEpoch}' : session.id,
             'name': session.name,
-            'started_at': session.startedAt.toIso8601String(),
-            'completed_at': session.completedAt.toIso8601String(),
+            'started_at': session.startedAt?.toIso8601String(),
+            'completed_at': session.completedAt?.toIso8601String(),
             'duration_seconds': session.durationSeconds,
           },
         );
