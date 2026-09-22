@@ -22,7 +22,8 @@ import 'features/challenges/presentation/providers/challenge_provider.dart';
 import 'features/metrics/presentation/providers/heart_rate_provider.dart';
 import 'core/providers/activity_provider.dart';
 import 'core/providers/notification_provider.dart';
-import 'core/presentation/providers/mascot_controller.dart';
+import 'core/providers/connectivity_provider.dart';
+import 'core/widgets/global_connectivity_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +55,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: di.sl<ConnectivityProvider>()),
         ChangeNotifierProvider.value(value: di.sl<AuthProvider>()),
         ChangeNotifierProvider.value(value: di.sl<ExerciseProvider>()),
         ChangeNotifierProvider.value(value: di.sl<WorkoutProvider>()),
@@ -87,6 +89,9 @@ class MainApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       themeMode: ThemeMode.light,
       routerConfig: AppRouter.router,
+      builder: (context, child) => GlobalConnectivityBanner(
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }
