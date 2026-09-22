@@ -244,6 +244,15 @@ class ProgressPhotosProvider extends ChangeNotifier {
 
       _photos.insert(0, newPhoto);
       await _saveLocalPhotos();
+      PendingSyncService.queueWrite(
+        type: 'photo_upload',
+        data: {
+          'id': newPhoto.id,
+          'file_path': remotePath,
+          'local_path': file.path,
+          'pose': pose,
+        },
+      );
       _calculateNextReminder();
       _isUploading = false;
       notifyListeners();
