@@ -177,11 +177,16 @@ class AIProvider extends ChangeNotifier {
     _chatError = null;
     notifyListeners();
 
-    // 2. Prepare context history
-    final historyForApi = _chatMessages
-        .sublist(0, _chatMessages.length - 1)
-        .map((m) => {'role': m['role']!, 'text': m['text']!})
-        .toList();
+    // 2. Prepare context history safely
+    final historyForApi = _chatMessages.length > 1
+        ? _chatMessages
+            .sublist(0, _chatMessages.length - 1)
+            .map((m) => {
+                  'role': m['role'] ?? 'user',
+                  'text': m['text'] ?? '',
+                })
+            .toList()
+        : <Map<String, String>>[];
 
     // 3. Request AI response
     final result = await _aiRepository.getCoachResponse(
@@ -232,10 +237,14 @@ class AIProvider extends ChangeNotifier {
     _chatError = null;
     notifyListeners();
 
-    final historyForApi = _chatMessages
-        .sublist(0, _chatMessages.length - 1)
-        .map((m) => {'role': m['role']!, 'text': m['text']!})
-        .toList();
+    final historyForApi = _chatMessages.isNotEmpty
+        ? _chatMessages
+            .map((m) => {
+                  'role': m['role'] ?? 'user',
+                  'text': m['text'] ?? '',
+                })
+            .toList()
+        : <Map<String, String>>[];
 
     final result = await _aiRepository.getCoachResponse(
       prompt: text,
