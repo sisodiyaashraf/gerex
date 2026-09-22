@@ -43,6 +43,9 @@ import 'package:gerex/core/services/voice_coach_service.dart';
 import 'package:gerex/core/services/voice_engine.dart';
 import '../presentation/providers/mascot_controller.dart';
 
+import 'package:gerex/core/services/connectivity_service.dart';
+import 'package:gerex/core/providers/connectivity_provider.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -65,6 +68,8 @@ Future<void> init() async {
 
   // Core
   sl.registerLazySingleton<NetworkInfo>(() => const NetworkInfoImpl());
+  sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
+  sl.registerLazySingleton<ConnectivityProvider>(() => ConnectivityProvider(sl<ConnectivityService>()));
 
   // Features - Auth
   sl.registerLazySingleton<AuthRepository>(
