@@ -23,7 +23,9 @@ import 'features/metrics/presentation/providers/heart_rate_provider.dart';
 import 'core/providers/activity_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/connectivity_provider.dart';
+import 'core/presentation/providers/mascot_controller.dart';
 import 'core/widgets/global_connectivity_banner.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
