@@ -113,6 +113,20 @@ class MealProvider extends ChangeNotifier {
     );
     _mealPlan.add(newEntry);
     _saveMealPlan();
+    PendingSyncService.queueWrite(
+      type: 'meal_log',
+      data: {
+        'id': newEntry.id,
+        'recipe_id': newEntry.recipeId,
+        'recipe_name': newEntry.recipeName,
+        'date': newEntry.date.toIso8601String(),
+        'meal_type': newEntry.mealType,
+        'calories': newEntry.calories,
+        'protein': newEntry.protein,
+        'carbs': newEntry.carbs,
+        'fat': newEntry.fat,
+      },
+    );
     if (newEntry.notificationEnabled) {
       di.sl<NotificationProvider>().scheduleMealReminder(
         entryId: newEntry.id,
@@ -150,6 +164,20 @@ class MealProvider extends ChangeNotifier {
     );
     _mealPlan.add(newEntry);
     _saveMealPlan();
+    PendingSyncService.queueWrite(
+      type: 'meal_log',
+      data: {
+        'id': newEntry.id,
+        'recipe_id': newEntry.recipeId,
+        'recipe_name': newEntry.recipeName,
+        'date': newEntry.date.toIso8601String(),
+        'meal_type': newEntry.mealType,
+        'calories': newEntry.calories,
+        'protein': newEntry.protein,
+        'carbs': newEntry.carbs,
+        'fat': newEntry.fat,
+      },
+    );
     if (newEntry.notificationEnabled) {
       di.sl<NotificationProvider>().scheduleMealReminder(
         entryId: newEntry.id,
