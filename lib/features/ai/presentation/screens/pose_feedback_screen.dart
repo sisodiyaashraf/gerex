@@ -824,51 +824,60 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                             valueListenable:
                                                 _poseOverlayNotifier,
                                             builder: (context, overlayData, _) {
-                                               final bool showSkeleton =
-                                                   overlayData != null &&
-                                                   !_isCalibrating;
-                                               return AnimatedOpacity(
-                                                 duration: const Duration(
-                                                   milliseconds: 300,
-                                                 ),
-                                                 opacity: showSkeleton ? 1.0 : 0.0,
-                                                 child: overlayData == null
-                                                     ? const SizedBox.shrink()
-                                                     : CustomPaint(
-                                                painter: _SkeletonOverlayPainter(
-                                                  pose: overlayData.pose,
-                                                  hands: overlayData.hands,
-                                                  imageSize: _cameraPreviewSize,
-                                                  isFrontCamera:
-                                                      _cameraController
-                                                          ?.description
-                                                          .lensDirection ==
-                                                      CameraLensDirection.front,
-                                                  isGoodForm:
-                                                      overlayData.isGoodForm,
-                                                  showGhostTrainer:
-                                                      Provider.of<
-                                                            ProfileProvider
-                                                          >(
-                                                            context,
-                                                            listen: false,
-                                                          )
-                                                          .ghostTrainerEnabled,
-                                                  exercise:
-                                                      overlayData.exercise,
-                                                  phase:
-                                                      overlayData.currentPhase,
-                                                  measuredAngle: overlayData
-                                                      .currentJointAngle,
-                                                  jointType: overlayData
-                                                      .primaryJointType,
-                                                  perfConfig: _perfConfig,
-                                                  pulseValue:
-                                                      _radarPulseController
-                                                          .value,
+                                              final bool showSkeleton =
+                                                  overlayData != null &&
+                                                  !_isCalibrating;
+                                              return AnimatedOpacity(
+                                                duration: const Duration(
+                                                  milliseconds: 300,
                                                 ),
-                                               ),
-                                             );
+                                                opacity: showSkeleton
+                                                    ? 1.0
+                                                    : 0.0,
+                                                child: overlayData == null
+                                                    ? const SizedBox.shrink()
+                                                    : CustomPaint(
+                                                        painter: _SkeletonOverlayPainter(
+                                                          pose:
+                                                              overlayData.pose,
+                                                          hands:
+                                                              overlayData.hands,
+                                                          imageSize:
+                                                              _cameraPreviewSize,
+                                                          isFrontCamera:
+                                                              _cameraController
+                                                                  ?.description
+                                                                  .lensDirection ==
+                                                              CameraLensDirection
+                                                                  .front,
+                                                          isGoodForm:
+                                                              overlayData
+                                                                  .isGoodForm,
+                                                          showGhostTrainer:
+                                                              Provider.of<
+                                                                    ProfileProvider
+                                                                  >(
+                                                                    context,
+                                                                    listen:
+                                                                        false,
+                                                                  )
+                                                                  .ghostTrainerEnabled,
+                                                          exercise: overlayData
+                                                              .exercise,
+                                                          phase: overlayData
+                                                              .currentPhase,
+                                                          measuredAngle: overlayData
+                                                              .currentJointAngle,
+                                                          jointType: overlayData
+                                                              .primaryJointType,
+                                                          perfConfig:
+                                                              _perfConfig,
+                                                          pulseValue:
+                                                              _radarPulseController
+                                                                  .value,
+                                                        ),
+                                                      ),
+                                              );
                                             },
                                           );
                                         },
