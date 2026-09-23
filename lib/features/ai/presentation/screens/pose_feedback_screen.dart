@@ -58,7 +58,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   CameraController? _cameraController;
   final PoseDetectorService _poseDetectorService = PoseDetectorService();
   final HandLandmarkService _handLandmarkService = HandLandmarkService();
-  final ValueNotifier<PoseOverlayData?> _poseOverlayNotifier = ValueNotifier(null);
+  final ValueNotifier<PoseOverlayData?> _poseOverlayNotifier = ValueNotifier(
+    null,
+  );
 
   bool _isCameraInitialized = false;
   bool _isSimulationMode = kIsWeb;
@@ -198,23 +200,34 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   void _triggerRepParticleBurst(Pose pose) {
     if (_perfConfig.maxParticleCount <= 0) return;
 
-    final targetJoint = pose.landmarks[_primaryJointType] ??
+    final targetJoint =
+        pose.landmarks[_primaryJointType] ??
         pose.landmarks[PoseLandmarkType.leftKnee] ??
         pose.landmarks[PoseLandmarkType.leftElbow];
     if (targetJoint == null) return;
 
-    final double imageW = _cameraPreviewSize.width > 0 ? _cameraPreviewSize.width : 480;
-    final double imageH = _cameraPreviewSize.height > 0 ? _cameraPreviewSize.height : 640;
+    final double imageW = _cameraPreviewSize.width > 0
+        ? _cameraPreviewSize.width
+        : 480;
+    final double imageH = _cameraPreviewSize.height > 0
+        ? _cameraPreviewSize.height
+        : 640;
     final double normX = (targetJoint.x / imageW).clamp(0.0, 1.0);
     final double normY = (targetJoint.y / imageH).clamp(0.0, 1.0);
 
-    final bool isFront = _cameraController?.description.lensDirection == CameraLensDirection.front;
+    final bool isFront =
+        _cameraController?.description.lensDirection ==
+        CameraLensDirection.front;
     final Size screenSize = MediaQuery.of(context).size;
-    final double screenX = isFront ? (1.0 - normX) * screenSize.width : normX * screenSize.width;
+    final double screenX = isFront
+        ? (1.0 - normX) * screenSize.width
+        : normX * screenSize.width;
     final double screenY = normY * (screenSize.height * 0.7);
 
     final Random random = Random();
-    final Color sparkColor = _isGoodForm ? AppColors.accentEmeraldLight : Colors.amber;
+    final Color sparkColor = _isGoodForm
+        ? AppColors.accentEmeraldLight
+        : Colors.amber;
 
     for (int i = 0; i < _perfConfig.maxParticleCount; i++) {
       final double angle = random.nextDouble() * 2 * pi;
@@ -363,7 +376,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     if (_isProcessing || _isPausedByGesture || !mounted) return;
 
     final now = DateTime.now();
-    if (now.difference(_lastProcessedAt).inMilliseconds < _perfConfig.inferenceThrottleMs) return;
+    if (now.difference(_lastProcessedAt).inMilliseconds <
+        _perfConfig.inferenceThrottleMs)
+      return;
     _lastProcessedAt = now;
     _isProcessing = true;
 
@@ -387,12 +402,17 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           : InputImageFormat.bgra8888);
 
       Size metadataSize = Size(image.width.toDouble(), image.height.toDouble());
-      int bytesPerRow = image.planes.isNotEmpty ? image.planes[0].bytesPerRow : image.width;
+      int bytesPerRow = image.planes.isNotEmpty
+          ? image.planes[0].bytesPerRow
+          : image.width;
 
       // Real Performance Optimization: Downsample high-res camera frames for inference while retaining full-res preview
       if (format == InputImageFormat.nv21 && image.width >= 640) {
         bytes = _downsampleNV21(bytes, image.width, image.height);
-        metadataSize = Size((image.width ~/ 2).toDouble(), (image.height ~/ 2).toDouble());
+        metadataSize = Size(
+          (image.width ~/ 2).toDouble(),
+          (image.height ~/ 2).toDouble(),
+        );
         bytesPerRow = image.width ~/ 2;
       }
 
@@ -666,10 +686,13 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     );
 
     // Only invoke setState when text/badge UI state changes to keep UI 60 FPS
-    final bool msgChanged = feedback != null && feedback.message != _feedbackMessage;
-    final bool isGoodFormChanged = feedback != null && feedback.isGoodForm != _isGoodForm;
+    final bool msgChanged =
+        feedback != null && feedback.message != _feedbackMessage;
+    final bool isGoodFormChanged =
+        feedback != null && feedback.isGoodForm != _isGoodForm;
     final bool exChanged = classifiedEx != _classifiedExercise;
-    final bool progressChanged = feedback != null && (feedback.progress - _repProgress).abs() > 0.05;
+    final bool progressChanged =
+        feedback != null && (feedback.progress - _repProgress).abs() > 0.05;
 
     if (msgChanged || isGoodFormChanged || exChanged || progressChanged) {
       setState(() {
@@ -795,8 +818,11 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                       child: AnimatedBuilder(
                                         animation: _radarPulseController,
                                         builder: (context, _) {
-                                          return ValueListenableBuilder<PoseOverlayData?>(
-                                            valueListenable: _poseOverlayNotifier,
+                                          return ValueListenableBuilder<
+                                            PoseOverlayData?
+                                          >(
+                                            valueListenable:
+                                                _poseOverlayNotifier,
                                             builder: (context, overlayData, _) {
                                               if (overlayData == null) {
                                                 return const SizedBox.shrink();
@@ -808,23 +834,31 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                                   imageSize: _cameraPreviewSize,
                                                   isFrontCamera:
                                                       _cameraController
-                                                              ?.description
-                                                              .lensDirection ==
-                                                          CameraLensDirection.front,
-                                                  isGoodForm: overlayData.isGoodForm,
+                                                          ?.description
+                                                          .lensDirection ==
+                                                      CameraLensDirection.front,
+                                                  isGoodForm:
+                                                      overlayData.isGoodForm,
                                                   showGhostTrainer:
-                                                      Provider.of<ProfileProvider>(
-                                                        context,
-                                                        listen: false,
-                                                      ).ghostTrainerEnabled,
-                                                  exercise: overlayData.exercise,
-                                                  phase: overlayData.currentPhase,
-                                                  measuredAngle:
-                                                      overlayData.currentJointAngle,
-                                                  jointType:
-                                                      overlayData.primaryJointType,
+                                                      Provider.of<
+                                                            ProfileProvider
+                                                          >(
+                                                            context,
+                                                            listen: false,
+                                                          )
+                                                          .ghostTrainerEnabled,
+                                                  exercise:
+                                                      overlayData.exercise,
+                                                  phase:
+                                                      overlayData.currentPhase,
+                                                  measuredAngle: overlayData
+                                                      .currentJointAngle,
+                                                  jointType: overlayData
+                                                      .primaryJointType,
                                                   perfConfig: _perfConfig,
-                                                  pulseValue: _radarPulseController.value,
+                                                  pulseValue:
+                                                      _radarPulseController
+                                                          .value,
                                                 ),
                                               );
                                             },
@@ -861,7 +895,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                     child: IgnorePointer(
                       child: CustomPaint(
                         painter: HUDCornerBracketsPainter(
-                          bracketColor: _isGoodForm ? AppColors.accentEmeraldLight : Colors.amber,
+                          bracketColor: _isGoodForm
+                              ? AppColors.accentEmeraldLight
+                              : Colors.amber,
                         ),
                       ),
                     ),
@@ -873,7 +909,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       child: IgnorePointer(
                         child: RepaintBoundary(
                           child: CustomPaint(
-                            painter: ParticleBurstPainter(particles: _activeParticles),
+                            painter: ParticleBurstPainter(
+                              particles: _activeParticles,
+                            ),
                           ),
                         ),
                       ),
@@ -909,7 +947,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                   ValueListenableBuilder<PoseOverlayData?>(
                     valueListenable: _poseOverlayNotifier,
                     builder: (context, overlayData, _) {
-                      final bool isScanningState = _isCalibrating || overlayData == null;
+                      final bool isScanningState =
+                          _isCalibrating || overlayData == null;
                       return AnimatedOpacity(
                         duration: const Duration(milliseconds: 300),
                         opacity: isScanningState ? 1.0 : 0.0,
@@ -927,14 +966,18 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                       height: 170,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                                        color: const Color(
+                                          0xFF0F172A,
+                                        ).withValues(alpha: 0.85),
                                         border: Border.all(
-                                          color: AppColors.accentEmeraldLight.withValues(alpha: 0.6),
+                                          color: AppColors.accentEmeraldLight
+                                              .withValues(alpha: 0.6),
                                           width: 2,
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: AppColors.accentEmeraldLight.withValues(alpha: 0.25),
+                                            color: AppColors.accentEmeraldLight
+                                                .withValues(alpha: 0.25),
                                             blurRadius: 20,
                                             spreadRadius: 2,
                                           ),
@@ -946,22 +989,30 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                         child: Image.asset(
                                           'assets/images/robot_mascot/ai_face_detector.png',
                                           fit: BoxFit.contain,
-                                          errorBuilder: (_, __, ___) => const Icon(
-                                            Icons.camera_front_rounded,
-                                            size: 64,
-                                            color: AppColors.accentEmeraldLight,
-                                          ),
+                                          errorBuilder: (_, __, ___) =>
+                                              const Icon(
+                                                Icons.camera_front_rounded,
+                                                size: 64,
+                                                color: AppColors
+                                                    .accentEmeraldLight,
+                                              ),
                                         ),
                                       ),
                                     ),
                                     const SizedBox(height: 16),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 8,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                                        color: const Color(
+                                          0xFF0F172A,
+                                        ).withValues(alpha: 0.85),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
-                                          color: AppColors.accentEmeraldLight.withValues(alpha: 0.3),
+                                          color: AppColors.accentEmeraldLight
+                                              .withValues(alpha: 0.3),
                                         ),
                                       ),
                                       child: Row(
@@ -972,7 +1023,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                             height: 14,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              color: AppColors.accentEmeraldLight,
+                                              color:
+                                                  AppColors.accentEmeraldLight,
                                             ),
                                           ),
                                           const SizedBox(width: 10),
@@ -1493,7 +1545,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       tierColor = Colors.orangeAccent;
     }
 
-    final String latencyText = _lastInferenceMs > 0 ? '${_lastInferenceMs}ms' : 'AI';
+    final String latencyText = _lastInferenceMs > 0
+        ? '${_lastInferenceMs}ms'
+        : 'AI';
 
     return GestureDetector(
       onTap: () {
@@ -2416,8 +2470,11 @@ class _SkeletonOverlayPainter extends CustomPainter {
     ..color = const Color(0xFFBBF7E0)
     ..style = PaintingStyle.fill;
 
-  static final Paint _chipBgPaint = Paint()..color = Colors.black.withValues(alpha: 0.88);
-  static final Paint _chipBorderPaint = Paint()..style = PaintingStyle.stroke..strokeWidth = 1.2;
+  static final Paint _chipBgPaint = Paint()
+    ..color = Colors.black.withValues(alpha: 0.88);
+  static final Paint _chipBorderPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.2;
 
   static const _fullConnections = [
     // Face outline / head
@@ -2469,7 +2526,9 @@ class _SkeletonOverlayPainter extends CustomPainter {
 
     Offset toScreen(double lx, double ly) {
       final double imageW = imageSize.width > 0 ? imageSize.width : size.width;
-      final double imageH = imageSize.height > 0 ? imageSize.height : size.height;
+      final double imageH = imageSize.height > 0
+          ? imageSize.height
+          : size.height;
 
       final double normX = (lx / imageW).clamp(0.0, 1.0);
       final double normY = (ly / imageH).clamp(0.0, 1.0);
@@ -2500,7 +2559,10 @@ class _SkeletonOverlayPainter extends CustomPainter {
     for (final pair in _fullConnections) {
       final a = pose.landmarks[pair[0]];
       final b = pose.landmarks[pair[1]];
-      if (a != null && b != null && a.likelihood > 0.45 && b.likelihood > 0.45) {
+      if (a != null &&
+          b != null &&
+          a.likelihood > 0.45 &&
+          b.likelihood > 0.45) {
         final p1 = toScreen(a.x, a.y);
         final p2 = toScreen(b.x, b.y);
         // Outer glow stroke pass
@@ -2550,7 +2612,8 @@ class _SkeletonOverlayPainter extends CustomPainter {
           canvas.drawCircle(pos, 5.0, _jointPaint);
 
           // Futuristic radar pulse ping ring around key joints
-          if (perfConfig.enablePulsingJoints && radarJoints.contains(entry.key)) {
+          if (perfConfig.enablePulsingJoints &&
+              radarJoints.contains(entry.key)) {
             final double pulseRadius = 5.0 + (14.0 * pulseValue);
             final double pulseAlpha = (1.0 - pulseValue).clamp(0.0, 1.0) * 0.75;
             _pulseRingPaint.color = accentColor.withValues(alpha: pulseAlpha);
@@ -2591,7 +2654,9 @@ class _SkeletonOverlayPainter extends CustomPainter {
         const Radius.circular(8),
       );
 
-      _chipBorderPaint.color = isGoodForm ? AppColors.accentEmeraldLight : Colors.amber;
+      _chipBorderPaint.color = isGoodForm
+          ? AppColors.accentEmeraldLight
+          : Colors.amber;
 
       canvas.drawRRect(bgRRect, _chipBgPaint);
       canvas.drawRRect(bgRRect, _chipBorderPaint);
