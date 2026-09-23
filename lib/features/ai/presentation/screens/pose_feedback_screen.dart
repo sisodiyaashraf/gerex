@@ -867,7 +867,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                                       _radarPulseController
                                                           .value,
                                                 ),
-                                              );
+                                               ),
+                                             );
                                             },
                                           );
                                         },
