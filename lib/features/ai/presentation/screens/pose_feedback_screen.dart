@@ -905,33 +905,99 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                     child: _buildVerticalProgressSlider(),
                   ),
 
-                  // 4. Calibration overlay
-                  if (_isCalibrating)
-                    Container(
-                      color: Colors.black54,
-                      child: Center(
-                        child: FadeTransition(
-                          opacity: _pulseAnimation,
-                          child: const Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircularProgressIndicator(
-                                color: AppColors.accentEmeraldLight,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'Calibrating AI & Hand Landmarks...',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                  // 4. Calibration & No Person Detected AI Face Scanning Crossfade Graphic Overlay
+                  ValueListenableBuilder<PoseOverlayData?>(
+                    valueListenable: _poseOverlayNotifier,
+                    builder: (context, overlayData, _) {
+                      final bool isScanningState = _isCalibrating || overlayData == null;
+                      return AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: isScanningState ? 1.0 : 0.0,
+                        child: IgnorePointer(
+                          ignoring: !isScanningState,
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.45),
+                            child: Center(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 170,
+                                      height: 170,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                                        border: Border.all(
+                                          color: AppColors.accentEmeraldLight.withValues(alpha: 0.6),
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.accentEmeraldLight.withValues(alpha: 0.25),
+                                            blurRadius: 20,
+                                            spreadRadius: 2,
+                                          ),
+                                        ],
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: FadeTransition(
+                                        opacity: _pulseAnimation,
+                                        child: Image.asset(
+                                          'assets/images/robot_mascot/ai_face_detector.png',
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, __, ___) => const Icon(
+                                            Icons.camera_front_rounded,
+                                            size: 64,
+                                            color: AppColors.accentEmeraldLight,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: AppColors.accentEmeraldLight.withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: AppColors.accentEmeraldLight,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            _isCalibrating
+                                                ? 'Calibrating AI Scanner...'
+                                                : 'No Body Detected — Step into Frame',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  ),
 
                   // 4.5 Paused by Gesture Overlay Banner
                   if (_isPausedByGesture)
