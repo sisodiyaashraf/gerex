@@ -669,8 +669,32 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildRobotAvatar(),
-              const SizedBox(height: 16),
+              Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: AppColors.accentEmeraldLight.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accentEmeraldLight.withValues(alpha: 0.2),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Image.asset(
+                  'assets/images/robot_mascot/ai_face_detector.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => _buildRobotAvatar(),
+                ),
+              ),
+              const SizedBox(height: 18),
               Text(
                 'Meet Coach Gerex',
                 style: GoogleFonts.outfit(

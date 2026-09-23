@@ -269,18 +269,27 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
         children: [
           Center(
             child: Container(
-              width: 72,
-              height: 72,
+              width: 84,
+              height: 84,
               decoration: BoxDecoration(
-                color: AppColors.accentEmeraldLight.withValues(alpha: 0.1),
+                color: const Color(0xFF0F172A).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.accentEmeraldLight.withValues(alpha: 0.25),
-                  width: 1.5,
+                  color: AppColors.accentEmeraldLight.withValues(alpha: 0.4),
+                  width: 2,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                  ),
+                ],
               ),
-              child: const Center(
-                child: FaIcon(
+              padding: const EdgeInsets.all(10),
+              child: Image.asset(
+                'assets/images/robot_mascot/ai_face_detector.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const FaIcon(
                   FontAwesomeIcons.wandMagicSparkles,
                   color: AppColors.accentEmeraldLight,
                   size: 28,

@@ -220,6 +220,7 @@ class _MascotAiHubBottomSheetState extends State<MascotAiHubBottomSheet> {
                 const SizedBox(height: 10),
                 _buildOptionCard(
                   context,
+                  imageAsset: 'assets/images/robot_mascot/ai_face_detector.png',
                   icon: FontAwesomeIcons.wandMagicSparkles,
                   gradientColors: const [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
                   title: 'AI Suggestions',
@@ -379,7 +380,8 @@ class _MascotAiHubBottomSheetState extends State<MascotAiHubBottomSheet> {
 
   Widget _buildOptionCard(
     BuildContext context, {
-    required dynamic icon,
+    dynamic icon,
+    String? imageAsset,
     required List<Color> gradientColors,
     required String title,
     required String subtitle,
@@ -427,11 +429,26 @@ class _MascotAiHubBottomSheetState extends State<MascotAiHubBottomSheet> {
                   ],
                 ),
                 child: Center(
-                  child: FaIcon(
-                    icon,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: imageAsset != null
+                      ? Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Image.asset(
+                            imageAsset,
+                            fit: BoxFit.contain,
+                            width: 28,
+                            height: 28,
+                            errorBuilder: (_, __, ___) => FaIcon(
+                              icon ?? FontAwesomeIcons.robot,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        )
+                      : FaIcon(
+                          icon,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                 ),
               ),
               const SizedBox(width: 14),
