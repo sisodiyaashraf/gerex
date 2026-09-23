@@ -824,10 +824,17 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                             valueListenable:
                                                 _poseOverlayNotifier,
                                             builder: (context, overlayData, _) {
-                                              if (overlayData == null) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              return CustomPaint(
+                                               final bool showSkeleton =
+                                                   overlayData != null &&
+                                                   !_isCalibrating;
+                                               return AnimatedOpacity(
+                                                 duration: const Duration(
+                                                   milliseconds: 300,
+                                                 ),
+                                                 opacity: showSkeleton ? 1.0 : 0.0,
+                                                 child: overlayData == null
+                                                     ? const SizedBox.shrink()
+                                                     : CustomPaint(
                                                 painter: _SkeletonOverlayPainter(
                                                   pose: overlayData.pose,
                                                   hands: overlayData.hands,
