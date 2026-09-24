@@ -100,16 +100,22 @@ class DenseFaceMeshService {
     final double dirRightX = eyeDist > 0 ? eyeDx / eyeDist : 1.0;
     final double dirRightY = eyeDist > 0 ? eyeDy / eyeDist : 0.0;
 
-    final double faceHeight = (mouthCenter.dy - eyeCenter.dy).abs().clamp(20.0, 260.0) * 2.2;
-    final double foreheadDist = (eyeCenter.dy - pNose.dy).abs().clamp(15.0, 120.0) * 1.6;
+    final double faceHeight =
+        (mouthCenter.dy - eyeCenter.dy).abs().clamp(20.0, 260.0) * 2.2;
+    final double foreheadDist =
+        (eyeCenter.dy - pNose.dy).abs().clamp(15.0, 120.0) * 1.6;
 
     final List<Offset> vertices = [];
 
     // Helper to calculate landmark-driven forehead & cheek nodes along live directional vectors
     Offset foreheadNode(double rightOffset, double upFactor) {
       return Offset(
-        eyeCenter.dx + dirRightX * (rightOffset * eyeDist * 0.9) + dirUpX * (foreheadDist * upFactor),
-        eyeCenter.dy + dirRightY * (rightOffset * eyeDist * 0.9) + dirUpY * (foreheadDist * upFactor),
+        eyeCenter.dx +
+            dirRightX * (rightOffset * eyeDist * 0.9) +
+            dirUpX * (foreheadDist * upFactor),
+        eyeCenter.dy +
+            dirRightY * (rightOffset * eyeDist * 0.9) +
+            dirUpY * (foreheadDist * upFactor),
       );
     }
 
@@ -156,19 +162,43 @@ class DenseFaceMeshService {
     vertices.add(cheekNode(pRightEar, pRightMouth, 0.25));
 
     // Row 5: Mouth Line (5 vertices) [25..29]
-    vertices.add(Offset(pLeftEar.dx * 0.7 + pLeftMouth.dx * 0.3, pLeftMouth.dy));
+    vertices.add(
+      Offset(pLeftEar.dx * 0.7 + pLeftMouth.dx * 0.3, pLeftMouth.dy),
+    );
     vertices.add(pLeftMouth);
     vertices.add(mouthCenter);
     vertices.add(pRightMouth);
-    vertices.add(Offset(pRightEar.dx * 0.7 + pRightMouth.dx * 0.3, pRightMouth.dy));
+    vertices.add(
+      Offset(pRightEar.dx * 0.7 + pRightMouth.dx * 0.3, pRightMouth.dy),
+    );
 
     // Row 6: Lower Jaw & Chin (5 vertices) [30..34]
     final Offset chin = Offset(pNose.dx, mouthCenter.dy + faceHeight * 0.35);
-    vertices.add(Offset(pLeftEar.dx * 0.8 + chin.dx * 0.2, mouthCenter.dy + faceHeight * 0.20));
-    vertices.add(Offset(pLeftMouth.dx * 0.6 + chin.dx * 0.4, mouthCenter.dy + faceHeight * 0.28));
+    vertices.add(
+      Offset(
+        pLeftEar.dx * 0.8 + chin.dx * 0.2,
+        mouthCenter.dy + faceHeight * 0.20,
+      ),
+    );
+    vertices.add(
+      Offset(
+        pLeftMouth.dx * 0.6 + chin.dx * 0.4,
+        mouthCenter.dy + faceHeight * 0.28,
+      ),
+    );
     vertices.add(chin);
-    vertices.add(Offset(pRightMouth.dx * 0.6 + chin.dx * 0.4, mouthCenter.dy + faceHeight * 0.28));
-    vertices.add(Offset(pRightEar.dx * 0.8 + chin.dx * 0.2, mouthCenter.dy + faceHeight * 0.20));
+    vertices.add(
+      Offset(
+        pRightMouth.dx * 0.6 + chin.dx * 0.4,
+        mouthCenter.dy + faceHeight * 0.28,
+      ),
+    );
+    vertices.add(
+      Offset(
+        pRightEar.dx * 0.8 + chin.dx * 0.2,
+        mouthCenter.dy + faceHeight * 0.20,
+      ),
+    );
 
     // Build dense 48-triangle mesh topology
     final List<List<int>> triangles = [];
