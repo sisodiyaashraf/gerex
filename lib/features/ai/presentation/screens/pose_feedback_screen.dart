@@ -12,6 +12,7 @@ import '../../data/services/form_analyzer.dart';
 import '../../data/services/exercise_classifier.dart';
 import '../../data/services/hand_landmark_service.dart';
 import '../../data/services/dense_face_mesh_service.dart';
+import 'package:gerex/core/services/camera_rotation_helper.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -434,11 +435,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   InputImageRotation _computeInputImageRotation(CameraDescription? camera) {
-    if (camera == null) return InputImageRotation.rotation270deg;
-    final sensorOrientation = camera.sensorOrientation;
-    final int rotationCompensation = sensorOrientation % 360;
-    return InputImageRotationValue.fromRawValue(rotationCompensation) ??
-        InputImageRotation.rotation270deg;
+    return CameraRotationHelper.computeInputImageRotation(camera);
   }
 
   void _resumeDetection() {
@@ -2404,6 +2401,7 @@ class _SkeletonOverlayPainter extends CustomPainter {
   final List<HandSkeleton> hands;
   final Size imageSize;
   final bool isFrontCamera;
+  final InputImageRotation rotation;
   final bool isGoodForm;
   final bool showGhostTrainer;
   final String exercise;
@@ -2418,6 +2416,7 @@ class _SkeletonOverlayPainter extends CustomPainter {
     required this.hands,
     required this.imageSize,
     this.isFrontCamera = true,
+    this.rotation = InputImageRotation.rotation270deg,
     required this.isGoodForm,
     this.showGhostTrainer = false,
     this.exercise = 'custom',
@@ -2503,28 +2502,23 @@ class _SkeletonOverlayPainter extends CustomPainter {
     _faceJointPaint.color = const Color(0xFFFFD54F);
 
     Offset toScreen(double lx, double ly) {
-      final double imageW = imageSize.width > 0 ? imageSize.width : size.width;
-      final double imageH = imageSize.height > 0
-          ? imageSize.height
-          : size.height;
-
-      final double normX = (lx / imageW).clamp(0.0, 1.0);
-      final double normY = (ly / imageH).clamp(0.0, 1.0);
-
-      final double x = isFrontCamera
-          ? (1.0 - normX) * size.width
-          : normX * size.width;
-      final double y = normY * size.height;
-
-      return Offset(x, y);
+      return CameraRotationHelper.transformPoint(
+        lx: lx,
+        ly: ly,
+        imageSize: imageSize,
+        screenSize: size,
+        isFrontCamera: isFrontCamera,
+        rotation: rotation,
+      );
     }
 
     // 0. Draw Dense Triangulated 3D Face Mesh (Forehead, Cheeks, Jaw, Eyes, Nose, Mouth)
     final FaceMesh? faceMesh = DenseFaceMeshService.generateFaceMesh(
-      pose,
-      imageSize,
-      isFrontCamera,
-      size,
+      pose: pose,
+      imageSize: imageSize,
+      isFrontCamera: isFrontCamera,
+      screenSize: size,
+      rotation: rotation,
     );
 
     if (faceMesh != null) {
