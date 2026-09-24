@@ -34,16 +34,16 @@ class CameraRotationHelper {
     double y;
 
     switch (rotation) {
+      case InputImageRotation.rotation0deg:
+      case InputImageRotation.rotation180deg:
+        x = isFrontCamera ? (1.0 - normY) * screenSize.width : normY * screenSize.width;
+        y = normX * screenSize.height;
+        break;
       case InputImageRotation.rotation90deg:
       case InputImageRotation.rotation270deg:
       default:
         x = isFrontCamera ? (1.0 - normX) * screenSize.width : normX * screenSize.width;
         y = normY * screenSize.height;
-        break;
-      case InputImageRotation.rotation0deg:
-      case InputImageRotation.rotation180deg:
-        x = isFrontCamera ? (1.0 - normY) * screenSize.width : normY * screenSize.width;
-        y = normX * screenSize.height;
         break;
     }
 
