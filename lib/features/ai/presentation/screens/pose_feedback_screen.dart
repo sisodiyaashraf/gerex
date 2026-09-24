@@ -11,6 +11,7 @@ import '../../data/services/pose_detector_service.dart';
 import '../../data/services/form_analyzer.dart';
 import '../../data/services/exercise_classifier.dart';
 import '../../data/services/hand_landmark_service.dart';
+import '../../data/services/dense_face_mesh_service.dart';
 import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/theme/app_theme.dart';
@@ -2464,16 +2465,6 @@ class _SkeletonOverlayPainter extends CustomPainter {
     ..strokeWidth = 1.2;
 
   static const _fullConnections = [
-    // Face outline / head
-    [PoseLandmarkType.nose, PoseLandmarkType.leftEye],
-    [PoseLandmarkType.nose, PoseLandmarkType.rightEye],
-    [PoseLandmarkType.leftEye, PoseLandmarkType.leftEar],
-    [PoseLandmarkType.rightEye, PoseLandmarkType.rightEar],
-    [PoseLandmarkType.leftEye, PoseLandmarkType.rightEye],
-    [PoseLandmarkType.leftMouth, PoseLandmarkType.rightMouth],
-    [PoseLandmarkType.nose, PoseLandmarkType.leftMouth],
-    [PoseLandmarkType.nose, PoseLandmarkType.rightMouth],
-
     // Torso box
     [PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder],
     [PoseLandmarkType.leftShoulder, PoseLandmarkType.leftHip],
@@ -2526,6 +2517,41 @@ class _SkeletonOverlayPainter extends CustomPainter {
       final double y = normY * size.height;
 
       return Offset(x, y);
+    }
+
+    // 0. Draw Dense Triangulated 3D Face Mesh (Forehead, Cheeks, Jaw, Eyes, Nose, Mouth)
+    final FaceMesh? faceMesh = DenseFaceMeshService.generateFaceMesh(
+      pose,
+      imageSize,
+      isFrontCamera,
+      size,
+    );
+
+    if (faceMesh != null) {
+      final Paint meshLinePaint = Paint()
+        ..color = const Color(0xFF2DD4BF).withValues(alpha: 0.6)
+        ..strokeWidth = 1.1
+        ..style = PaintingStyle.stroke;
+
+      final Paint meshNodePaint = Paint()
+        ..color = const Color(0xFFFFD54F)
+        ..style = PaintingStyle.fill;
+
+      // Draw small triangulated mesh edges
+      for (final tri in faceMesh.triangles) {
+        final Offset v1 = faceMesh.vertices[tri[0]];
+        final Offset v2 = faceMesh.vertices[tri[1]];
+        final Offset v3 = faceMesh.vertices[tri[2]];
+
+        canvas.drawLine(v1, v2, meshLinePaint);
+        canvas.drawLine(v2, v3, meshLinePaint);
+        canvas.drawLine(v3, v1, meshLinePaint);
+      }
+
+      // Draw small circular vertex nodes at every mesh landmark
+      for (final vertex in faceMesh.vertices) {
+        canvas.drawCircle(vertex, 2.2, meshNodePaint);
+      }
     }
 
     // 1. Draw Ghost Silhouette if enabled
