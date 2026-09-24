@@ -49,7 +49,6 @@ class CameraRotationHelper {
         break;
       case InputImageRotation.rotation90deg:
       case InputImageRotation.rotation270deg:
-      default:
         x = isFrontCamera
             ? (1.0 - normX) * screenSize.width
             : normX * screenSize.width;
