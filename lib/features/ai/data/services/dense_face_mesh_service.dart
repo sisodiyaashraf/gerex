@@ -27,7 +27,9 @@ class DenseFaceMeshService {
     final leftMouth = pose.landmarks[PoseLandmarkType.leftMouth];
     final rightMouth = pose.landmarks[PoseLandmarkType.rightMouth];
 
-    if (nose == null || leftEye == null || rightEye == null) return null;
+    if (nose == null || leftEye == null || rightEye == null) {
+      return null;
+    }
     if (nose.likelihood < 0.35 ||
         leftEye.likelihood < 0.35 ||
         rightEye.likelihood < 0.35)
