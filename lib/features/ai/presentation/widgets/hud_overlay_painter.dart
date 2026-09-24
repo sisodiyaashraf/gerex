@@ -83,8 +83,12 @@ class HUDCornerBracketsPainter extends CustomPainter {
     final double bracketLength = min(size.width, size.height) * 0.12;
     const double margin = 16.0;
 
-    _bracketGlowPaint.color = bracketColor.withValues(alpha: 0.35 * animationValue);
-    _bracketCorePaint.color = bracketColor.withValues(alpha: 0.9 * animationValue);
+    _bracketGlowPaint.color = bracketColor.withValues(
+      alpha: 0.35 * animationValue,
+    );
+    _bracketCorePaint.color = bracketColor.withValues(
+      alpha: 0.9 * animationValue,
+    );
     _dotPaint.color = bracketColor.withValues(alpha: 0.8 * animationValue);
 
     final double w = size.width;
@@ -157,14 +161,16 @@ class HUDScanLinePainter extends CustomPainter {
 
     // Glowing vertical gradient trailing the scanline
     const double glowHeight = 35.0;
-    final Rect glowRect = Rect.fromLTRB(0, max(0, y - glowHeight), size.width, y);
+    final Rect glowRect = Rect.fromLTRB(
+      0,
+      max(0, y - glowHeight),
+      size.width,
+      y,
+    );
     _gradientGlowPaint.shader = const LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        Colors.transparent,
-        Color(0x4000F5A0),
-      ],
+      colors: [Colors.transparent, Color(0x4000F5A0)],
     ).createShader(glowRect);
 
     canvas.drawRect(glowRect, _gradientGlowPaint);
@@ -197,31 +203,24 @@ class HUDFormQualityRingPainter extends CustomPainter {
     ..strokeWidth = 3.5
     ..strokeCap = StrokeCap.round;
 
-  HUDFormQualityRingPainter({
-    required this.isGoodForm,
-    this.confidence = 1.0,
-  });
+  HUDFormQualityRingPainter({required this.isGoodForm, this.confidence = 1.0});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double radius = min(size.width, size.height) * 0.48;
-    final Offset center = Offset(size.width / 2, size.height / 2);
+    // Redesigned: Sleek HUD top border indicator arc instead of invasive center circle around face
+    final double arcWidth = min(size.width, size.height) * 0.22;
+    final Offset center = Offset(size.width / 2, 42.0);
 
-    // Color shift along Emerald -> Amber -> Red spectrum
     final Color ringColor = isGoodForm
         ? (confidence > 0.8 ? AppColors.accentEmeraldLight : Colors.amber)
         : Colors.redAccent;
 
-    _ringForegroundPaint.color = ringColor.withValues(alpha: 0.65);
+    _ringForegroundPaint.color = ringColor.withValues(alpha: 0.7);
 
-    // Draw background track ring
-    canvas.drawCircle(center, radius, _ringBackgroundPaint);
-
-    // Draw active arc segment
-    final double sweepAngle = 2 * pi * confidence.clamp(0.1, 1.0);
+    final double sweepAngle = pi * confidence.clamp(0.1, 1.0);
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -pi / 2,
+      Rect.fromCircle(center: center, radius: arcWidth),
+      pi,
       sweepAngle,
       false,
       _ringForegroundPaint,

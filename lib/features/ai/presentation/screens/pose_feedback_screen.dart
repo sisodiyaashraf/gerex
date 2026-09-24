@@ -340,45 +340,22 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     }
   }
 
-  Uint8List _downsampleNV21(Uint8List nv21, int width, int height) {
-    final int newW = width ~/ 2;
-    final int newH = height ~/ 2;
-    final int ySize = width * height;
-    final int newYSize = newW * newH;
-    final Uint8List result = Uint8List(newYSize + (newYSize ~/ 2));
-
-    int outIdx = 0;
-    for (int r = 0; r < height; r += 2) {
-      final int rowOffset = r * width;
-      for (int c = 0; c < width; c += 2) {
-        if (outIdx < newYSize && (rowOffset + c) < ySize) {
-          result[outIdx++] = nv21[rowOffset + c];
-        }
-      }
-    }
-
-    int vuOutIdx = newYSize;
-    final int vuStart = ySize;
-    for (int r = 0; r < (height ~/ 2); r += 2) {
-      final int vuRowOffset = vuStart + r * width;
-      for (int c = 0; c < width; c += 4) {
-        if (vuRowOffset + c + 1 < nv21.length && vuOutIdx + 1 < result.length) {
-          result[vuOutIdx++] = nv21[vuRowOffset + c];
-          result[vuOutIdx++] = nv21[vuRowOffset + c + 1];
-        }
-      }
-    }
-    return result;
-  }
-
   void _processCameraImage(CameraImage image) async {
-    // Non-blocking early guard: drop incoming frame immediately if detector is busy
-    if (_isProcessing || _isPausedByGesture || !mounted) return;
+    // Non-blocking early guard: drop incoming frame immediately if detector is busy (Step 2 Frame Dropping)
+    if (_isProcessing || _isPausedByGesture || !mounted) {
+      if (kDebugMode && _isProcessing) {
+        print(
+          '[PoseDetector] Frame dropped: detector busy processing previous frame.',
+        );
+      }
+      return;
+    }
 
     final now = DateTime.now();
     if (now.difference(_lastProcessedAt).inMilliseconds <
-        _perfConfig.inferenceThrottleMs)
+        _perfConfig.inferenceThrottleMs) {
       return;
+    }
     _lastProcessedAt = now;
     _isProcessing = true;
 
@@ -406,15 +383,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
           ? image.planes[0].bytesPerRow
           : image.width;
 
-      // Real Performance Optimization: Downsample high-res camera frames for inference while retaining full-res preview
-      if (format == InputImageFormat.nv21 && image.width >= 640) {
-        bytes = _downsampleNV21(bytes, image.width, image.height);
-        metadataSize = Size(
-          (image.width ~/ 2).toDouble(),
-          (image.height ~/ 2).toDouble(),
-        );
-        bytesPerRow = image.width ~/ 2;
-      }
+      // Uncorrupted direct camera buffer fed to ML Kit stream detector
 
       final InputImageRotation rotation = _computeInputImageRotation(
         _cameraController?.description,
@@ -754,39 +723,40 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
         ),
         actions: [
           _buildPerformanceTierChip(),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Row(
-              children: [
-                const Text(
-                  'Sim',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: _isSimulationMode,
-                    activeTrackColor: AppColors.accentEmeraldLight.withValues(
-                      alpha: 0.5,
+          if (kDebugMode)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Row(
+                children: [
+                  const Text(
+                    'Sim (Dev)',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                     ),
-                    activeThumbColor: AppColors.accentEmeraldLight,
-                    onChanged: (val) {
-                      setState(() {
-                        _isSimulationMode = val;
-                        if (!val && !_isCameraInitialized) {
-                          _initializeCamera();
-                        }
-                      });
-                    },
                   ),
-                ),
-              ],
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: _isSimulationMode,
+                      activeTrackColor: AppColors.accentEmeraldLight.withValues(
+                        alpha: 0.5,
+                      ),
+                      activeThumbColor: AppColors.accentEmeraldLight,
+                      onChanged: (val) {
+                        setState(() {
+                          _isSimulationMode = val;
+                          if (!val && !_isCameraInitialized) {
+                            _initializeCamera();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
       body: LiquidBackground(
@@ -2578,8 +2548,8 @@ class _SkeletonOverlayPainter extends CustomPainter {
       final b = pose.landmarks[pair[1]];
       if (a != null &&
           b != null &&
-          a.likelihood > 0.45 &&
-          b.likelihood > 0.45) {
+          a.likelihood > 0.35 &&
+          b.likelihood > 0.35) {
         final p1 = toScreen(a.x, a.y);
         final p2 = toScreen(b.x, b.y);
         // Outer glow stroke pass
@@ -2621,7 +2591,7 @@ class _SkeletonOverlayPainter extends CustomPainter {
 
     for (final entry in pose.landmarks.entries) {
       final lm = entry.value;
-      if (lm.likelihood > 0.4) {
+      if (lm.likelihood > 0.35) {
         final pos = toScreen(lm.x, lm.y);
         if (faceTypes.contains(entry.key)) {
           canvas.drawCircle(pos, 3.0, _faceJointPaint);
