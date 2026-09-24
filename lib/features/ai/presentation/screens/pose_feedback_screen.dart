@@ -843,6 +843,12 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                                           pulseValue:
                                                               _radarPulseController
                                                                   .value,
+                                                          rotation:
+                                                              CameraRotationHelper
+                                                                  .computeInputImageRotation(
+                                                            _cameraController
+                                                                ?.description,
+                                                          ),
                                                         ),
                                                       ),
                                               );
