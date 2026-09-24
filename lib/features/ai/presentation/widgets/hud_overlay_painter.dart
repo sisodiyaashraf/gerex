@@ -193,11 +193,6 @@ class HUDFormQualityRingPainter extends CustomPainter {
   final bool isGoodForm;
   final double confidence; // 0.0 to 1.0
 
-  static final Paint _ringBackgroundPaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 3.0
-    ..color = Colors.white10;
-
   static final Paint _ringForegroundPaint = Paint()
     ..style = PaintingStyle.stroke
     ..strokeWidth = 3.5
