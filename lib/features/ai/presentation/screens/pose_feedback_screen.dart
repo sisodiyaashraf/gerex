@@ -345,7 +345,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     // Non-blocking early guard: drop incoming frame immediately if detector is busy (Step 2 Frame Dropping)
     if (_isProcessing || _isPausedByGesture || !mounted) {
       if (kDebugMode && _isProcessing) {
-        print(
+        debugPrint(
           '[PoseDetector] Frame dropped: detector busy processing previous frame.',
         );
       }
