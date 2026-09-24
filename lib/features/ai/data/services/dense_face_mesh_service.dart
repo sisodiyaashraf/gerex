@@ -28,16 +28,25 @@ class DenseFaceMeshService {
     final rightMouth = pose.landmarks[PoseLandmarkType.rightMouth];
 
     if (nose == null || leftEye == null || rightEye == null) return null;
-    if (nose.likelihood < 0.35 || leftEye.likelihood < 0.35 || rightEye.likelihood < 0.35) return null;
+    if (nose.likelihood < 0.35 ||
+        leftEye.likelihood < 0.35 ||
+        rightEye.likelihood < 0.35)
+      return null;
 
     Offset toScreen(double lx, double ly) {
-      final double imageW = imageSize.width > 0 ? imageSize.width : screenSize.width;
-      final double imageH = imageSize.height > 0 ? imageSize.height : screenSize.height;
+      final double imageW = imageSize.width > 0
+          ? imageSize.width
+          : screenSize.width;
+      final double imageH = imageSize.height > 0
+          ? imageSize.height
+          : screenSize.height;
 
       final double normX = (lx / imageW).clamp(0.0, 1.0);
       final double normY = (ly / imageH).clamp(0.0, 1.0);
 
-      final double x = isFrontCamera ? (1.0 - normX) * screenSize.width : normX * screenSize.width;
+      final double x = isFrontCamera
+          ? (1.0 - normX) * screenSize.width
+          : normX * screenSize.width;
       final double y = normY * screenSize.height;
 
       return Offset(x, y);
@@ -49,11 +58,17 @@ class DenseFaceMeshService {
 
     final pLeftEar = leftEar != null && leftEar.likelihood > 0.3
         ? toScreen(leftEar.x, leftEar.y)
-        : Offset(pLeftEye.dx - (pRightEye.dx - pLeftEye.dx).abs() * 0.9, pLeftEye.dy);
+        : Offset(
+            pLeftEye.dx - (pRightEye.dx - pLeftEye.dx).abs() * 0.9,
+            pLeftEye.dy,
+          );
 
     final pRightEar = rightEar != null && rightEar.likelihood > 0.3
         ? toScreen(rightEar.x, rightEar.y)
-        : Offset(pRightEye.dx + (pRightEye.dx - pLeftEye.dx).abs() * 0.9, pRightEye.dy);
+        : Offset(
+            pRightEye.dx + (pRightEye.dx - pLeftEye.dx).abs() * 0.9,
+            pRightEye.dy,
+          );
 
     final pLeftMouth = leftMouth != null && leftMouth.likelihood > 0.3
         ? toScreen(leftMouth.x, leftMouth.y)
@@ -63,11 +78,21 @@ class DenseFaceMeshService {
         ? toScreen(rightMouth.x, rightMouth.y)
         : Offset(pNose.dx + 18, pNose.dy + 38);
 
-    final Offset eyeCenter = Offset((pLeftEye.dx + pRightEye.dx) / 2, (pLeftEye.dy + pRightEye.dy) / 2);
-    final Offset mouthCenter = Offset((pLeftMouth.dx + pRightMouth.dx) / 2, (pLeftMouth.dy + pRightMouth.dy) / 2);
+    final Offset eyeCenter = Offset(
+      (pLeftEye.dx + pRightEye.dx) / 2,
+      (pLeftEye.dy + pRightEye.dy) / 2,
+    );
+    final Offset mouthCenter = Offset(
+      (pLeftMouth.dx + pRightMouth.dx) / 2,
+      (pLeftMouth.dy + pRightMouth.dy) / 2,
+    );
 
-    final double faceWidth = (pRightEar.dx - pLeftEar.dx).abs().clamp(40.0, 420.0);
-    final double faceHeight = (mouthCenter.dy - eyeCenter.dy).abs().clamp(20.0, 260.0) * 2.2;
+    final double faceWidth = (pRightEar.dx - pLeftEar.dx).abs().clamp(
+      40.0,
+      420.0,
+    );
+    final double faceHeight =
+        (mouthCenter.dy - eyeCenter.dy).abs().clamp(20.0, 260.0) * 2.2;
 
     final Offset chin = Offset(pNose.dx, mouthCenter.dy + faceHeight * 0.35);
 
@@ -83,7 +108,10 @@ class DenseFaceMeshService {
       final double wy = ry * (faceHeight * 0.5);
       final double rotX = wx * cosA - wy * sinA;
       final double rotY = wx * sinA + wy * cosA;
-      return Offset(eyeCenter.dx + rotX, eyeCenter.dy + faceHeight * 0.15 + rotY);
+      return Offset(
+        eyeCenter.dx + rotX,
+        eyeCenter.dy + faceHeight * 0.15 + rotY,
+      );
     }
 
     final List<Offset> vertices = [];
