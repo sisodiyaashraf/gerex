@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:gerex/core/services/camera_rotation_helper.dart';
 
 class FaceMesh {
   final List<Offset> vertices;
@@ -9,16 +10,17 @@ class FaceMesh {
   const FaceMesh({required this.vertices, required this.triangles});
 }
 
-/// Synthesizes a dense, triangulated 3D face mesh covering forehead, cheeks, jaw, nose, eyes, and mouth.
+/// Synthesizes a dense, triangulated 3D face mesh conforming dynamically to each user's unique facial geometry and 3D head pose in real-time.
 class DenseFaceMeshService {
   DenseFaceMeshService._();
 
-  static FaceMesh? generateFaceMesh(
-    Pose pose,
-    Size imageSize,
-    bool isFrontCamera,
-    Size screenSize,
-  ) {
+  static FaceMesh? generateFaceMesh({
+    required Pose pose,
+    required Size imageSize,
+    required bool isFrontCamera,
+    required Size screenSize,
+    InputImageRotation rotation = InputImageRotation.rotation270deg,
+  }) {
     final nose = pose.landmarks[PoseLandmarkType.nose];
     final leftEye = pose.landmarks[PoseLandmarkType.leftEye];
     final rightEye = pose.landmarks[PoseLandmarkType.rightEye];
@@ -37,24 +39,17 @@ class DenseFaceMeshService {
     }
 
     Offset toScreen(double lx, double ly) {
-      final double imageW = imageSize.width > 0
-          ? imageSize.width
-          : screenSize.width;
-      final double imageH = imageSize.height > 0
-          ? imageSize.height
-          : screenSize.height;
-
-      final double normX = (lx / imageW).clamp(0.0, 1.0);
-      final double normY = (ly / imageH).clamp(0.0, 1.0);
-
-      final double x = isFrontCamera
-          ? (1.0 - normX) * screenSize.width
-          : normX * screenSize.width;
-      final double y = normY * screenSize.height;
-
-      return Offset(x, y);
+      return CameraRotationHelper.transformPoint(
+        lx: lx,
+        ly: ly,
+        imageSize: imageSize,
+        screenSize: screenSize,
+        isFrontCamera: isFrontCamera,
+        rotation: rotation,
+      );
     }
 
+    // Live mapped landmark points
     final pNose = toScreen(nose.x, nose.y);
     final pLeftEye = toScreen(leftEye.x, leftEye.y);
     final pRightEye = toScreen(rightEye.x, rightEye.y);
@@ -81,6 +76,7 @@ class DenseFaceMeshService {
         ? toScreen(rightMouth.x, rightMouth.y)
         : Offset(pNose.dx + 18, pNose.dy + 38);
 
+    // Mapped centers and directional vectors for dynamic head pitch/yaw/roll
     final Offset eyeCenter = Offset(
       (pLeftEye.dx + pRightEye.dx) / 2,
       (pLeftEye.dy + pRightEye.dy) / 2,
@@ -90,83 +86,89 @@ class DenseFaceMeshService {
       (pLeftMouth.dy + pRightMouth.dy) / 2,
     );
 
-    final double faceWidth = (pRightEar.dx - pLeftEar.dx).abs().clamp(
-      40.0,
-      420.0,
-    );
-    final double faceHeight =
-        (mouthCenter.dy - eyeCenter.dy).abs().clamp(20.0, 260.0) * 2.2;
+    // Vector pointing from nose up through eye center (forehead direction)
+    final double upDx = eyeCenter.dx - pNose.dx;
+    final double upDy = eyeCenter.dy - pNose.dy;
+    final double upLen = sqrt(upDx * upDx + upDy * upDy);
+    final double dirUpX = upLen > 0 ? upDx / upLen : 0.0;
+    final double dirUpY = upLen > 0 ? upDy / upLen : -1.0;
 
-    final Offset chin = Offset(pNose.dx, mouthCenter.dy + faceHeight * 0.35);
+    // Vector along eye line (left -> right)
+    final double eyeDx = pRightEye.dx - pLeftEye.dx;
+    final double eyeDy = pRightEye.dy - pLeftEye.dy;
+    final double eyeDist = sqrt(eyeDx * eyeDx + eyeDy * eyeDy);
+    final double dirRightX = eyeDist > 0 ? eyeDx / eyeDist : 1.0;
+    final double dirRightY = eyeDist > 0 ? eyeDy / eyeDist : 0.0;
 
-    // Angle of rotation (roll)
-    final double dx = pRightEye.dx - pLeftEye.dx;
-    final double dy = pRightEye.dy - pLeftEye.dy;
-    final double angle = atan2(dy, dx);
-    final double cosA = cos(angle);
-    final double sinA = sin(angle);
-
-    Offset computeVertex(double rx, double ry) {
-      final double wx = rx * (faceWidth * 0.5);
-      final double wy = ry * (faceHeight * 0.5);
-      final double rotX = wx * cosA - wy * sinA;
-      final double rotY = wx * sinA + wy * cosA;
-      return Offset(
-        eyeCenter.dx + rotX,
-        eyeCenter.dy + faceHeight * 0.15 + rotY,
-      );
-    }
+    final double faceHeight = (mouthCenter.dy - eyeCenter.dy).abs().clamp(20.0, 260.0) * 2.2;
+    final double foreheadDist = (eyeCenter.dy - pNose.dy).abs().clamp(15.0, 120.0) * 1.6;
 
     final List<Offset> vertices = [];
 
-    // Row 0: Top Forehead Hairline (5 vertices)
-    vertices.add(computeVertex(-0.85, -0.95));
-    vertices.add(computeVertex(-0.42, -1.05));
-    vertices.add(computeVertex(0.0, -1.10));
-    vertices.add(computeVertex(0.42, -1.05));
-    vertices.add(computeVertex(0.85, -0.95));
+    // Helper to calculate landmark-driven forehead & cheek nodes along live directional vectors
+    Offset foreheadNode(double rightOffset, double upFactor) {
+      return Offset(
+        eyeCenter.dx + dirRightX * (rightOffset * eyeDist * 0.9) + dirUpX * (foreheadDist * upFactor),
+        eyeCenter.dy + dirRightY * (rightOffset * eyeDist * 0.9) + dirUpY * (foreheadDist * upFactor),
+      );
+    }
 
-    // Row 1: Mid Forehead (5 vertices)
-    vertices.add(computeVertex(-0.80, -0.60));
-    vertices.add(computeVertex(-0.40, -0.65));
-    vertices.add(computeVertex(0.0, -0.68));
-    vertices.add(computeVertex(0.40, -0.65));
-    vertices.add(computeVertex(0.80, -0.60));
+    Offset cheekNode(Offset ear, Offset mouth, double blend) {
+      return Offset(
+        ear.dx + (mouth.dx - ear.dx) * blend,
+        ear.dy + (mouth.dy - ear.dy) * blend + 8.0,
+      );
+    }
 
-    // Row 2: Eyebrows Line (5 vertices)
-    vertices.add(computeVertex(-0.75, -0.25));
-    vertices.add(computeVertex(-0.35, -0.28));
-    vertices.add(computeVertex(0.0, -0.30));
-    vertices.add(computeVertex(0.35, -0.28));
-    vertices.add(computeVertex(0.75, -0.25));
+    // Row 0: Top Forehead Hairline (5 vertices) [0..4]
+    vertices.add(foreheadNode(-1.1, 1.45));
+    vertices.add(foreheadNode(-0.5, 1.60));
+    vertices.add(foreheadNode(0.0, 1.65));
+    vertices.add(foreheadNode(0.5, 1.60));
+    vertices.add(foreheadNode(1.1, 1.45));
 
-    // Row 3: Eyes & Nose Bridge (5 vertices)
+    // Row 1: Mid Forehead (5 vertices) [5..9]
+    vertices.add(foreheadNode(-1.0, 0.85));
+    vertices.add(foreheadNode(-0.45, 0.95));
+    vertices.add(foreheadNode(0.0, 1.00));
+    vertices.add(foreheadNode(0.45, 0.95));
+    vertices.add(foreheadNode(1.0, 0.85));
+
+    // Row 2: Eyebrows Line (5 vertices) [10..14]
+    vertices.add(foreheadNode(-0.9, 0.35));
+    vertices.add(foreheadNode(-0.4, 0.40));
+    vertices.add(foreheadNode(0.0, 0.42));
+    vertices.add(foreheadNode(0.4, 0.40));
+    vertices.add(foreheadNode(0.9, 0.35));
+
+    // Row 3: Eyes & Nose Bridge (5 vertices) [15..19]
     vertices.add(pLeftEar);
     vertices.add(pLeftEye);
-    vertices.add(Offset(pNose.dx, pNose.dy - faceHeight * 0.12));
+    vertices.add(Offset(pNose.dx, eyeCenter.dy));
     vertices.add(pRightEye);
     vertices.add(pRightEar);
 
-    // Row 4: Cheeks & Nose Tip (5 vertices)
-    vertices.add(computeVertex(-0.85, 0.20));
-    vertices.add(computeVertex(-0.45, 0.22));
+    // Row 4: Cheeks & Nose Tip (5 vertices) [20..24]
+    vertices.add(cheekNode(pLeftEar, pLeftMouth, 0.25));
+    vertices.add(cheekNode(pLeftEar, pLeftMouth, 0.60));
     vertices.add(pNose);
-    vertices.add(computeVertex(0.45, 0.22));
-    vertices.add(computeVertex(0.85, 0.20));
+    vertices.add(cheekNode(pRightEar, pRightMouth, 0.60));
+    vertices.add(cheekNode(pRightEar, pRightMouth, 0.25));
 
-    // Row 5: Mouth Line (5 vertices)
-    vertices.add(computeVertex(-0.75, 0.55));
+    // Row 5: Mouth Line (5 vertices) [25..29]
+    vertices.add(Offset(pLeftEar.dx * 0.7 + pLeftMouth.dx * 0.3, pLeftMouth.dy));
     vertices.add(pLeftMouth);
     vertices.add(mouthCenter);
     vertices.add(pRightMouth);
-    vertices.add(computeVertex(0.75, 0.55));
+    vertices.add(Offset(pRightEar.dx * 0.7 + pRightMouth.dx * 0.3, pRightMouth.dy));
 
-    // Row 6: Lower Jaw & Chin (5 vertices)
-    vertices.add(computeVertex(-0.65, 0.85));
-    vertices.add(computeVertex(-0.35, 0.95));
+    // Row 6: Lower Jaw & Chin (5 vertices) [30..34]
+    final Offset chin = Offset(pNose.dx, mouthCenter.dy + faceHeight * 0.35);
+    vertices.add(Offset(pLeftEar.dx * 0.8 + chin.dx * 0.2, mouthCenter.dy + faceHeight * 0.20));
+    vertices.add(Offset(pLeftMouth.dx * 0.6 + chin.dx * 0.4, mouthCenter.dy + faceHeight * 0.28));
     vertices.add(chin);
-    vertices.add(computeVertex(0.35, 0.95));
-    vertices.add(computeVertex(0.65, 0.85));
+    vertices.add(Offset(pRightMouth.dx * 0.6 + chin.dx * 0.4, mouthCenter.dy + faceHeight * 0.28));
+    vertices.add(Offset(pRightEar.dx * 0.8 + chin.dx * 0.2, mouthCenter.dy + faceHeight * 0.20));
 
     // Build dense 48-triangle mesh topology
     final List<List<int>> triangles = [];
