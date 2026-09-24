@@ -32,8 +32,9 @@ class DenseFaceMeshService {
     }
     if (nose.likelihood < 0.35 ||
         leftEye.likelihood < 0.35 ||
-        rightEye.likelihood < 0.35)
+        rightEye.likelihood < 0.35) {
       return null;
+    }
 
     Offset toScreen(double lx, double ly) {
       final double imageW = imageSize.width > 0
