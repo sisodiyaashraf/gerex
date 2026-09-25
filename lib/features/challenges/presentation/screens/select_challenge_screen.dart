@@ -607,13 +607,36 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       children: [
+        // Create Custom Challenge Action Button
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF10B981),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          icon: const Icon(Icons.add_task_rounded),
+          label: const Text('Create Custom Challenge', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          onPressed: () => _showCreateChallengeModalSheet(context),
+        ),
+        const SizedBox(height: 16),
+
         if (provider.challenges.isNotEmpty) ...[
-          Text(
-            'Active Challenges',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.2,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Active Challenges',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              Chip(
+                label: Text('${provider.challenges.length} Total', style: const TextStyle(fontSize: 11)),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           ...provider.challenges.map((challenge) {
