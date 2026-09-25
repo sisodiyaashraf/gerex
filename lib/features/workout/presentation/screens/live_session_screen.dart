@@ -1534,6 +1534,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
 class _SetLogRow extends StatefulWidget {
   final LoggedSet setLog;
   final Function(int reps, double weight) onChanged;
+  final Function(String tag) onTagChanged;
+  final Function(String notes) onNotesChanged;
   final VoidCallback onToggleComplete;
   final VoidCallback onDelete;
 
@@ -1541,6 +1543,8 @@ class _SetLogRow extends StatefulWidget {
     super.key,
     required this.setLog,
     required this.onChanged,
+    required this.onTagChanged,
+    required this.onNotesChanged,
     required this.onToggleComplete,
     required this.onDelete,
   });
@@ -1582,6 +1586,72 @@ class _SetLogRowState extends State<_SetLogRow> {
     super.dispose();
   }
 
+  void _showNoteDialog(BuildContext context) {
+    final noteController = TextEditingController(text: widget.setLog.notes ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Set ${widget.setLog.setNumber} Note'),
+        content: TextField(
+          controller: noteController,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'e.g. Felt smooth, slight RPE 8',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              widget.onNotesChanged(noteController.text.trim());
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save Note'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getTagColor(String tag) {
+    switch (tag) {
+      case 'warmup':
+        return Colors.orangeAccent;
+      case 'drop':
+        return Colors.purpleAccent;
+      case 'failure':
+        return Colors.redAccent;
+      case 'working':
+      default:
+        return const Color(0xFF6C5CE7);
+    }
+  }
+
+  String _getTagLabel(String tag) {
+    switch (tag) {
+      case 'warmup':
+        return 'W';
+      case 'drop':
+        return 'D';
+      case 'failure':
+        return 'F';
+      case 'working':
+      default:
+        return 'N';
+    }
+  }
+
+  void _cycleTag() {
+    final tags = ['working', 'warmup', 'drop', 'failure'];
+    final currentIdx = tags.indexOf(widget.setLog.tag);
+    final nextTag = tags[(currentIdx + 1) % tags.length];
+    widget.onTagChanged(nextTag);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1590,86 +1660,144 @@ class _SetLogRowState extends State<_SetLogRow> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Container(
-        color: isDone
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
-            : Colors.transparent,
-        child: Row(
+        decoration: BoxDecoration(
+          color: isDone
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
           children: [
-            SizedBox(
-              width: 40,
-              child: isDone
-                  ? Text(
-                      '${widget.setLog.setNumber}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    )
-                  : GestureDetector(
-                      onLongPress: widget.onDelete,
-                      child: Tooltip(
-                        message: 'Long press to delete set',
-                        child: Text(
-                          '${widget.setLog.setNumber}',
-                          style: const TextStyle(
-                            decoration: TextDecoration.underline,
-                            decorationStyle: TextDecorationStyle.dotted,
+            Row(
+              children: [
+                SizedBox(
+                  width: 50,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: isDone ? null : _cycleTag,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _getTagColor(widget.setLog.tag).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: _getTagColor(widget.setLog.tag),
+                              width: 1,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
+                          child: Text(
+                            _getTagLabel(widget.setLog.tag),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: _getTagColor(widget.setLog.tag),
+                            ),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${widget.setLog.setNumber}',
+                        style: TextStyle(
+                          fontWeight: isDone ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: TextField(
+                      controller: _weightController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        border: OutlineInputBorder(),
+                      ),
+                      enabled: !isDone,
+                      textAlign: TextAlign.center,
+                      onChanged: (val) {
+                        final weight = double.tryParse(val) ?? 0.0;
+                        widget.onChanged(widget.setLog.reps, weight);
+                      },
                     ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: TextField(
+                      controller: _repsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        border: OutlineInputBorder(),
+                      ),
+                      enabled: !isDone,
+                      textAlign: TextAlign.center,
+                      onChanged: (val) {
+                        final reps = int.tryParse(val) ?? 0;
+                        widget.onChanged(reps, widget.setLog.weight);
+                      },
+                    ),
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  icon: Icon(
+                    widget.setLog.notes?.isNotEmpty == true
+                        ? Icons.sticky_note_2_rounded
+                        : Icons.note_add_outlined,
+                    size: 20,
+                    color: widget.setLog.notes?.isNotEmpty == true
+                        ? theme.colorScheme.primary
+                        : theme.hintColor,
+                  ),
+                  onPressed: () => _showNoteDialog(context),
+                  tooltip: 'Set note',
+                ),
+                SizedBox(
+                  width: 44,
+                  child: IconButton(
+                    icon: Icon(
+                      isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                      color: isDone ? theme.colorScheme.primary : theme.disabledColor,
+                    ),
+                    onPressed: widget.onToggleComplete,
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: TextField(
-                  controller: _weightController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    border: OutlineInputBorder(),
-                  ),
-                  enabled: !isDone,
-                  textAlign: TextAlign.center,
-                  onChanged: (val) {
-                    final weight = double.tryParse(val) ?? 0.0;
-                    widget.onChanged(widget.setLog.reps, weight);
-                  },
+            if (widget.setLog.notes?.isNotEmpty == true)
+              Padding(
+                padding: const EdgeInsets.only(left: 54, right: 16, bottom: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.notes, size: 12, color: theme.hintColor),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        widget.setLog.notes!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: TextField(
-                  controller: _repsController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    border: OutlineInputBorder(),
-                  ),
-                  enabled: !isDone,
-                  textAlign: TextAlign.center,
-                  onChanged: (val) {
-                    final reps = int.tryParse(val) ?? 0;
-                    widget.onChanged(reps, widget.setLog.weight);
-                  },
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 60,
-              child: IconButton(
-                icon: Icon(
-                  isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                  color: isDone ? theme.colorScheme.primary : theme.disabledColor,
-                ),
-                onPressed: widget.onToggleComplete,
-              ),
-            ),
           ],
         ),
       ),
