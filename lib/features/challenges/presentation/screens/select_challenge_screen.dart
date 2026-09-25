@@ -58,11 +58,109 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
     });
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _searchController.dispose();
-    super.dispose();
+  void _showCreateChallengeModalSheet(BuildContext context) {
+    final titleController = TextEditingController();
+    final descController = TextEditingController();
+    final minutesController = TextEditingController(text: '60');
+    String selectedDifficulty = 'Easy';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return GlassContainer(
+            borderRadius: 24,
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Create Custom Challenge',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Challenge Name',
+                      hintText: 'e.g., 30-Day Morning Pushups',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      hintText: 'e.g. Complete 50 minutes of core & pushups',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: minutesController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Target Minutes Goal',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedDifficulty,
+                    decoration: const InputDecoration(
+                      labelText: 'Difficulty',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: ['Easy', 'Hard', 'Very Hard'].map((d) {
+                      return DropdownMenuItem(value: d, child: Text(d));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setModalState(() => selectedDifficulty = val);
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      if (titleController.text.trim().isNotEmpty) {
+                        final mins = int.tryParse(minutesController.text) ?? 60;
+                        context.read<ChallengeProvider>().addCustomChallenge(
+                          title: titleController.text.trim(),
+                          description: descController.text.trim(),
+                          targetMinutes: mins,
+                          difficulty: selectedDifficulty,
+                        );
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Challenge "${titleController.text.trim()}" created!')),
+                        );
+                      }
+                    },
+                    child: const Text('Create Challenge', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _showFilterBottomSheet(BuildContext context) {
