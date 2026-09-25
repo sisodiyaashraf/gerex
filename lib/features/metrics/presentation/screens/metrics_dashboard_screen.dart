@@ -47,6 +47,42 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
     });
   }
 
+  void _showSetTargetWeightDialog(BuildContext context, MetricsProvider provider) {
+    final controller = TextEditingController(
+      text: provider.targetWeight != null ? provider.targetWeight.toString() : '',
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Set Target Goal Weight'),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Target Weight (kg)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final val = double.tryParse(controller.text);
+              if (val != null && val > 0) {
+                provider.setTargetWeight(val);
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save Goal'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _weightController.dispose();
