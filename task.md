@@ -22,4 +22,7 @@
 - [x] Fix builder cards constraints and alternatives modal sheet dimensions in `lib/features/workout/presentation/screens/workout_builder_screen.dart`
 - [x] Create PastelGradientCard widget in `lib/core/presentation/widgets/pastel_gradient_card.dart` for optimized frame rates
 - [x] Add Grocery / Shopping List Generator feature in `lib/features/nutrition` with automated meal plan ingredient parsing, category filtering, item check-off, and clipboard export
-- [x] Verify clean compilation and full unit tests stability
+- [x] Live Workout Tracker: Add set classification tags (Warmup, Working, Drop set, Failure), set notes dialog and badges, rest timer quick adjustments (-15s, +15s, +30s), and mascot exercise/smiling state triggers
+- [x] Metrics & Health Dashboard: Add target weight milestone goal tracker with progress bar, heart rate intensity zones (Warmup, Fat Burn, Aerobic, Anaerobic, Peak), and sleep goal streak visualizer
+- [x] Challenges & Community: Add custom challenge creator modal sheet, custom challenge entity creation, and badge celebration state handling
+- [x] Verify clean compilation and full unit tests stability (0 errors, all 58 tests passing)
