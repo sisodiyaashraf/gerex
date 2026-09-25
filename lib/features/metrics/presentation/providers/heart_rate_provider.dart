@@ -60,6 +60,35 @@ class HeartRateProvider extends ChangeNotifier {
   bool _isHealthConnectInstalled = true;
   String? _bleConnectionError;
 
+  int _userMaxHr = 190;
+
+  int get userMaxHr => _userMaxHr;
+
+  void setUserMaxHr(int maxHr) {
+    _userMaxHr = maxHr;
+    notifyListeners();
+  }
+
+  String get currentZoneName {
+    if (_currentBpm == null) return 'Resting';
+    final pct = _currentBpm! / _userMaxHr;
+    if (pct < 0.60) return 'Zone 1: Warm Up (50-60%)';
+    if (pct < 0.70) return 'Zone 2: Fat Burn (60-70%)';
+    if (pct < 0.80) return 'Zone 3: Aerobic (70-80%)';
+    if (pct < 0.90) return 'Zone 4: Anaerobic (80-90%)';
+    return 'Zone 5: Peak (90-100%)';
+  }
+
+  Color get currentZoneColor {
+    if (_currentBpm == null) return const Color(0xFF6C5CE7);
+    final pct = _currentBpm! / _userMaxHr;
+    if (pct < 0.60) return Colors.blue;
+    if (pct < 0.70) return Colors.green;
+    if (pct < 0.80) return Colors.amber;
+    if (pct < 0.90) return Colors.orange;
+    return Colors.redAccent;
+  }
+
   // Getters
   HeartRateConnectionState get connectionState => _connectionState;
   HeartRateSource get activeSource => _activeSource;
