@@ -140,8 +140,9 @@ class ChallengeProvider extends ChangeNotifier {
       id: 'prog_${customChallenge.id}',
       challengeId: customChallenge.id,
       userId: 'user',
-      minutesCompleted: 0,
-      isCompleted: false,
+      progressMinutes: 0,
+      status: 'joined',
+      joinedAt: DateTime.now(),
     );
     _latestUnlockedBadge = title;
     notifyListeners();
