@@ -110,6 +110,43 @@ class ChallengeProvider extends ChangeNotifier {
     return _progressMap.containsKey(challengeId);
   }
 
+  String? _latestUnlockedBadge;
+  String? get latestUnlockedBadge => _latestUnlockedBadge;
+
+  void clearUnlockedBadge() {
+    _latestUnlockedBadge = null;
+    notifyListeners();
+  }
+
+  void addCustomChallenge({
+    required String title,
+    required String description,
+    required int targetMinutes,
+    required String difficulty,
+  }) {
+    final customChallenge = Challenge(
+      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      difficulty: difficulty.toLowerCase(),
+      type: 'Custom Challenge',
+      badgeIcon: 'star',
+      description: description,
+      totalMinutesGoal: targetMinutes,
+      usersJoined: 1,
+    );
+
+    _challenges.insert(0, customChallenge);
+    _progressMap[customChallenge.id] = ChallengeProgress(
+      id: 'prog_${customChallenge.id}',
+      challengeId: customChallenge.id,
+      userId: 'user',
+      minutesCompleted: 0,
+      isCompleted: false,
+    );
+    _latestUnlockedBadge = title;
+    notifyListeners();
+  }
+
   Future<void> fetchFriendsProgress(String challengeId) async {
     try {
       final prefs = di.sl<SharedPreferences>();
