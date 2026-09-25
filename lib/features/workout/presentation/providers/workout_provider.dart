@@ -355,6 +355,27 @@ class WorkoutProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateSetTag(String exerciseId, int index, String tag) {
+    final sets = _liveSets[exerciseId];
+    if (sets == null || index < 0 || index >= sets.length) return;
+    sets[index] = sets[index].copyWith(tag: tag);
+    notifyListeners();
+  }
+
+  void updateSetNotes(String exerciseId, int index, String notes) {
+    final sets = _liveSets[exerciseId];
+    if (sets == null || index < 0 || index >= sets.length) return;
+    sets[index] = sets[index].copyWith(notes: notes);
+    notifyListeners();
+  }
+
+  void adjustRestTime(int deltaSeconds) {
+    if (!_isRestActive) return;
+    _restTimeRemaining = (_restTimeRemaining + deltaSeconds).clamp(0, 600);
+    _restTimerTotal = math.max(_restTimerTotal, _restTimeRemaining);
+    notifyListeners();
+  }
+
   void toggleSetComplete(String exerciseId, int index) {
     final sets = _liveSets[exerciseId];
     if (sets == null) return;
@@ -362,19 +383,13 @@ class WorkoutProvider extends ChangeNotifier {
     final current = sets[index];
     final nextState = !current.isCompleted;
 
-    sets[index] = LoggedSet(
-      id: current.id,
-      sessionId: current.sessionId,
-      exerciseId: current.exerciseId,
-      exercise: current.exercise,
-      setNumber: current.setNumber,
-      reps: current.reps,
-      weight: current.weight,
-      isCompleted: nextState,
-    );
+    sets[index] = current.copyWith(isCompleted: nextState);
 
-    // If completed, trigger rest timer
+    // If completed, trigger rest timer & mascot feedback
     if (nextState) {
+      try {
+        di.sl<MascotController>().setMascotState(MascotState.exercise);
+      } catch (_) {}
       di.sl<VoiceCoachService>().speakTrigger('set_complete');
       _triggerRestTimerForExercise(exerciseId);
 
@@ -401,6 +416,9 @@ class WorkoutProvider extends ChangeNotifier {
           weight: current.weight,
           reps: current.reps,
         );
+        try {
+          di.sl<MascotController>().setMascotState(MascotState.smiling);
+        } catch (_) {}
       }
     }
 
