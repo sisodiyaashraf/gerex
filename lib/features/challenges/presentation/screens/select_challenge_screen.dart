@@ -56,6 +56,11 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
         _searchController.text,
       );
     });
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _showCreateChallengeModalSheet(BuildContext context) {
