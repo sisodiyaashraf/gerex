@@ -151,6 +151,8 @@ class LoggedSet {
   final int reps;
   final double weight;
   final bool isCompleted;
+  final String tag; // 'working', 'warmup', 'drop', 'failure'
+  final String? notes;
 
   const LoggedSet({
     required this.id,
@@ -161,6 +163,8 @@ class LoggedSet {
     required this.reps,
     required this.weight,
     required this.isCompleted,
+    this.tag = 'working',
+    this.notes,
   });
 
   factory LoggedSet.fromJson(Map<String, dynamic> json, [Exercise? ex]) {
@@ -176,6 +180,8 @@ class LoggedSet {
       reps: json['reps'] as int,
       weight: (json['weight'] as num).toDouble(),
       isCompleted: json['is_completed'] as bool? ?? false,
+      tag: json['tag'] as String? ?? 'working',
+      notes: json['notes'] as String?,
     );
   }
 
@@ -187,6 +193,34 @@ class LoggedSet {
       'reps': reps,
       'weight': weight,
       'is_completed': isCompleted,
+      'tag': tag,
+      if (notes != null) 'notes': notes,
     };
+  }
+
+  LoggedSet copyWith({
+    String? id,
+    String? sessionId,
+    String? exerciseId,
+    Exercise? exercise,
+    int? setNumber,
+    int? reps,
+    double? weight,
+    bool? isCompleted,
+    String? tag,
+    String? notes,
+  }) {
+    return LoggedSet(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      exerciseId: exerciseId ?? this.exerciseId,
+      exercise: exercise ?? this.exercise,
+      setNumber: setNumber ?? this.setNumber,
+      reps: reps ?? this.reps,
+      weight: weight ?? this.weight,
+      isCompleted: isCompleted ?? this.isCompleted,
+      tag: tag ?? this.tag,
+      notes: notes ?? this.notes,
+    );
   }
 }
