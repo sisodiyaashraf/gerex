@@ -56,6 +56,8 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
         _searchController.text,
       );
     });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
