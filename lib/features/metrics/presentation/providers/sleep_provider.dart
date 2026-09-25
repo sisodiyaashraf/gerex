@@ -51,6 +51,22 @@ class SleepProvider extends ChangeNotifier {
   double _sleepGoalHours = 8.0;
   int _windDownLeadMinutes = 30;
 
+  int get sleepStreakDays {
+    if (_logs.isEmpty) return 0;
+    int streak = 0;
+    final sortedLogs = List<SleepLogEntity>.from(_logs)
+      ..sort((a, b) => b.startTime.compareTo(a.startTime));
+
+    for (final log in sortedLogs) {
+      if (log.durationMinutes >= (_sleepGoalHours * 60 - 30)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
   SleepProvider(this._prefs, this._notifications) {
     _loadSleepGoal();
     _loadWindDownConfig();
