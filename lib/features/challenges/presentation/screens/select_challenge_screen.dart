@@ -125,7 +125,7 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedDifficulty,
+                    initialValue: selectedDifficulty,
                     decoration: const InputDecoration(
                       labelText: 'Difficulty',
                       border: OutlineInputBorder(),
