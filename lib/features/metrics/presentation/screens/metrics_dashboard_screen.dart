@@ -568,57 +568,224 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // 4. Sleep Tracker Card
+                  // Target Weight Goal Milestone Card
                   PastelGradientCard(
-                    type: PastelCardType.violet,
+                    type: PastelCardType.emerald,
                     padding: const EdgeInsets.all(16.0),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          backgroundColor: theme.colorScheme.primary.withValues(
-                            alpha: 0.15,
-                          ),
-                          child: FaIcon(
-                            FontAwesomeIcons.bed,
-                            color: theme.colorScheme.primary,
-                            size: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Sleep Tracker',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
+                        Row(
+                          children: [
+                            const CircleAvatar(
+                              backgroundColor: Color(0x2610B981),
+                              child: FaIcon(
+                                FontAwesomeIcons.bullseye,
+                                color: Color(0xFF10B981),
+                                size: 16,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Monitor sleep schedules & recovery goals',
-                                style: TextStyle(
-                                  color: const Color(0xFF14181F).withValues(
-                                    alpha: 0.6,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Target Weight Goal',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
                                   ),
-                                  fontSize: 12,
-                                ),
+                                  Text(
+                                    metricsProvider.targetWeight != null
+                                        ? 'Goal: ${metricsProvider.targetWeight} kg (${metricsProvider.weightRemainingToTarget?.toStringAsFixed(1) ?? "0"} kg away)'
+                                        : 'No target goal set',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: const Color(0xFF14181F).withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _showSetTargetWeightDialog(context, metricsProvider),
+                              icon: const Icon(Icons.edit_outlined, size: 16),
+                              label: Text(metricsProvider.targetWeight != null ? 'Edit' : 'Set'),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 16,
+                        if (metricsProvider.targetWeight != null) ...[
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: LinearProgressIndicator(
+                              value: metricsProvider.targetWeightProgress,
+                              minHeight: 8,
+                              backgroundColor: const Color(0x1A14181F),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                            ),
                           ),
-                          onPressed: () => context.push('/sleep-tracker'),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${(metricsProvider.targetWeightProgress * 100).toInt()}% progress toward goal',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF10B981)),
+                          ),
+                        ],
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Heart Rate Zone Card
+                  Consumer<HeartRateProvider>(
+                    builder: (context, hr, _) {
+                      return PastelGradientCard(
+                        type: PastelCardType.rose,
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: hr.currentZoneColor.withValues(alpha: 0.2),
+                              child: FaIcon(
+                                FontAwesomeIcons.heartPulse,
+                                color: hr.currentZoneColor,
+                                size: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Heart Rate Zone',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: hr.currentZoneColor.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          hr.currentBpm != null ? '${hr.currentBpm} BPM' : 'Offline',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: hr.currentZoneColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    hr.currentZoneName,
+                                    style: TextStyle(
+                                      color: const Color(0xFF14181F).withValues(alpha: 0.7),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 16,
+                              ),
+                              onPressed: () => context.push('/heart-rate'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // 4. Sleep Tracker Card with Sleep Goal Streak
+                  Consumer<SleepProvider>(
+                    builder: (context, sleep, _) {
+                      return PastelGradientCard(
+                        type: PastelCardType.violet,
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: theme.colorScheme.primary.withValues(
+                                alpha: 0.15,
+                              ),
+                              child: FaIcon(
+                                FontAwesomeIcons.bed,
+                                color: theme.colorScheme.primary,
+                                size: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Sleep Tracker',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      if (sleep.sleepStreakDays > 0) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.purple.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            '🔥 ${sleep.sleepStreakDays}d goal streak',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.purple,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Monitor sleep schedules & recovery goals',
+                                    style: TextStyle(
+                                      color: const Color(0xFF14181F).withValues(
+                                        alpha: 0.6,
+                                      ),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 16,
+                              ),
+                              onPressed: () => context.push('/sleep-tracker'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
 
