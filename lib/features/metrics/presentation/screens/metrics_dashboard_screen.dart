@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../workout/presentation/providers/workout_provider.dart';
 import '../providers/metrics_provider.dart';
+import '../providers/heart_rate_provider.dart';
+import '../providers/sleep_provider.dart';
 import '../../../ai/presentation/providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
