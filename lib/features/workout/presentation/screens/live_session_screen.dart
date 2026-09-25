@@ -1207,6 +1207,64 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
             ),
           ],
         ),
+        if (provider.isRestActive)
+          Positioned(
+            bottom: 80,
+            left: 16,
+            right: 16,
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(16),
+              color: theme.colorScheme.surface,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.timer_outlined, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Rest: ${provider.restTimeRemaining ~/ 60}:${(provider.restTimeRemaining % 60).toString().padLeft(2, '0')}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    const Spacer(),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => provider.adjustRestTime(-15),
+                      child: const Text('-15s', style: TextStyle(fontSize: 12)),
+                    ),
+                    const SizedBox(width: 4),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => provider.adjustRestTime(15),
+                      child: const Text('+15s', style: TextStyle(fontSize: 12)),
+                    ),
+                    const SizedBox(width: 4),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => provider.adjustRestTime(30),
+                      child: const Text('+30s', style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         if (provider.lastPrCelebration != null)
           PrCelebrationOverlay(
             event: provider.lastPrCelebration!,
