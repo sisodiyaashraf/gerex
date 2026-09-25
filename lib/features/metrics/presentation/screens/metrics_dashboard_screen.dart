@@ -606,7 +606,7 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
                   const SizedBox(height: 16),
                   // Target Weight Goal Milestone Card
                   PastelGradientCard(
-                    type: PastelCardType.emerald,
+                    type: PastelCardType.mint,
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
