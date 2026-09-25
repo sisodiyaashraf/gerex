@@ -172,6 +172,18 @@ class MascotController extends ChangeNotifier {
     _startRandomIdleActionScheduler();
   }
 
+  void setMascotState(MascotState state, {Duration? duration}) {
+    _cancelReturnTimers();
+    _currentState = state;
+    _lastActionTime = DateTime.now();
+    notifyListeners();
+
+    final dur = duration ?? const Duration(milliseconds: 3000);
+    _stateReturnTimer = Timer(dur, () {
+      resetToIdle();
+    });
+  }
+
   /// Trigger navigation to a target bottom nav bar tab.
   /// Detects multiple rapid tab clicks to trigger running & post-run tired/sweating pose.
   void navigateToTab(int tabIndex) {
