@@ -9,19 +9,48 @@ import 'package:gerex/core/utils/logger.dart';
 class MetricsProvider extends ChangeNotifier {
   final MetricsRepository _metricsRepository;
 
-  MetricsProvider(this._metricsRepository);
+  double? _targetWeight;
 
-  List<BodyMetric> _weightLogs = [];
-  List<ProgressDataPoint> _volumeLogs = [];
-  bool _isLoading = false;
-  String? _errorMessage;
+  MetricsProvider(this._metricsRepository) {
+    loadTargetWeight();
+  }
 
-  // Streak State
-  int _currentStreak = 0;
-  int _longestStreak = 0;
-  final Set<String> _workoutDates = {}; // Format 'YYYY-MM-DD'
-  int _streakFreezesActive = 0;
-  bool _lastStreakProtected = false;
+  double? get targetWeight => _targetWeight;
+
+  Future<void> loadTargetWeight() async {
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      _targetWeight = prefs.getDouble('user_target_weight_kg');
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<void> setTargetWeight(double target) async {
+    _targetWeight = target;
+    try {
+      final prefs = di.sl<SharedPreferences>();
+      await prefs.setDouble('user_target_weight_kg', target);
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  double? get weightRemainingToTarget {
+    if (_targetWeight == null || _weightLogs.isEmpty) return null;
+    final latestWeight = _weightLogs.last.value;
+    return (latestWeight - _targetWeight!).abs();
+  }
+
+  double get targetWeightProgress {
+    if (_targetWeight == null || _weightLogs.isEmpty) return 0.0;
+    if (_weightLogs.length < 2) return 0.5;
+    final startWeight = _weightLogs.first.value;
+    final currentWeight = _weightLogs.last.value;
+    final totalDelta = (startWeight - _targetWeight!).abs();
+    if (totalDelta == 0) return 1.0;
+    final currentDelta = (currentWeight - _targetWeight!).abs();
+    final progress = 1.0 - (currentDelta / totalDelta);
+    return progress.clamp(0.0, 1.0);
+  }
 
   List<BodyMetric> get weightLogs => _weightLogs;
   List<ProgressDataPoint> get volumeLogs => _volumeLogs;
