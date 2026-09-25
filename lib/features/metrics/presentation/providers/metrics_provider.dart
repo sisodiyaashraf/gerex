@@ -9,6 +9,18 @@ import 'package:gerex/core/utils/logger.dart';
 class MetricsProvider extends ChangeNotifier {
   final MetricsRepository _metricsRepository;
 
+  List<BodyMetric> _weightLogs = [];
+  List<ProgressDataPoint> _volumeLogs = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  // Streak State
+  int _currentStreak = 0;
+  int _longestStreak = 0;
+  final Set<String> _workoutDates = {}; // Format 'YYYY-MM-DD'
+  int _streakFreezesActive = 0;
+  bool _lastStreakProtected = false;
+
   double? _targetWeight;
 
   MetricsProvider(this._metricsRepository) {
