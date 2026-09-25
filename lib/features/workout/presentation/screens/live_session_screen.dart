@@ -1185,6 +1185,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                                 weight: weight,
                               );
                             },
+                            onTagChanged: (tag) {
+                              provider.updateSetTag(exercise.id, idx, tag);
+                            },
+                            onNotesChanged: (notes) {
+                              provider.updateSetNotes(exercise.id, idx, notes);
+                            },
                             onToggleComplete: () {
                               provider.toggleSetComplete(exercise.id, idx);
                             },
