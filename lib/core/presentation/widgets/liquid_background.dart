@@ -32,51 +32,101 @@ class _LiquidBackgroundState extends State<LiquidBackground>
 
   @override
   Widget build(BuildContext context) {
-    const blob1Color = Color(0x1F50C19D); // accentEmeraldLight 12%
-    const blob2Color = Color(0x1F178C6D); // accentEmeraldDeep 12%
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final bgColor = isDark
+        ? AppColors.bgDarkPrimary
+        : theme.scaffoldBackgroundColor;
+
+    final blob1Color = isDark
+        ? const Color(0x2650C19D) // accentEmeraldLight 15%
+        : const Color(0x2210B981); // Emerald 13%
+    final blob2Color = isDark
+        ? const Color(0x26178C6D) // accentEmeraldDeep 15%
+        : const Color(0x226366F1); // Indigo 13%
+    final blob3Color = isDark
+        ? const Color(0x2030377B) // Glass dark indigo 12%
+        : const Color(0x1F0EA5E9); // Sky blue 12%
 
     return Container(
-      color: AppColors.bgDarkPrimary,
+      color: bgColor,
       width: double.infinity,
       height: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Animated Blobs in Background
+          // Animated Liquid Blobs in Background
           AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
               final angle = _controller.value * 2 * pi;
-              final x1 = sin(angle) * 60;
-              final y1 = cos(angle) * 90;
-              final x2 = cos(angle + pi / 3) * 80;
-              final y2 = sin(angle + pi / 3) * 60;
+              final x1 = sin(angle) * 70;
+              final y1 = cos(angle) * 100;
+              final x2 = cos(angle + pi / 3) * 90;
+              final y2 = sin(angle + pi / 3) * 70;
+              final x3 = sin(angle + pi * 2 / 3) * 60;
+              final y3 = cos(angle + pi * 2 / 3) * 80;
 
               return Stack(
                 children: [
-                  // Blob 1
+                  // Blob 1 Top Left
                   Positioned(
-                    top: 80 + y1,
-                    left: -60 + x1,
+                    top: 60 + y1,
+                    left: -70 + x1,
                     child: Container(
-                      width: 260,
-                      height: 260,
-                      decoration: const BoxDecoration(
+                      width: 280,
+                      height: 280,
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: blob1Color,
+                        boxShadow: [
+                          BoxShadow(
+                            color: blob1Color,
+                            blurRadius: 80,
+                            spreadRadius: 30,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  // Blob 2
+                  // Blob 2 Bottom Right
                   Positioned(
-                    bottom: 120 + y2,
-                    right: -80 + x2,
+                    bottom: 100 + y2,
+                    right: -90 + x2,
                     child: Container(
-                      width: 320,
-                      height: 320,
-                      decoration: const BoxDecoration(
+                      width: 340,
+                      height: 340,
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: blob2Color,
+                        boxShadow: [
+                          BoxShadow(
+                            color: blob2Color,
+                            blurRadius: 90,
+                            spreadRadius: 40,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Blob 3 Center Right
+                  Positioned(
+                    top: 320 + y3,
+                    right: 40 + x3,
+                    child: Container(
+                      width: 220,
+                      height: 220,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: blob3Color,
+                        boxShadow: [
+                          BoxShadow(
+                            color: blob3Color,
+                            blurRadius: 70,
+                            spreadRadius: 20,
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -92,3 +142,4 @@ class _LiquidBackgroundState extends State<LiquidBackground>
     );
   }
 }
+
