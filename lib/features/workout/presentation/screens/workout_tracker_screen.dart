@@ -166,7 +166,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                 color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const FaIcon(FontAwesomeIcons.plus, size: 14),
+              child: Icon(Icons.add_rounded, size: 18, color: headingColor),
             ),
             tooltip: 'Create Workout',
             onPressed: () => context.push('/workout-builder'),
@@ -353,7 +353,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         children: [
           _buildStatItem(
             isDark: isDark,
-            icon: FontAwesomeIcons.fire,
+            icon: Icons.local_fire_department_rounded,
             iconColor: const Color(0xFFFF6B6B),
             value: '$completedWorkouts',
             label: 'Completed',
@@ -361,7 +361,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
           _buildDivider(isDark),
           _buildStatItem(
             isDark: isDark,
-            icon: FontAwesomeIcons.clock,
+            icon: Icons.timer_rounded,
             iconColor: const Color(0xFF4DABF7),
             value: '${totalMinutes}m',
             label: 'Total Time',
@@ -369,7 +369,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
           _buildDivider(isDark),
           _buildStatItem(
             isDark: isDark,
-            icon: FontAwesomeIcons.bolt,
+            icon: Icons.bolt_rounded,
             iconColor: const Color(0xFFFCC419),
             value: '$calories',
             label: 'Est. Kcal',
@@ -391,7 +391,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FaIcon(icon, size: 14, color: iconColor),
+            Icon(icon, size: 16, color: iconColor),
             const SizedBox(width: 6),
             Text(
               value,
@@ -408,7 +408,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: isDark ? AppColors.textDarkMuted : AppColors.lightMuted,
+            color: isDark ? AppColors.textDarkMuted : AppTheme.lightMuted,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -685,9 +685,9 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                   ],
                 ),
               ),
-              FaIcon(
-                FontAwesomeIcons.dumbbell,
-                size: 16,
+              Icon(
+                Icons.fitness_center_rounded,
+                size: 18,
                 color: isDark ? Colors.white70 : AppColors.textLightHeading.withValues(alpha: 0.7),
               ),
             ],
@@ -706,19 +706,19 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
           Row(
             children: [
               _buildMetaChip(
-                icon: FontAwesomeIcons.layerGroup,
+                icon: Icons.layers_rounded,
                 label: '5 Exercises',
                 isDark: isDark,
               ),
               const SizedBox(width: 8),
               _buildMetaChip(
-                icon: FontAwesomeIcons.stopwatch,
+                icon: Icons.timer_outlined,
                 label: '45 mins',
                 isDark: isDark,
               ),
               const SizedBox(width: 8),
               _buildMetaChip(
-                icon: FontAwesomeIcons.fire,
+                icon: Icons.local_fire_department_rounded,
                 label: '350 kcal',
                 isDark: isDark,
               ),
@@ -757,7 +757,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        FaIcon(FontAwesomeIcons.play, size: 12, color: Colors.white),
+                        Icon(Icons.play_arrow_rounded, size: 18, color: Colors.white),
                         SizedBox(width: 8),
                         Text(
                           'Start Workout Now',
@@ -793,10 +793,10 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FaIcon(
+          Icon(
             icon,
-            size: 10,
-            color: isDark ? AppColors.textDarkMuted : AppColors.lightMuted,
+            size: 12,
+            color: isDark ? AppColors.textDarkMuted : AppTheme.lightMuted,
           ),
           const SizedBox(width: 4),
           Text(
@@ -828,9 +828,9 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         borderRadius: 20,
         child: Column(
           children: [
-            FaIcon(
-              FontAwesomeIcons.bellSlash,
-              size: 24,
+            Icon(
+              Icons.notifications_off_outlined,
+              size: 28,
               color: mutedColor,
             ),
             const SizedBox(height: 10),
@@ -891,9 +891,11 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                       .withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: FaIcon(
-                  FontAwesomeIcons.bell,
-                  size: 14,
+                child: Icon(
+                  isReminderActive
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_none_rounded,
+                  size: 16,
                   color: isReminderActive
                       ? AppColors.accentEmeraldLight
                       : headingColor,
@@ -925,7 +927,8 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
               ),
               Switch.adaptive(
                 value: isReminderActive,
-                activeColor: AppColors.accentEmeraldLight,
+                activeThumbColor: AppColors.accentEmeraldLight,
+                activeTrackColor: AppColors.accentEmeraldDeep.withValues(alpha: 0.5),
                 onChanged: (val) => _toggleWorkoutReminder(workout, val),
               ),
             ],
@@ -950,7 +953,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         'exercises': 6,
         'duration': '45 mins',
         'level': 'Intermediate',
-        'icon': FontAwesomeIcons.dumbbell,
+        'icon': Icons.fitness_center_rounded,
         'type': GlassContainerType.indigo,
       },
       {
@@ -958,7 +961,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         'exercises': 5,
         'duration': '40 mins',
         'level': 'Advanced',
-        'icon': FontAwesomeIcons.personWalking,
+        'icon': Icons.directions_run_rounded,
         'type': GlassContainerType.sky,
       },
       {
@@ -966,7 +969,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         'exercises': 4,
         'duration': '15 mins',
         'level': 'Beginner',
-        'icon': FontAwesomeIcons.solidCircleDot,
+        'icon': Icons.accessibility_new_rounded,
         'type': GlassContainerType.mint,
       },
       {
@@ -974,7 +977,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
         'exercises': 6,
         'duration': '50 mins',
         'level': 'Intermediate',
-        'icon': FontAwesomeIcons.child,
+        'icon': Icons.sports_gymnastics_rounded,
         'type': GlassContainerType.violet,
       },
     ];
@@ -1017,10 +1020,10 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
-                      child: FaIcon(
+                      child: Icon(
                         icon,
                         color: AppColors.accentEmeraldLight,
-                        size: 20,
+                        size: 22,
                       ),
                     ),
                   ),
@@ -1060,9 +1063,9 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            FaIcon(
-                              FontAwesomeIcons.circlePlay,
-                              size: 10,
+                            Icon(
+                              Icons.play_circle_outline_rounded,
+                              size: 12,
                               color: mutedColor,
                             ),
                             const SizedBox(width: 4),
@@ -1074,9 +1077,9 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            FaIcon(
-                              FontAwesomeIcons.clock,
-                              size: 10,
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 12,
                               color: mutedColor,
                             ),
                             const SizedBox(width: 4),
