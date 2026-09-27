@@ -702,20 +702,20 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
             children: [
               _buildMetaChip(
                 icon: Icons.layers_rounded,
                 label: '5 Exercises',
                 isDark: isDark,
               ),
-              const SizedBox(width: 8),
               _buildMetaChip(
                 icon: Icons.timer_outlined,
                 label: '45 mins',
                 isDark: isDark,
               ),
-              const SizedBox(width: 8),
               _buildMetaChip(
                 icon: Icons.local_fire_department_rounded,
                 label: '350 kcal',
@@ -1033,15 +1033,19 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: headingColor,
+                            Expanded(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: headingColor,
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
@@ -1060,34 +1064,46 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Row(
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 12,
+                          runSpacing: 4,
                           children: [
-                            Icon(
-                              Icons.play_circle_outline_rounded,
-                              size: 12,
-                              color: mutedColor,
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.play_circle_outline_rounded,
+                                  size: 12,
+                                  color: mutedColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$exerciseCount exercises',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: mutedColor,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$exerciseCount exercises',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: mutedColor,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 12,
-                              color: mutedColor,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              duration,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: mutedColor,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule_rounded,
+                                  size: 12,
+                                  color: mutedColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  duration,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: mutedColor,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
