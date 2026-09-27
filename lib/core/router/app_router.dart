@@ -108,6 +108,14 @@ class AppRouter {
         builder: (context, state) => const WorkoutBuilderScreen(),
       ),
       GoRoute(
+        path: '/workout-builder',
+        builder: (context, state) => const WorkoutBuilderScreen(),
+      ),
+      GoRoute(
+        path: '/workouts',
+        builder: (context, state) => const WorkoutsTab(),
+      ),
+      GoRoute(
         path: '/session',
         builder: (context, state) => const LiveSessionScreen(),
       ),
