@@ -1453,46 +1453,57 @@ class HomeSlidesCarousel extends StatefulWidget {
 }
 
 class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
-  final PageController _pageController = PageController();
+  late final PageController _pageController;
   int _currentPage = 0;
   Timer? _autoSlideTimer;
 
   final List<Map<String, String>> _slides = const [
     {
       'image': 'assets/images/homeslides/home_scr_1.jpeg',
+      'tag': '⚡ FEATURED ROUTINE',
       'title': 'Track Your Daily Workouts',
       'subtitle': 'Build strength & consistency with live tracking',
       'route': '/workout-tracker',
+      'action': 'Track Now',
     },
     {
       'image': 'assets/images/homeslides/home_scr_2.jpeg',
+      'tag': '🔥 INSTANT WORKOUT',
       'title': 'Instant Quick Workouts',
       'subtitle': 'Launch customized routine splits in seconds',
       'route': '/quick-workout',
+      'action': 'Quick Start',
     },
     {
       'image': 'assets/images/homeslides/home_scr_3.jpeg',
+      'tag': '🤖 AI FORM COACH',
       'title': 'AI Pose & Form Feedback',
       'subtitle': 'Real-time posture analysis & rep counter',
       'route': '/ai-plan',
+      'action': 'Analyze',
     },
     {
       'image': 'assets/images/homeslides/home_scr_4.jpeg',
+      'tag': '📚 EXERCISE HUB',
       'title': 'Explore Exercise Library',
       'subtitle': 'Discover hundreds of target muscle movements',
       'route': '/exercise-library',
+      'action': 'Explore',
     },
     {
       'image': 'assets/images/homeslides/home_scr_5.jpeg',
+      'tag': '📊 PERFORMANCE',
       'title': 'Smart Activity & Analytics',
       'subtitle': 'Monitor calories, sleep, and performance',
       'route': '/activity-tracker',
+      'action': 'View Metrics',
     },
   ];
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.9);
     _startAutoSlide();
   }
 
@@ -1502,8 +1513,8 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
         final nextPage = (_currentPage + 1) % _slides.length;
         _pageController.animateToPage(
           nextPage,
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeInOutCubic,
+          duration: const Duration(milliseconds: 550),
+          curve: Curves.fastOutSlowIn,
         );
       }
     });
@@ -1524,7 +1535,7 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 185,
+          height: 195,
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
@@ -1535,6 +1546,8 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
             itemCount: _slides.length,
             itemBuilder: (context, index) {
               final slide = _slides[index];
+              final isSelected = index == _currentPage;
+
               return AnimatedTappable(
                 onTap: () {
                   final route = slide['route'];
@@ -1542,24 +1555,37 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
                     context.push(route);
                   }
                 },
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  margin: EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: isSelected ? 2 : 8,
+                  ),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.accentEmeraldLight.withValues(alpha: 0.8)
+                          : Colors.white.withValues(alpha: isDark ? 0.12 : 0.4),
+                      width: isSelected ? 1.5 : 1.0,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
-                        blurRadius: 14,
+                        color: isSelected
+                            ? AppColors.accentEmeraldLight.withValues(alpha: isDark ? 0.3 : 0.2)
+                            : Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                        blurRadius: isSelected ? 18 : 10,
                         offset: const Offset(0, 6),
                       ),
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(23),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Slide Image
+                        // Slide Background Image
                         Image.asset(
                           slide['image']!,
                           fit: BoxFit.cover,
@@ -1573,48 +1599,139 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
                           },
                         ),
 
-                        // Subtle Gradient Overlay
+                        // Specular Light + Rich Dark Gradient Overlays
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
                                 Colors.black.withValues(alpha: 0.85),
-                                Colors.black.withValues(alpha: 0.25),
-                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.35),
+                                Colors.black.withValues(alpha: 0.1),
                               ],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
                           ),
                         ),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withValues(alpha: 0.12),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
 
-                        // Slide Text Overlay
+                        // Top Left Glass Category Tag
+                        Positioned(
+                          left: 14,
+                          top: 14,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppColors.accentEmeraldLight.withValues(alpha: 0.5),
+                                width: 1.0,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accentEmeraldLight.withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              slide['tag']!,
+                              style: const TextStyle(
+                                color: AppColors.accentEmeraldLight,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Bottom Text Overlay & Action CTA Button
                         Positioned(
                           left: 16,
-                          right: 16,
+                          right: 14,
                           bottom: 14,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                slide['title']!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(color: Colors.black54, blurRadius: 4),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      slide['title']!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: -0.2,
+                                        shadows: [
+                                          Shadow(color: Colors.black87, blurRadius: 6),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      slide['subtitle']!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.85),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                slide['subtitle']!,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
+                              const SizedBox(width: 10),
+                              // Action Pill Button
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  gradient: GerexGradients.primaryCTA,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.accentEmeraldDeep.withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      slide['action']!,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.arrow_forward_rounded,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -1628,7 +1745,7 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
             },
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
         // Indicator Dots
         Row(
@@ -1636,15 +1753,23 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
           children: List.generate(_slides.length, (index) {
             final isSelected = index == _currentPage;
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 300),
               margin: const EdgeInsets.symmetric(horizontal: 3),
               height: 6,
-              width: isSelected ? 22 : 6,
+              width: isSelected ? 26 : 6,
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.accentEmeraldLight
                     : (isDark ? Colors.white24 : Colors.black26),
                 borderRadius: BorderRadius.circular(4),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.accentEmeraldLight.withValues(alpha: 0.6),
+                          blurRadius: 6,
+                        ),
+                      ]
+                    : null,
               ),
             );
           }),
