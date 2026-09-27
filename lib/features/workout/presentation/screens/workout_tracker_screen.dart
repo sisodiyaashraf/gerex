@@ -136,7 +136,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
     final weeklyCompletedCount = weeklyCompletions.where((c) => c).length;
     final totalWorkoutSeconds = workoutProvider.sessions.fold<int>(
       0,
-      (sum, s) => sum + (s.durationSeconds ?? 0),
+      (sum, s) => sum + s.durationSeconds,
     );
     final totalWorkoutMins = (totalWorkoutSeconds / 60).round();
     final estimatedCalories = (totalWorkoutMins * 7.5).round();
