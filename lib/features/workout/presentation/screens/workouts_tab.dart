@@ -1444,3 +1444,212 @@ class _TypewriterTextState extends State<TypewriterText> {
     );
   }
 }
+
+class HomeSlidesCarousel extends StatefulWidget {
+  const HomeSlidesCarousel({super.key});
+
+  @override
+  State<HomeSlidesCarousel> createState() => _HomeSlidesCarouselState();
+}
+
+class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  Timer? _autoSlideTimer;
+
+  final List<Map<String, String>> _slides = const [
+    {
+      'image': 'assets/images/homeslides/home_scr_1.jpeg',
+      'title': 'Track Your Daily Workouts',
+      'subtitle': 'Build strength & consistency with live tracking',
+      'route': '/workout-tracker',
+    },
+    {
+      'image': 'assets/images/homeslides/home_scr_2.jpeg',
+      'title': 'Instant Quick Workouts',
+      'subtitle': 'Launch customized routine splits in seconds',
+      'route': '/quick-workout',
+    },
+    {
+      'image': 'assets/images/homeslides/home_scr_3.jpeg',
+      'title': 'AI Pose & Form Feedback',
+      'subtitle': 'Real-time posture analysis & rep counter',
+      'route': '/ai-plan',
+    },
+    {
+      'image': 'assets/images/homeslides/home_scr_4.jpeg',
+      'title': 'Explore Exercise Library',
+      'subtitle': 'Discover hundreds of target muscle movements',
+      'route': '/exercise-library',
+    },
+    {
+      'image': 'assets/images/homeslides/home_scr_5.jpeg',
+      'title': 'Smart Activity & Analytics',
+      'subtitle': 'Monitor calories, sleep, and performance',
+      'route': '/activity-tracker',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoSlide();
+  }
+
+  void _startAutoSlide() {
+    _autoSlideTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_pageController.hasClients) {
+        final nextPage = (_currentPage + 1) % _slides.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoSlideTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 185,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemCount: _slides.length,
+            itemBuilder: (context, index) {
+              final slide = _slides[index];
+              return AnimatedTappable(
+                onTap: () {
+                  final route = slide['route'];
+                  if (route != null) {
+                    context.push(route);
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Slide Image
+                        Image.asset(
+                          slide['image']!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: AppColors.cardDarkGlass,
+                              child: const Center(
+                                child: Icon(Icons.image_not_supported_rounded, color: Colors.white54),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // Subtle Gradient Overlay
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withValues(alpha: 0.85),
+                                Colors.black.withValues(alpha: 0.25),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                          ),
+                        ),
+
+                        // Slide Text Overlay
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: 14,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                slide['title']!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(color: Colors.black54, blurRadius: 4),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                slide['subtitle']!,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Indicator Dots
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_slides.length, (index) {
+            final isSelected = index == _currentPage;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              height: 6,
+              width: isSelected ? 22 : 6,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.accentEmeraldLight
+                    : (isDark ? Colors.white24 : Colors.black26),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
