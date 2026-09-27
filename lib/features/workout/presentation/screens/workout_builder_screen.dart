@@ -73,7 +73,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                   borderRadius: 20,
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.edit_note_rounded,
                         color: AppColors.accentEmeraldLight,
                         size: 24,
