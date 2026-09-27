@@ -1580,12 +1580,18 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Slide Background Image (Full Cover Fit)
+                        // Ambient Background Container
+                        Container(
+                          color: isDark
+                              ? const Color(0xFF151729)
+                              : const Color(0xFFE2E8F0),
+                        ),
+
+                        // Full Uncropped Slide Image (100% Full Visibility)
                         Image.asset(
                           slide['image']!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: AppColors.cardDarkGlass,
