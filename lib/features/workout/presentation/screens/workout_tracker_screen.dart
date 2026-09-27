@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/workout_provider.dart';
 import '../../domain/entities/workout_entities.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
@@ -143,7 +142,7 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
     final estimatedCalories = (totalWorkoutMins * 7.5).round();
 
     final headingColor = isDark ? AppColors.textDarkHeading : theme.colorScheme.onSurface;
-    final mutedColor = isDark ? AppColors.textDarkMuted : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6) ?? const Color(0x991E293B);
+    final mutedColor = isDark ? AppColors.textDarkMuted : theme.colorScheme.onSurface.withValues(alpha: 0.6);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
