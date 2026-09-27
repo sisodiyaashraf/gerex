@@ -88,7 +88,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                           ),
                           decoration: InputDecoration(
                             labelText: 'Template Routine Name',
-                            labelStyle: TextStyle(
+                            labelStyle: const TextStyle(
                               color: AppColors.accentEmeraldLight,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
