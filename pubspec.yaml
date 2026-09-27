@@ -70,6 +70,7 @@ flutter:
     - assets/.env
     - assets/images/robot_mascot/
     - assets/images/app icon/
+    - assets/images/homeslides/
     - assets/images/gerex smartwatch.png
     - assets/images/meal_icon.png
     - assets/images/explore_icon.png
