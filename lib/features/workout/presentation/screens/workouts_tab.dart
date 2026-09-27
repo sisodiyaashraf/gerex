@@ -1580,11 +1580,9 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Ambient Background Container
+                        // Pure Black Background Container for Empty Top/Bottom & Side Spaces
                         Container(
-                          color: isDark
-                              ? const Color(0xFF151729)
-                              : const Color(0xFFE2E8F0),
+                          color: Colors.black,
                         ),
 
                         // Full Uncropped Slide Image (100% Full Visibility)
