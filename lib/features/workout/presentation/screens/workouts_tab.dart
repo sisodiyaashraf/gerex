@@ -245,6 +245,10 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
                     const SizedBox(height: 16),
                   ],
 
+                  // 1. Interactive Home Slides Carousel (1-5)
+                  const HomeSlidesCarousel(),
+                  const SizedBox(height: 20),
+
                   // Signature Hero Mint Card Overview
                   HeroMintCard(
                     margin: const EdgeInsets.only(bottom: 20),
