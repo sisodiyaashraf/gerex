@@ -1503,7 +1503,7 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.9);
+    _pageController = PageController(viewportFraction: 1.0);
     _startAutoSlide();
   }
 
@@ -1535,7 +1535,7 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 195,
+          height: 235,
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
@@ -1555,27 +1555,22 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
                     context.push(route);
                   }
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                  margin: EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: isSelected ? 2 : 8,
-                  ),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
                       color: isSelected
                           ? AppColors.accentEmeraldLight.withValues(alpha: 0.8)
                           : Colors.white.withValues(alpha: isDark ? 0.12 : 0.4),
-                      width: isSelected ? 1.5 : 1.0,
+                      width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: isSelected
                             ? AppColors.accentEmeraldLight.withValues(alpha: isDark ? 0.3 : 0.2)
                             : Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                        blurRadius: isSelected ? 18 : 10,
+                        blurRadius: 18,
                         offset: const Offset(0, 6),
                       ),
                     ],
@@ -1585,10 +1580,12 @@ class _HomeSlidesCarouselState extends State<HomeSlidesCarousel> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Slide Background Image
+                        // Slide Background Image (Full Cover Fit)
                         Image.asset(
                           slide['image']!,
                           fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: AppColors.cardDarkGlass,
