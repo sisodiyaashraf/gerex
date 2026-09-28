@@ -12,6 +12,9 @@ import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_dashboard_app_bar.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import 'package:gerex/core/providers/notification_provider.dart';
 import '../widgets/streak_flame_widget.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 
