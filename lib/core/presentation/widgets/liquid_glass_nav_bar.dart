@@ -99,7 +99,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
                 // Slot 4: Tab 3 (Analytics)
                 final activeSlotIndex = safeTab < 2 ? safeTab : safeTab + 1;
                 final activePillLeft = (activeSlotIndex * slotWidth) + (slotWidth - activePillWidth) / 2.0;
-                final activePillTop = (navBarHeight - activePillHeight) / 2.0;
+                const activePillTop = (navBarHeight - activePillHeight) / 2.0;
 
                 return Stack(
                   alignment: Alignment.center,
