@@ -289,20 +289,33 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
     // All exercises
     final allExercises = exerciseProvider.exercises;
 
+    final auth = Provider.of<AuthProvider>(context);
+    final notifications = Provider.of<NotificationProvider>(context);
+    final metrics = Provider.of<MetricsProvider>(context);
+
+    final displayName = auth.user?.userMetadata?['full_name'] ??
+        auth.user?.userMetadata?['name'] ??
+        auth.user?.email?.split('@').first ??
+        'Athlete';
+
+    final photoUrl = auth.user?.userMetadata?['avatar_url'] ??
+        auth.user?.userMetadata?['picture'];
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Explore & Challenges',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: GerexDashboardAppBar(
+        title: 'Explore & Challenges',
+        showGreeting: false,
+        userDisplayName: displayName,
+        userPhotoUrl: photoUrl,
+        unreadNotificationsCount: notifications.unreadCount,
+        streakCount: metrics.currentStreak,
+        onProfileTap: () => context.push('/profile'),
+        onNotificationTap: () => context.push('/notifications'),
+        onQuickWinTap: () => context.push('/quick-win'),
+        onStreakTap: () => context.push('/metrics'),
       ),
+
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
