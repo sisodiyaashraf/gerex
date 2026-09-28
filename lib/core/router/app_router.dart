@@ -401,40 +401,63 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             ),
 
           Positioned(
-            left: 24,
-            right: 24,
+            left: 20,
+            right: 20,
             bottom: 12 + MediaQuery.of(context).padding.bottom,
             child: LiquidGlassNavBar(
-              currentIndex: _currentIndex,
+              currentIndex: _currentIndex == 0
+                  ? 0
+                  : _currentIndex == 1
+                      ? 1
+                      : _currentIndex == 2
+                          ? 3
+                          : 4,
               onTap: (index) {
+                if (index == 2) {
+                  // Center node: Open AI Coach / Mascot Hub Sheet
+                  MascotAiHubBottomSheet.show(context);
+                  return;
+                }
+                final targetTab = index == 0
+                    ? 0
+                    : index == 1
+                        ? 1
+                        : index == 3
+                            ? 2
+                            : 3;
                 try {
                   final mascotController = Provider.of<MascotController>(context, listen: false);
-                  mascotController.navigateToTab(index);
+                  mascotController.navigateToTab(targetTab);
                 } catch (_) {}
                 setState(() {
-                  _currentIndex = index;
+                  _currentIndex = targetTab;
                 });
               },
               items: const [
                 LiquidGlassNavBarItem(
-                  icon: 'assets/svg icons/barbel.svg',
+                  icon: FontAwesomeIcons.dumbbell,
                   label: 'Workouts',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: 'assets/images/explore_icon.png',
+                  icon: FontAwesomeIcons.compass,
                   label: 'Explore',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: 'assets/images/meal_icon.png',
+                  icon: FontAwesomeIcons.arrowsRotate,
+                  label: 'AI Hub',
+                ),
+                LiquidGlassNavBarItem(
+                  icon: FontAwesomeIcons.utensils,
                   label: 'Meals',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: 'assets/images/analytics_icon.png',
+                  icon: FontAwesomeIcons.chartLine,
                   label: 'Analytics',
                 ),
               ],
             ),
           ),
+
 
           if (activeAlarm != null)
             Positioned.fill(
