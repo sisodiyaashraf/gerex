@@ -87,17 +87,18 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> {
           'Sleep Tracker',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
             fontSize: 18,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [

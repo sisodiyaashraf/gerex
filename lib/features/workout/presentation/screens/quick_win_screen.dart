@@ -129,16 +129,17 @@ class _QuickWinScreenState extends State<QuickWinScreen> {
           'Quick Win Training',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: theme.colorScheme.onSurface),
           onPressed: () => context.pop(),
         ),
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
