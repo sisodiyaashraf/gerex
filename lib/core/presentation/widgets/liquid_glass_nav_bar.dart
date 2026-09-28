@@ -140,28 +140,33 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
     if (icon is IconData) {
       return FaIcon(
         icon as FaIconData,
-        size: isActive ? 19.0 : 18.0,
+        size: isActive ? 20.0 : 18.0,
         color: color,
       );
     } else if (icon is String) {
       if (icon.endsWith('.svg')) {
         return SvgPicture.asset(
           icon,
-          width: isActive ? 20.0 : 19.0,
-          height: isActive ? 20.0 : 19.0,
+          width: isActive ? 24.0 : 22.0,
+          height: isActive ? 24.0 : 22.0,
           colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
         );
       } else {
-        return Image.asset(
-          icon,
-          width: isActive ? 20.0 : 19.0,
-          height: isActive ? 20.0 : 19.0,
-          color: color,
+        // PNG Asset Images: Render crisp original asset colors without tint overlay
+        return Opacity(
+          opacity: isActive ? 1.0 : 0.85,
+          child: Image.asset(
+            icon,
+            width: isActive ? 26.0 : 24.0,
+            height: isActive ? 26.0 : 24.0,
+            fit: BoxFit.contain,
+          ),
         );
       }
     }
     return Icon(Icons.circle, size: 18, color: color);
   }
+
 }
 
 /// CustomPainter rendering connected metaball liquid container with smooth concave waist curves
