@@ -173,38 +173,18 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverAppBar(
-                    floating: true,
-                    title: Text(
-                      'Gerex Dashboard',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    backgroundColor: Colors.transparent,
-                    scrolledUnderElevation: 0,
-                    elevation: 0,
-                    leading: Padding(
-                      padding: const EdgeInsets.only(left: 16.0),
-                      child: Center(
-                        child: GerexAvatar(
-                          imageUrl: photoUrl,
-                          initials: displayName.isNotEmpty ? displayName[0] : 'G',
-                          size: 36,
-                          hasNotification: notifications.unreadCount > 0,
-                          onTap: () => context.push('/profile'),
-                        ),
-                      ),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: FaIcon(FontAwesomeIcons.solidBell, size: 18, color: theme.colorScheme.onSurface),
-                        onPressed: () => context.push('/notifications'),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-            ),
+                  SliverGerexDashboardAppBar(
+                    userDisplayName: displayName,
+                    userPhotoUrl: photoUrl,
+                    unreadNotificationsCount: notifications.unreadCount,
+                    streakCount: metricsProvider.currentStreak,
+                    isTodayLogged: completedToday,
+                    onProfileTap: () => context.push('/profile'),
+                    onNotificationTap: () => context.push('/notifications'),
+                    onQuickWinTap: () => context.push('/quick-win'),
+                    onStreakTap: () => context.push('/metrics'),
+                  ),
+
 
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
