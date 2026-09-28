@@ -175,29 +175,19 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverAppBar(
-                    floating: true,
-                    pinned: true,
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    title: Text(
-                      'Analytics & Progress',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: GerexAvatar(
-                          size: 38,
-                          hasNotification: true,
-                          onTap: () => context.push('/notifications'),
-                        ),
-                      ),
-                    ],
+                  SliverGerexDashboardAppBar(
+                    title: 'Analytics & Progress',
+                    showGreeting: false,
+                    userDisplayName: displayName,
+                    userPhotoUrl: photoUrl,
+                    unreadNotificationsCount: notifications.unreadCount,
+                    streakCount: metricsProvider.currentStreak,
+                    onProfileTap: () => context.push('/profile'),
+                    onNotificationTap: () => context.push('/notifications'),
+                    onQuickWinTap: () => context.push('/quick-win'),
+                    onStreakTap: () => context.push('/metrics'),
                   ),
+
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 100.0),
                     sliver: SliverList(
