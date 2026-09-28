@@ -477,7 +477,7 @@ class _GerexAppBarContent extends StatelessWidget {
 
 /// Upgraded Frosted Glass Icon Button with dynamic glow, gradient option, & notification badge
 class _GlassIconButton extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final double iconSize;
   final Color iconColor;
   final Color glowColor;
