@@ -9,9 +9,8 @@ import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/presentation/widgets/mascot_ai_hub_sheet.dart';
 import 'package:gerex/features/metrics/presentation/widgets/streak_flame_widget.dart';
 
-/// Upgraded Gerex Dashboard AppBar with ultra-premium glassmorphism,
-/// interactive custom icon actions, animated streak status, AI Coach shortcut,
-/// and dynamic greeting title.
+/// Full-width edge-to-edge Gerex Dashboard AppBar with high visibility,
+/// dynamic light/dark contrast, interactive icons, and glassmorphism.
 class GerexDashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? userDisplayName;
   final String? userPhotoUrl;
@@ -45,29 +44,34 @@ class GerexDashboardAppBar extends StatelessWidget implements PreferredSizeWidge
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(68.0);
+  Size get preferredSize => const Size.fromHeight(64.0);
 
   @override
   Widget build(BuildContext context) {
-    return _GerexAppBarContent(
-      userDisplayName: userDisplayName,
-      userPhotoUrl: userPhotoUrl,
-      unreadNotificationsCount: unreadNotificationsCount,
-      streakCount: streakCount,
-      isTodayLogged: isTodayLogged,
-      onProfileTap: onProfileTap,
-      onNotificationTap: onNotificationTap,
-      onAiCoachTap: onAiCoachTap,
-      onQuickWinTap: onQuickWinTap,
-      onStreakTap: onStreakTap,
-      title: title,
-      showGreeting: showGreeting,
-      customActions: customActions,
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Container(
+      height: 64.0 + topPadding,
+      padding: EdgeInsets.only(top: topPadding),
+      child: _GerexAppBarContent(
+        userDisplayName: userDisplayName,
+        userPhotoUrl: userPhotoUrl,
+        unreadNotificationsCount: unreadNotificationsCount,
+        streakCount: streakCount,
+        isTodayLogged: isTodayLogged,
+        onProfileTap: onProfileTap,
+        onNotificationTap: onNotificationTap,
+        onAiCoachTap: onAiCoachTap,
+        onQuickWinTap: onQuickWinTap,
+        onStreakTap: onStreakTap,
+        title: title,
+        showGreeting: showGreeting,
+        customActions: customActions,
+      ),
     );
   }
 }
 
-/// Sliver version of the upgraded Gerex Dashboard AppBar for CustomScrollView
+/// Sliver version of the edge-to-edge Gerex Dashboard AppBar for CustomScrollView
 class SliverGerexDashboardAppBar extends StatelessWidget {
   final String? userDisplayName;
   final String? userPhotoUrl;
@@ -112,8 +116,8 @@ class SliverGerexDashboardAppBar extends StatelessWidget {
       floating: floating,
       pinned: pinned,
       delegate: _SliverAppBarDelegate(
-        minHeight: 68.0 + topPadding,
-        maxHeight: 68.0 + topPadding,
+        minHeight: 64.0 + topPadding,
+        maxHeight: 64.0 + topPadding,
         child: Padding(
           padding: EdgeInsets.only(top: topPadding),
           child: _GerexAppBarContent(
@@ -136,7 +140,6 @@ class SliverGerexDashboardAppBar extends StatelessWidget {
     );
   }
 }
-
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
@@ -219,270 +222,236 @@ class _GerexAppBarContent extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final initials = _getFirstName().isNotEmpty ? _getFirstName()[0].toUpperCase() : 'G';
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.0),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18.0, sigmaY: 18.0),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? [
-                        const Color(0xFF181E29).withValues(alpha: 0.85),
-                        const Color(0xFF0F141C).withValues(alpha: 0.90),
-                      ]
-                    : [
-                        Colors.white.withValues(alpha: 0.88),
-                        const Color(0xFFF1F5F9).withValues(alpha: 0.92),
-                      ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24.0),
-              border: Border.all(
+    // High visibility text colors
+    final textColorPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
+    final textColorSecondary = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF0F141C).withValues(alpha: 0.88)
+                : Colors.white.withValues(alpha: 0.90),
+            border: Border(
+              bottom: BorderSide(
                 color: isDark
-                    ? AppColors.accentEmeraldLight.withValues(alpha: 0.25)
-                    : AppColors.accentEmeraldLight.withValues(alpha: 0.35),
-                width: 1.2,
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.06),
+                width: 1.0,
               ),
             ),
-            child: Row(
-              children: [
-                // 1. Profile Avatar Action Button with Halo Ring
-                AnimatedTappable(
-                  onTap: onProfileTap ?? () => context.push('/profile'),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [
-                              AppColors.accentEmeraldLight,
-                              Color(0xFF3B82F6),
-                              Color(0xFF8B5CF6),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.accentEmeraldLight.withValues(alpha: 0.35),
-                              blurRadius: 10,
-                              spreadRadius: 1,
-                            ),
+          ),
+          child: Row(
+            children: [
+              // 1. User Profile Avatar Action with Glowing Border
+              AnimatedTappable(
+                onTap: onProfileTap ?? () => context.push('/profile'),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [
+                            AppColors.accentEmeraldLight,
+                            Color(0xFF3B82F6),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: GerexAvatar(
-                          imageUrl: userPhotoUrl,
-                          initials: initials,
-                          size: 40,
-                          hasNotification: unreadNotificationsCount > 0,
-                          onTap: onProfileTap ?? () => context.push('/profile'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-
-                // 2. Title & Dynamic Greeting
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              showGreeting ? _getGreetingText() : (title ?? 'Gerex Dashboard'),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.accentEmeraldLight.withValues(alpha: 0.2),
-                                  const Color(0xFF10B981).withValues(alpha: 0.1),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: AppColors.accentEmeraldLight.withValues(alpha: 0.4),
-                                width: 0.6,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 5,
-                                  height: 5,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.accentEmeraldLight,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  'PRO',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.accentEmeraldLight,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.accentEmeraldLight.withValues(alpha: 0.3),
+                            blurRadius: 8,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 1),
-                      Text(
-                        showGreeting ? _getFirstName() : (title ?? 'Dashboard'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.outfit(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: theme.colorScheme.onSurface,
-                          letterSpacing: -0.3,
-                        ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: GerexAvatar(
+                        imageUrl: userPhotoUrl,
+                        initials: initials,
+                        size: 36,
+                        hasNotification: unreadNotificationsCount > 0,
+                        onTap: onProfileTap ?? () => context.push('/profile'),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(width: 12),
 
-                // 3. Action Icons Bar
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+              // 2. Title & Dynamic Greeting
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Extra custom actions if provided
-                    if (customActions != null) ...[
-                      ...customActions!,
-                      const SizedBox(width: 6),
-                    ],
-
-                    // A. Streak Pill Action Button (if streak > 0)
-                    if (streakCount > 0) ...[
-                      AnimatedTappable(
-                        onTap: onStreakTap ?? () => context.push('/metrics'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF261D15).withValues(alpha: 0.8)
-                                : const Color(0xFFFFF7ED),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFFF97316).withValues(alpha: 0.4),
-                              width: 1.0,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            showGreeting ? _getGreetingText() : (title ?? 'GEREX'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: textColorSecondary,
+                              letterSpacing: 0.2,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFF97316).withValues(alpha: 0.2),
-                                blurRadius: 6,
-                              ),
-                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentEmeraldLight.withValues(alpha: isDark ? 0.2 : 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: AppColors.accentEmeraldLight.withValues(alpha: 0.5),
+                              width: 0.8,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: StreakFlameWidget(
-                                  streakCount: streakCount,
-                                  isTodayLogged: isTodayLogged,
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.accentEmeraldLight,
+                                  shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 3),
                               Text(
-                                '${streakCount}d',
+                                'PRO',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFF97316),
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                  color: isDark ? AppColors.accentEmeraldLight : const Color(0xFF059669),
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      showGreeting ? _getFirstName() : (title ?? 'Dashboard'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: textColorPrimary,
+                        letterSpacing: -0.3,
                       ),
-                      const SizedBox(width: 6),
-                    ],
-
-                    // B. Quick Action Lightning Icon Button
-                    GerexGlassIconButton(
-                      icon: FontAwesomeIcons.boltLightning,
-                      iconSize: 14,
-                      iconColor: const Color(0xFFEAB308),
-                      glowColor: const Color(0xFFEAB308),
-                      tooltip: 'Quick Workout',
-                      onTap: onQuickWinTap ?? () => context.push('/quick-win'),
-                    ),
-                    const SizedBox(width: 6),
-
-                    // C. AI Coach Mascot Magic Sparkles Icon Button
-                    GerexGlassIconButton(
-                      icon: FontAwesomeIcons.wandMagicSparkles,
-                      iconSize: 14,
-                      iconColor: const Color(0xFFA855F7),
-                      glowColor: const Color(0xFFA855F7),
-                      isGradient: true,
-                      tooltip: 'AI Coach Hub',
-                      onTap: onAiCoachTap ?? () => MascotAiHubBottomSheet.show(context),
-                    ),
-                    const SizedBox(width: 6),
-
-                    // D. Notifications Bell Icon Button with Live Pulse & Count Badge
-                    GerexGlassIconButton(
-                      icon: FontAwesomeIcons.solidBell,
-                      iconSize: 14,
-                      iconColor: theme.colorScheme.onSurface,
-                      glowColor: AppColors.accentEmeraldLight,
-                      badgeCount: unreadNotificationsCount,
-                      tooltip: 'Notifications',
-                      onTap: onNotificationTap ?? () => context.push('/notifications'),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+
+              // 3. Action Icons Bar
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (customActions != null) ...[
+                    ...customActions!,
+                    const SizedBox(width: 6),
+                  ],
+
+                  // A. Streak Pill Action Button (if streak > 0)
+                  if (streakCount > 0) ...[
+                    AnimatedTappable(
+                      onTap: onStreakTap ?? () => context.push('/metrics'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF261D15).withValues(alpha: 0.9)
+                              : const Color(0xFFFFF7ED),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFF97316).withValues(alpha: 0.5),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: StreakFlameWidget(
+                                streakCount: streakCount,
+                                isTodayLogged: isTodayLogged,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${streakCount}d',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFF97316),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+
+                  // B. Quick Action Lightning Icon Button
+                  GerexGlassIconButton(
+                    icon: FontAwesomeIcons.boltLightning,
+                    iconSize: 14,
+                    iconColor: const Color(0xFFEAB308),
+                    glowColor: const Color(0xFFEAB308),
+                    tooltip: 'Quick Workout',
+                    onTap: onQuickWinTap ?? () => context.push('/quick-win'),
+                  ),
+                  const SizedBox(width: 6),
+
+                  // C. AI Coach Mascot Magic Sparkles Icon Button
+                  GerexGlassIconButton(
+                    icon: FontAwesomeIcons.wandMagicSparkles,
+                    iconSize: 14,
+                    iconColor: const Color(0xFFA855F7),
+                    glowColor: const Color(0xFFA855F7),
+                    isGradient: true,
+                    tooltip: 'AI Coach Hub',
+                    onTap: onAiCoachTap ?? () => MascotAiHubBottomSheet.show(context),
+                  ),
+                  const SizedBox(width: 6),
+
+                  // D. Notifications Bell Icon Button with Live Pulse & Count Badge
+                  GerexGlassIconButton(
+                    icon: FontAwesomeIcons.solidBell,
+                    iconSize: 14,
+                    iconColor: textColorPrimary,
+                    glowColor: AppColors.accentEmeraldLight,
+                    badgeCount: unreadNotificationsCount,
+                    tooltip: 'Notifications',
+                    onTap: onNotificationTap ?? () => context.push('/notifications'),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -513,7 +482,6 @@ class GerexGlassIconButton extends StatelessWidget {
     required this.onTap,
   });
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -527,15 +495,15 @@ class GerexGlassIconButton extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: isGradient
                     ? LinearGradient(
                         colors: [
-                          glowColor.withValues(alpha: 0.35),
-                          const Color(0xFF6366F1).withValues(alpha: 0.25),
+                          glowColor.withValues(alpha: 0.4),
+                          const Color(0xFF6366F1).withValues(alpha: 0.3),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -543,29 +511,27 @@ class GerexGlassIconButton extends StatelessWidget {
                     : null,
                 color: !isGradient
                     ? (isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.04))
+                        ? Colors.white.withValues(alpha: 0.10)
+                        : const Color(0xFFF1F5F9))
                     : null,
                 border: Border.all(
-                  color: glowColor.withValues(alpha: isGradient ? 0.6 : 0.25),
-                  width: 1.1,
+                  color: isGradient
+                      ? glowColor.withValues(alpha: 0.7)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : Colors.black.withValues(alpha: 0.10)),
+                  width: 1.0,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: glowColor.withValues(alpha: isGradient ? 0.3 : 0.1),
-                    blurRadius: 8,
-                    spreadRadius: 0,
-                  ),
-                ],
               ),
               child: Center(
                 child: FaIcon(
                   icon as FaIconData,
                   size: iconSize,
-                  color: isGradient ? Colors.white : iconColor,
+                  color: isGradient
+                      ? Colors.white
+                      : (isDark ? iconColor : (iconColor == theme.colorScheme.onSurface ? const Color(0xFF0F172A) : iconColor)),
                 ),
               ),
-
             ),
 
             // Notification Badge Bubble with Pulse Red Glow
@@ -629,7 +595,7 @@ class _PulsingBadgeState extends State<_PulsingBadge>
           shape: widget.count < 10 ? BoxShape.circle : BoxShape.rectangle,
           borderRadius: widget.count >= 10 ? BorderRadius.circular(10) : null,
           border: Border.all(
-            color: const Color(0xFF0F141C),
+            color: Colors.white,
             width: 1.5,
           ),
           boxShadow: [
