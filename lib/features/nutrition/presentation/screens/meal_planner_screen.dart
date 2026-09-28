@@ -217,30 +217,34 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
     final isDark = theme.brightness == Brightness.dark;
     const accentColor = Color(0xFF10B981); // Emerald Green / Nutrition accent
 
+    final auth = Provider.of<AuthProvider>(context);
+    final notifications = Provider.of<NotificationProvider>(context);
+    final metrics = Provider.of<MetricsProvider>(context);
+
+    final displayName = auth.user?.userMetadata?['full_name'] ??
+        auth.user?.userMetadata?['name'] ??
+        auth.user?.email?.split('@').first ??
+        'Athlete';
+
+    final photoUrl = auth.user?.userMetadata?['avatar_url'] ??
+        auth.user?.userMetadata?['picture'];
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Meal Planner',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-            fontSize: 20,
-          ),
-        ),
-        backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.6),
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        flexibleSpace: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-        actions: [
+      appBar: GerexDashboardAppBar(
+        title: 'Meal Planner',
+        showGreeting: false,
+        userDisplayName: displayName,
+        userPhotoUrl: photoUrl,
+        unreadNotificationsCount: notifications.unreadCount,
+        streakCount: metrics.currentStreak,
+        onProfileTap: () => context.push('/profile'),
+        onNotificationTap: () => context.push('/notifications'),
+        onQuickWinTap: () => context.push('/quick-win'),
+        onStreakTap: () => context.push('/metrics'),
+      ),
+
           IconButton(
             icon: Icon(Icons.shopping_bag_outlined, color: theme.colorScheme.onSurface, size: 22),
             tooltip: 'Shopping List',
