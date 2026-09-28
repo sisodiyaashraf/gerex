@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'mascot_ai_hub_sheet.dart';
 
 class LiquidGlassNavBarItem {
   final dynamic icon; // IconData, FaIconData, or String (SVG/Image asset path)
@@ -50,14 +50,23 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
 
           // Compute exact horizontal center for each nav item
           final List<double> itemCenterXList = [];
-          if (itemCount == 5) {
-            final cx = width / 2;
-            final leftPillWidth = cx - 30.0;
-            final rightPillStart = cx + 30.0;
+          double centerNodeX = width / 2;
+
+          if (itemCount == 4) {
+            final leftPillWidth = centerNodeX - 30.0;
+            final rightPillStart = centerNodeX + 30.0;
+
+            itemCenterXList.add(leftPillWidth * 0.32);
+            itemCenterXList.add(leftPillWidth * 0.72);
+            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.28);
+            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.68);
+          } else if (itemCount == 5) {
+            final leftPillWidth = centerNodeX - 30.0;
+            final rightPillStart = centerNodeX + 30.0;
 
             itemCenterXList.add(leftPillWidth * 0.30);
             itemCenterXList.add(leftPillWidth * 0.75);
-            itemCenterXList.add(cx);
+            itemCenterXList.add(centerNodeX);
             itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.25);
             itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.70);
           } else {
@@ -107,25 +116,108 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
 
               // 3. Tap Target Icons
               Positioned.fill(
-                child: Row(
-                  children: List.generate(itemCount, (idx) {
-                    final item = widget.items[idx];
-                    final isActive = widget.currentIndex == idx;
-
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => widget.onTap(idx),
-                        child: Center(
-                          child: _buildItemIcon(
-                            item.icon,
-                            isActive: isActive,
+                child: itemCount == 4
+                    ? Stack(
+                        children: [
+                          // Left Pill Items (0 & 1)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: centerNodeX - 30.0,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => widget.onTap(0),
+                                    child: Center(
+                                      child: _buildItemIcon(widget.items[0].icon, isActive: widget.currentIndex == 0),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => widget.onTap(1),
+                                    child: Center(
+                                      child: _buildItemIcon(widget.items[1].icon, isActive: widget.currentIndex == 1),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+
+                          // Center Node Action (AI Mascot Hub)
+                          Positioned(
+                            left: centerNodeX - 22.0,
+                            top: (navBarHeight - 44.0) / 2,
+                            width: 44.0,
+                            height: 44.0,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => MascotAiHubBottomSheet.show(context),
+                              child: const Center(
+                                child: FaIcon(
+                                  FontAwesomeIcons.arrowsRotate,
+                                  size: 17.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Right Pill Items (2 & 3)
+                          Positioned(
+                            left: centerNodeX + 30.0,
+                            top: 0,
+                            bottom: 0,
+                            right: 0,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => widget.onTap(2),
+                                    child: Center(
+                                      child: _buildItemIcon(widget.items[2].icon, isActive: widget.currentIndex == 2),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => widget.onTap(3),
+                                    child: Center(
+                                      child: _buildItemIcon(widget.items[3].icon, isActive: widget.currentIndex == 3),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: List.generate(itemCount, (idx) {
+                          final item = widget.items[idx];
+                          final isActive = widget.currentIndex == idx;
+
+                          return Expanded(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => widget.onTap(idx),
+                              child: Center(
+                                child: _buildItemIcon(
+                                  item.icon,
+                                  isActive: isActive,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
                       ),
-                    );
-                  }),
-                ),
               ),
             ],
           );
@@ -152,7 +244,8 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
           colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
         );
       } else {
-        // PNG Asset Images: Render crisp original asset colors without tint overlay
+        // PNG Asset Images (explore_icon.png, meal_icon.png, analytics_icon.png)
+        // Render original artwork with 100% detail and visibility without tinting!
         return Opacity(
           opacity: isActive ? 1.0 : 0.85,
           child: Image.asset(
@@ -166,7 +259,6 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
     }
     return Icon(Icons.circle, size: 18, color: color);
   }
-
 }
 
 /// CustomPainter rendering connected metaball liquid container with smooth concave waist curves
@@ -195,7 +287,7 @@ class _LiquidMetaballPainter extends CustomPainter {
 
     final path = Path();
 
-    if (itemCount == 5) {
+    if (itemCount >= 4) {
       final cx = w / 2;
       const rCenter = 27.0; // Center circle node radius
       const bridgeInset = 14.0;
