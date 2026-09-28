@@ -280,7 +280,7 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
           'Progress Photos',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -295,11 +295,12 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
             onPressed: () => context.push('/progress-compare'),
           ),
           IconButton(
-            icon: FaIcon(FontAwesomeIcons.sliders, size: 16, color: AppColors.textDarkHeading),
+            icon: FaIcon(FontAwesomeIcons.sliders, size: 16, color: theme.colorScheme.onSurface),
             onPressed: () => _showSettingsDialog(context, provider),
           ),
         ],
       ),
+
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
