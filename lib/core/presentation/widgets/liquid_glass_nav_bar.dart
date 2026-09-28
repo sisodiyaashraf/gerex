@@ -13,8 +13,8 @@ class LiquidGlassNavBarItem {
   });
 }
 
-/// OrganicConnected liquid metaball Bottom Navigation Bar widget,
-/// matching the custom fluid capsule & circle geometry design.
+/// Organic connected metaball Bottom Navigation Bar widget,
+/// matching the exact custom liquid capsule & circle geometry design.
 class LiquidGlassNavBar extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -34,59 +34,57 @@ class LiquidGlassNavBar extends StatefulWidget {
 class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    const navBarHeight = 62.0;
-    // Sleek dark organic container color matching reference image
-    final navBgColor = isDark ? const Color(0xFF12141C) : const Color(0xFF1E222D);
+    const navBarHeight = 58.0;
+    // Sleek solid dark obsidian container color matching reference image exactly
+    const navBgColor = Color(0xFF131419);
 
     return SizedBox(
       height: navBarHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final itemCount = widget.items.length;
+          final cx = width / 2;
+          const rCenter = 26.0;
+          const bridgeInset = 12.0;
 
-          // Compute exact horizontal center for each nav item
-          final List<double> itemCenterXList = [];
-          double centerNodeX = width / 2;
+          final leftPillEnd = cx - rCenter - bridgeInset;
+          final rightPillStart = cx + rCenter + bridgeInset;
+          final rightPillWidth = width - rightPillStart;
 
-          if (itemCount == 4) {
-            final leftPillWidth = centerNodeX - 30.0;
-            final rightPillStart = centerNodeX + 30.0;
+          // 5 exact node center X positions matching metaball geometry:
+          // Node 0: Left pill left item
+          // Node 1: Left pill right item
+          // Node 2: Center circle node (AI Hub action)
+          // Node 3: Right pill left item
+          // Node 4: Right pill right item
+          final List<double> nodeCenterX = [
+            leftPillEnd * 0.32,
+            leftPillEnd * 0.72,
+            cx,
+            rightPillStart + rightPillWidth * 0.28,
+            rightPillStart + rightPillWidth * 0.68,
+          ];
 
-            itemCenterXList.add(leftPillWidth * 0.32);
-            itemCenterXList.add(leftPillWidth * 0.72);
-            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.28);
-            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.68);
-          } else if (itemCount == 5) {
-            final leftPillWidth = centerNodeX - 30.0;
-            final rightPillStart = centerNodeX + 30.0;
+          // Map active tab (0, 1, 2, 3) to node index (0, 1, 3, 4)
+          final safeTab = widget.currentIndex.clamp(0, 3);
+          final activeNodeIndex = safeTab == 0
+              ? 0
+              : safeTab == 1
+                  ? 1
+                  : safeTab == 2
+                      ? 3
+                      : 4;
 
-            itemCenterXList.add(leftPillWidth * 0.30);
-            itemCenterXList.add(leftPillWidth * 0.75);
-            itemCenterXList.add(centerNodeX);
-            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.25);
-            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.70);
-          } else {
-            final segWidth = width / itemCount;
-            for (int i = 0; i < itemCount; i++) {
-              itemCenterXList.add(segWidth * i + segWidth / 2);
-            }
-          }
-
-          final safeIndex = widget.currentIndex.clamp(0, itemCount - 1);
-          final activeX = itemCenterXList.isNotEmpty ? itemCenterXList[safeIndex] : 0.0;
+          final activeX = nodeCenterX[activeNodeIndex];
 
           return Stack(
+            clipBehavior: Clip.none,
             children: [
               // 1. Organic Connected Metaball Shape Background
               Positioned.fill(
                 child: CustomPaint(
                   painter: _LiquidMetaballPainter(
                     bgColor: navBgColor,
-                    itemCount: itemCount,
                   ),
                 ),
               ),
@@ -95,17 +93,17 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 280),
                 curve: Curves.fastOutSlowIn,
-                left: activeX - 22.0,
-                top: (navBarHeight - 44.0) / 2,
+                left: activeX - 21.0,
+                top: (navBarHeight - 42.0) / 2,
                 child: Container(
-                  width: 44.0,
-                  height: 44.0,
+                  width: 42.0,
+                  height: 42.0,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.28),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -114,110 +112,55 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
                 ),
               ),
 
-              // 3. Tap Target Icons
+              // 3. Five Interactive Nodes Layer
               Positioned.fill(
-                child: itemCount == 4
-                    ? Stack(
-                        children: [
-                          // Left Pill Items (0 & 1)
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: centerNodeX - 30.0,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => widget.onTap(0),
-                                    child: Center(
-                                      child: _buildItemIcon(widget.items[0].icon, isActive: widget.currentIndex == 0),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => widget.onTap(1),
-                                    child: Center(
-                                      child: _buildItemIcon(widget.items[1].icon, isActive: widget.currentIndex == 1),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                child: Stack(
+                  children: [
+                    // Node 0: Workouts (Left Pill, Item 0)
+                    _buildNodeTapArea(
+                      centerX: nodeCenterX[0],
+                      navBarHeight: navBarHeight,
+                      onTap: () => widget.onTap(0),
+                      child: _buildIcon(widget.items[0].icon, isActive: safeTab == 0),
+                    ),
 
-                          // Center Node Action (AI Mascot Hub)
-                          Positioned(
-                            left: centerNodeX - 22.0,
-                            top: (navBarHeight - 44.0) / 2,
-                            width: 44.0,
-                            height: 44.0,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => MascotAiHubBottomSheet.show(context),
-                              child: const Center(
-                                child: FaIcon(
-                                  FontAwesomeIcons.arrowsRotate,
-                                  size: 17.0,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
+                    // Node 1: Explore (Left Pill, Item 1)
+                    _buildNodeTapArea(
+                      centerX: nodeCenterX[1],
+                      navBarHeight: navBarHeight,
+                      onTap: () => widget.onTap(1),
+                      child: _buildIcon(widget.items[1].icon, isActive: safeTab == 1),
+                    ),
 
-                          // Right Pill Items (2 & 3)
-                          Positioned(
-                            left: centerNodeX + 30.0,
-                            top: 0,
-                            bottom: 0,
-                            right: 0,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => widget.onTap(2),
-                                    child: Center(
-                                      child: _buildItemIcon(widget.items[2].icon, isActive: widget.currentIndex == 2),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => widget.onTap(3),
-                                    child: Center(
-                                      child: _buildItemIcon(widget.items[3].icon, isActive: widget.currentIndex == 3),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: List.generate(itemCount, (idx) {
-                          final item = widget.items[idx];
-                          final isActive = widget.currentIndex == idx;
-
-                          return Expanded(
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => widget.onTap(idx),
-                              child: Center(
-                                child: _buildItemIcon(
-                                  item.icon,
-                                  isActive: isActive,
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
+                    // Node 2: Center Action Node (Mascot AI Hub)
+                    _buildNodeTapArea(
+                      centerX: nodeCenterX[2],
+                      navBarHeight: navBarHeight,
+                      onTap: () => MascotAiHubBottomSheet.show(context),
+                      child: const FaIcon(
+                        FontAwesomeIcons.arrowsRotate,
+                        size: 18.0,
+                        color: Colors.white,
                       ),
+                    ),
+
+                    // Node 3: Meals (Right Pill, Item 2)
+                    _buildNodeTapArea(
+                      centerX: nodeCenterX[3],
+                      navBarHeight: navBarHeight,
+                      onTap: () => widget.onTap(2),
+                      child: _buildIcon(widget.items[2].icon, isActive: safeTab == 2),
+                    ),
+
+                    // Node 4: Analytics (Right Pill, Item 3)
+                    _buildNodeTapArea(
+                      centerX: nodeCenterX[4],
+                      navBarHeight: navBarHeight,
+                      onTap: () => widget.onTap(3),
+                      child: _buildIcon(widget.items[3].icon, isActive: safeTab == 3),
+                    ),
+                  ],
+                ),
               ),
             ],
           );
@@ -226,49 +169,75 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
     );
   }
 
-  Widget _buildItemIcon(dynamic icon, {required bool isActive}) {
-    final color = isActive ? const Color(0xFF12141C) : Colors.white.withValues(alpha: 0.90);
+  Widget _buildNodeTapArea({
+    required double centerX,
+    required double navBarHeight,
+    required VoidCallback onTap,
+    required Widget child,
+  }) {
+    return Positioned(
+      left: centerX - 24.0,
+      top: 0,
+      width: 48.0,
+      height: navBarHeight,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Center(child: child),
+      ),
+    );
+  }
+
+  Widget _buildIcon(dynamic icon, {required bool isActive}) {
+    const activeColor = Color(0xFF131419);
+    final inactiveColor = Colors.white.withValues(alpha: 0.90);
 
     if (icon is IconData) {
       return FaIcon(
         icon as FaIconData,
         size: isActive ? 20.0 : 18.0,
-        color: color,
+        color: isActive ? activeColor : inactiveColor,
       );
     } else if (icon is String) {
+      final size = isActive ? 22.0 : 20.0;
       if (icon.endsWith('.svg')) {
         return SvgPicture.asset(
           icon,
-          width: isActive ? 24.0 : 22.0,
-          height: isActive ? 24.0 : 22.0,
-          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          width: size,
+          height: size,
+          colorFilter: ColorFilter.mode(
+            isActive ? activeColor : inactiveColor,
+            BlendMode.srcIn,
+          ),
         );
       } else {
-        // PNG Asset Images (explore_icon.png, meal_icon.png, analytics_icon.png)
-        // Render original artwork with 100% detail and visibility without tinting!
-        return Opacity(
-          opacity: isActive ? 1.0 : 0.85,
-          child: Image.asset(
-            icon,
-            width: isActive ? 26.0 : 24.0,
-            height: isActive ? 26.0 : 24.0,
-            fit: BoxFit.contain,
+        // PNG Asset Images: High contrast stencil color filter for 100% visibility
+        return Image.asset(
+          icon,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          colorFilter: ColorFilter.mode(
+            isActive ? activeColor : inactiveColor,
+            BlendMode.srcIn,
           ),
         );
       }
     }
-    return Icon(Icons.circle, size: 18, color: color);
+    return Icon(
+      Icons.circle,
+      size: 18,
+      color: isActive ? activeColor : inactiveColor,
+    );
   }
 }
 
-/// CustomPainter rendering connected metaball liquid container with smooth concave waist curves
+/// CustomPainter rendering exact organic connected metaball container with smooth concave waists
 class _LiquidMetaballPainter extends CustomPainter {
   final Color bgColor;
-  final int itemCount;
 
   _LiquidMetaballPainter({
     required this.bgColor,
-    required this.itemCount,
   });
 
   @override
@@ -282,95 +251,87 @@ class _LiquidMetaballPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.35)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      ..color = Colors.black.withValues(alpha: 0.40)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
 
     final path = Path();
+    final cx = w / 2;
+    const rCenter = 26.0; // Center circle node radius
+    const bridgeInset = 12.0;
 
-    if (itemCount >= 4) {
-      final cx = w / 2;
-      const rCenter = 27.0; // Center circle node radius
-      const bridgeInset = 14.0;
+    final leftPillEnd = cx - rCenter - bridgeInset;
+    final rightPillStart = cx + rCenter + bridgeInset;
 
-      final leftPillEnd = cx - rCenter - bridgeInset;
-      final rightPillStart = cx + rCenter + bridgeInset;
+    // Top edge left capsule
+    path.moveTo(r, 0);
+    path.lineTo(leftPillEnd, 0);
 
-      // Top edge left capsule
-      path.moveTo(r, 0);
-      path.lineTo(leftPillEnd, 0);
+    // Concave waist into top-left center circle
+    path.cubicTo(
+      cx - rCenter - 2, 0,
+      cx - rCenter, h * 0.18,
+      cx - rCenter + 2, h * 0.22,
+    );
 
-      // Concave waist into top-left center circle
-      path.cubicTo(
-        cx - rCenter - 2, 0,
-        cx - rCenter, h * 0.20,
-        cx - rCenter + 2, h * 0.24,
-      );
+    // Arc over top of center circle
+    path.arcToPoint(
+      Offset(cx + rCenter - 2, h * 0.22),
+      radius: const Radius.circular(rCenter),
+      clockwise: true,
+    );
 
-      // Arc over top of center circle
-      path.arcToPoint(
-        Offset(cx + rCenter - 2, h * 0.24),
-        radius: const Radius.circular(rCenter),
-        clockwise: true,
-      );
+    // Concave waist out to top-right pill
+    path.cubicTo(
+      cx + rCenter, h * 0.18,
+      cx + rCenter + 2, 0,
+      rightPillStart, 0,
+    );
 
-      // Concave waist out to top-right pill
-      path.cubicTo(
-        cx + rCenter, h * 0.20,
-        cx + rCenter + 2, 0,
-        rightPillStart, 0,
-      );
+    // Top edge right capsule
+    path.lineTo(w - r, 0);
 
-      // Top edge right capsule
-      path.lineTo(w - r, 0);
+    // Right cap arc
+    path.arcToPoint(
+      Offset(w - r, h),
+      radius: Radius.circular(r),
+      clockwise: true,
+    );
 
-      // Right cap arc
-      path.arcToPoint(
-        Offset(w - r, h),
-        radius: Radius.circular(r),
-        clockwise: true,
-      );
+    // Bottom edge right capsule
+    path.lineTo(rightPillStart, h);
 
-      // Bottom edge right capsule
-      path.lineTo(rightPillStart, h);
+    // Concave waist into bottom-right center circle
+    path.cubicTo(
+      cx + rCenter + 2, h,
+      cx + rCenter, h * 0.82,
+      cx + rCenter - 2, h * 0.78,
+    );
 
-      // Concave waist into bottom-right center circle
-      path.cubicTo(
-        cx + rCenter + 2, h,
-        cx + rCenter, h * 0.80,
-        cx + rCenter - 2, h * 0.76,
-      );
+    // Arc under bottom of center circle
+    path.arcToPoint(
+      Offset(cx - rCenter + 2, h * 0.78),
+      radius: const Radius.circular(rCenter),
+      clockwise: true,
+    );
 
-      // Arc under bottom of center circle
-      path.arcToPoint(
-        Offset(cx - rCenter + 2, h * 0.76),
-        radius: const Radius.circular(rCenter),
-        clockwise: true,
-      );
+    // Concave waist out to bottom-left pill
+    path.cubicTo(
+      cx - rCenter, h * 0.82,
+      cx - rCenter - 2, h,
+      leftPillEnd, h,
+    );
 
-      // Concave waist out to bottom-left pill
-      path.cubicTo(
-        cx - rCenter, h * 0.80,
-        cx - rCenter - 2, h,
-        leftPillEnd, h,
-      );
+    // Bottom edge left capsule
+    path.lineTo(r, h);
 
-      // Bottom edge left capsule
-      path.lineTo(r, h);
+    // Left cap arc
+    path.arcToPoint(
+      Offset(r, 0),
+      radius: Radius.circular(r),
+      clockwise: true,
+    );
 
-      // Left cap arc
-      path.arcToPoint(
-        Offset(r, 0),
-        radius: Radius.circular(r),
-        clockwise: true,
-      );
-
-      path.close();
-    } else {
-      path.addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, w, h),
-        Radius.circular(r),
-      ));
-    }
+    path.close();
 
     // Draw shadow then fill path
     canvas.drawPath(path.shift(const Offset(0, 6)), shadowPaint);
@@ -379,6 +340,6 @@ class _LiquidMetaballPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _LiquidMetaballPainter oldDelegate) {
-    return oldDelegate.bgColor != bgColor || oldDelegate.itemCount != itemCount;
+    return oldDelegate.bgColor != bgColor;
   }
 }
