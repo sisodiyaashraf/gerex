@@ -96,6 +96,16 @@ class _MetricsDashboardScreenState extends State<MetricsDashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final metricsProvider = Provider.of<MetricsProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
+    final notifications = Provider.of<NotificationProvider>(context);
+
+    final displayName = auth.user?.userMetadata?['full_name'] ??
+        auth.user?.userMetadata?['name'] ??
+        auth.user?.email?.split('@').first ??
+        'Athlete';
+
+    final photoUrl = auth.user?.userMetadata?['avatar_url'] ??
+        auth.user?.userMetadata?['picture'];
 
     // Get current month info
     final now = DateTime.now();
