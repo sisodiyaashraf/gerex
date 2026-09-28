@@ -543,11 +543,12 @@ class _GlassIconButton extends StatelessWidget {
               ),
               child: Center(
                 child: FaIcon(
-                  icon,
+                  icon as FaIconData,
                   size: iconSize,
                   color: isGradient ? Colors.white : iconColor,
                 ),
               ),
+
             ),
 
             // Notification Badge Bubble with Pulse Red Glow
