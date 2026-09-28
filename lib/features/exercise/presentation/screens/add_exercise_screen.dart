@@ -93,15 +93,16 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
           'Add Exercises',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textDarkHeading),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
+
         actions: [
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.circlePlus, size: 20, color: AppColors.accentEmeraldLight),
