@@ -43,8 +43,7 @@ import '../../features/nutrition/presentation/screens/meal_barcode_scanner_scree
 import '../../features/nutrition/presentation/screens/scanner_page.dart';
 import '../../features/profile/presentation/screens/guided_photo_capture_screen.dart';
 import '../../features/metrics/presentation/screens/heart_rate_connection_screen.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../presentation/widgets/mascot_ai_hub_sheet.dart';
+
 
 import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
 import '../../features/workout/presentation/screens/quick_workout_screen.dart';
