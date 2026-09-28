@@ -405,58 +405,37 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             right: 20,
             bottom: 12 + MediaQuery.of(context).padding.bottom,
             child: LiquidGlassNavBar(
-              currentIndex: _currentIndex == 0
-                  ? 0
-                  : _currentIndex == 1
-                      ? 1
-                      : _currentIndex == 2
-                          ? 3
-                          : 4,
+              currentIndex: _currentIndex,
               onTap: (index) {
-                if (index == 2) {
-                  // Center node: Open AI Coach / Mascot Hub Sheet
-                  MascotAiHubBottomSheet.show(context);
-                  return;
-                }
-                final targetTab = index == 0
-                    ? 0
-                    : index == 1
-                        ? 1
-                        : index == 3
-                            ? 2
-                            : 3;
                 try {
                   final mascotController = Provider.of<MascotController>(context, listen: false);
-                  mascotController.navigateToTab(targetTab);
+                  mascotController.navigateToTab(index);
                 } catch (_) {}
                 setState(() {
-                  _currentIndex = targetTab;
+                  _currentIndex = index;
                 });
               },
               items: const [
                 LiquidGlassNavBarItem(
-                  icon: FontAwesomeIcons.dumbbell,
+                  icon: 'assets/svg icons/barbel.svg',
                   label: 'Workouts',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: FontAwesomeIcons.compass,
+                  icon: 'assets/images/explore_icon.png',
                   label: 'Explore',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: FontAwesomeIcons.arrowsRotate,
-                  label: 'AI Hub',
-                ),
-                LiquidGlassNavBarItem(
-                  icon: FontAwesomeIcons.utensils,
+                  icon: 'assets/images/meal_icon.png',
                   label: 'Meals',
                 ),
                 LiquidGlassNavBarItem(
-                  icon: FontAwesomeIcons.chartLine,
+                  icon: 'assets/images/analytics_icon.png',
                   label: 'Analytics',
                 ),
               ],
             ),
           ),
+
 
 
           if (activeAlarm != null)
