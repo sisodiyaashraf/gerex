@@ -25,6 +25,7 @@ class GerexDashboardAppBar extends StatelessWidget implements PreferredSizeWidge
   final VoidCallback? onStreakTap;
   final String? title;
   final bool showGreeting;
+  final List<Widget>? customActions;
 
   const GerexDashboardAppBar({
     super.key,
@@ -40,6 +41,7 @@ class GerexDashboardAppBar extends StatelessWidget implements PreferredSizeWidge
     this.onStreakTap,
     this.title,
     this.showGreeting = true,
+    this.customActions,
   });
 
   @override
@@ -60,6 +62,7 @@ class GerexDashboardAppBar extends StatelessWidget implements PreferredSizeWidge
       onStreakTap: onStreakTap,
       title: title,
       showGreeting: showGreeting,
+      customActions: customActions,
     );
   }
 }
@@ -80,6 +83,7 @@ class SliverGerexDashboardAppBar extends StatelessWidget {
   final bool showGreeting;
   final bool floating;
   final bool pinned;
+  final List<Widget>? customActions;
 
   const SliverGerexDashboardAppBar({
     super.key,
@@ -97,6 +101,7 @@ class SliverGerexDashboardAppBar extends StatelessWidget {
     this.showGreeting = true,
     this.floating = true,
     this.pinned = false,
+    this.customActions,
   });
 
   @override
@@ -124,12 +129,14 @@ class SliverGerexDashboardAppBar extends StatelessWidget {
             onStreakTap: onStreakTap,
             title: title,
             showGreeting: showGreeting,
+            customActions: customActions,
           ),
         ),
       ),
     );
   }
 }
+
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
@@ -174,6 +181,7 @@ class _GerexAppBarContent extends StatelessWidget {
   final VoidCallback? onStreakTap;
   final String? title;
   final bool showGreeting;
+  final List<Widget>? customActions;
 
   const _GerexAppBarContent({
     this.userDisplayName,
@@ -188,6 +196,7 @@ class _GerexAppBarContent extends StatelessWidget {
     this.onStreakTap,
     this.title,
     this.showGreeting = true,
+    this.customActions,
   });
 
   String _getGreetingText() {
@@ -382,6 +391,12 @@ class _GerexAppBarContent extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Extra custom actions if provided
+                    if (customActions != null) ...[
+                      ...customActions!,
+                      const SizedBox(width: 6),
+                    ],
+
                     // A. Streak Pill Action Button (if streak > 0)
                     if (streakCount > 0) ...[
                       AnimatedTappable(
@@ -432,7 +447,7 @@ class _GerexAppBarContent extends StatelessWidget {
                     ],
 
                     // B. Quick Action Lightning Icon Button
-                    _GlassIconButton(
+                    GerexGlassIconButton(
                       icon: FontAwesomeIcons.boltLightning,
                       iconSize: 14,
                       iconColor: const Color(0xFFEAB308),
@@ -443,7 +458,7 @@ class _GerexAppBarContent extends StatelessWidget {
                     const SizedBox(width: 6),
 
                     // C. AI Coach Mascot Magic Sparkles Icon Button
-                    _GlassIconButton(
+                    GerexGlassIconButton(
                       icon: FontAwesomeIcons.wandMagicSparkles,
                       iconSize: 14,
                       iconColor: const Color(0xFFA855F7),
@@ -455,7 +470,7 @@ class _GerexAppBarContent extends StatelessWidget {
                     const SizedBox(width: 6),
 
                     // D. Notifications Bell Icon Button with Live Pulse & Count Badge
-                    _GlassIconButton(
+                    GerexGlassIconButton(
                       icon: FontAwesomeIcons.solidBell,
                       iconSize: 14,
                       iconColor: theme.colorScheme.onSurface,
@@ -476,7 +491,7 @@ class _GerexAppBarContent extends StatelessWidget {
 }
 
 /// Upgraded Frosted Glass Icon Button with dynamic glow, gradient option, & notification badge
-class _GlassIconButton extends StatelessWidget {
+class GerexGlassIconButton extends StatelessWidget {
   final dynamic icon;
   final double iconSize;
   final Color iconColor;
@@ -486,7 +501,8 @@ class _GlassIconButton extends StatelessWidget {
   final String tooltip;
   final VoidCallback onTap;
 
-  const _GlassIconButton({
+  const GerexGlassIconButton({
+    super.key,
     required this.icon,
     this.iconSize = 14,
     required this.iconColor,
@@ -496,6 +512,7 @@ class _GlassIconButton extends StatelessWidget {
     required this.tooltip,
     required this.onTap,
   });
+
 
   @override
   Widget build(BuildContext context) {
