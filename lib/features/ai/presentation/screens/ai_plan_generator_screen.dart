@@ -105,7 +105,7 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
           'AI Plan Generator',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -113,11 +113,12 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_rounded,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+
       body: provider.isPlanLoading
           ? _buildLoadingState(theme)
           : provider.generatedWorkoutPlan != null
