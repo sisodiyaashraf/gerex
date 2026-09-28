@@ -245,34 +245,6 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         onStreakTap: () => context.push('/metrics'),
       ),
 
-          IconButton(
-            icon: Icon(Icons.shopping_bag_outlined, color: theme.colorScheme.onSurface, size: 22),
-            tooltip: 'Shopping List',
-            onPressed: () => context.push('/grocery-list'),
-          ),
-          IconButton(
-            icon: Icon(Icons.photo_camera_rounded, color: theme.colorScheme.onSurface, size: 22),
-            tooltip: 'AI Food Scanner',
-            onPressed: () => context.push('/meal-food-scanner'),
-          ),
-          IconButton(
-            icon: Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.onSurface, size: 22),
-            tooltip: 'Log Custom Meal',
-            onPressed: () => _showLogMealDialog(context, mealProvider),
-          ),
-          IconButton(
-            icon: Icon(Icons.calendar_month_rounded, color: theme.colorScheme.onSurface, size: 22),
-            tooltip: 'Schedule',
-            onPressed: () => context.push('/meal-schedule'),
-          ),
-          IconButton(
-            icon: Icon(Icons.search_rounded, color: theme.colorScheme.onSurface, size: 22),
-            tooltip: 'Browse',
-            onPressed: () => context.push('/meal-browse'),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
