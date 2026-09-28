@@ -1,84 +1,21 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class LiquidGlassNavBarItem {
-  final dynamic icon; // Can be IconData or String (SVG path)
+  final dynamic icon; // IconData, FaIconData, or String (SVG/Image asset path)
   final String label;
 
   const LiquidGlassNavBarItem({
     required this.icon,
-    required this.label,
+    this.label = '',
   });
 }
 
-class BouncingIcon extends StatefulWidget {
-  final Widget child;
-  final bool isActive;
-
-  const BouncingIcon({
-    super.key,
-    required this.child,
-    required this.isActive,
-  });
-
-  @override
-  State<BouncingIcon> createState() => _BouncingIconState();
-}
-
-class _BouncingIconState extends State<BouncingIcon> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.25)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.25, end: 1.0)
-            .chain(CurveTween(curve: Curves.bounceOut)),
-        weight: 60,
-      ),
-    ]).animate(_controller);
-
-    if (widget.isActive) {
-      _controller.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant BouncingIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isActive && !oldWidget.isActive) {
-      _controller.forward(from: 0.0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: widget.child,
-    );
-  }
-}
-
-class LiquidGlassNavBar extends StatelessWidget {
+/// OrganicConnected liquid metaball Bottom Navigation Bar widget,
+/// matching the custom fluid capsule & circle geometry design.
+class LiquidGlassNavBar extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final List<LiquidGlassNavBarItem> items;
@@ -91,255 +28,260 @@ class LiquidGlassNavBar extends StatelessWidget {
   });
 
   @override
+  State<LiquidGlassNavBar> createState() => _LiquidGlassNavBarState();
+}
+
+class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Premium dual-color linear gradient backgrounds
-    final barBgGradient = isDark
-        ? LinearGradient(
-            colors: [
-              const Color(0xFF12132A).withValues(alpha: 0.95),
-              const Color(0xFF1E2142).withValues(alpha: 0.95),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-        : LinearGradient(
-            colors: [
-              const Color(0xFFFFFFFF).withValues(alpha: 0.95),
-              const Color(0xFFE2E8F0).withValues(alpha: 0.95),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          );
+    const navBarHeight = 62.0;
+    // Sleek dark organic container color matching reference image
+    final navBgColor = isDark ? const Color(0xFF12141C) : const Color(0xFF1E222D);
 
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.08);
+    return SizedBox(
+      height: navBarHeight,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final itemCount = widget.items.length;
 
-    final activePillGradient = _getActivePillGradient(currentIndex, isDark);
-    final activeShadowColor = _getActiveShadowColor(currentIndex);
+          // Compute exact horizontal center for each nav item
+          final List<double> itemCenterXList = [];
+          if (itemCount == 5) {
+            final cx = width / 2;
+            final leftPillWidth = cx - 30.0;
+            final rightPillStart = cx + 30.0;
 
-    return Container(
-      height: 72, // Sleeker height
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: barBgGradient,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: borderColor, width: 1.0),
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final segmentWidth = constraints.maxWidth / items.length;
-                // Active pill geometry: sitting with 7dp margin top/bottom and 8dp margin left/right
-                final activeWidth = segmentWidth - 16;
-                final activeLeft = (segmentWidth * currentIndex) + 8;
+            itemCenterXList.add(leftPillWidth * 0.30);
+            itemCenterXList.add(leftPillWidth * 0.75);
+            itemCenterXList.add(cx);
+            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.25);
+            itemCenterXList.add(rightPillStart + (width - rightPillStart) * 0.70);
+          } else {
+            final segWidth = width / itemCount;
+            for (int i = 0; i < itemCount; i++) {
+              itemCenterXList.add(segWidth * i + segWidth / 2);
+            }
+          }
 
-                return Stack(
-                  children: [
-                    // Sliding & Morphing Active Indicator
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
-                      left: activeLeft,
-                      top: 7,
-                      width: activeWidth,
-                      height: 58, // 72 - 14
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeOutCubic,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: activePillGradient,
-                          boxShadow: [
-                            BoxShadow(
-                              color: activeShadowColor.withValues(alpha: isDark ? 0.35 : 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+          final safeIndex = widget.currentIndex.clamp(0, itemCount - 1);
+          final activeX = itemCenterXList.isNotEmpty ? itemCenterXList[safeIndex] : 0.0;
+
+          return Stack(
+            children: [
+              // 1. Organic Connected Metaball Shape Background
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _LiquidMetaballPainter(
+                    bgColor: navBgColor,
+                    itemCount: itemCount,
+                  ),
+                ),
+              ),
+
+              // 2. Animated Active White Circular Highlight Pill
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.fastOutSlowIn,
+                left: activeX - 22.0,
+                top: (navBarHeight - 44.0) / 2,
+                child: Container(
+                  width: 44.0,
+                  height: 44.0,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.28),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 3. Tap Target Icons
+              Positioned.fill(
+                child: Row(
+                  children: List.generate(itemCount, (idx) {
+                    final item = widget.items[idx];
+                    final isActive = widget.currentIndex == idx;
+
+                    return Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => widget.onTap(idx),
+                        child: Center(
+                          child: _buildItemIcon(
+                            item.icon,
+                            isActive: isActive,
+                          ),
                         ),
                       ),
-                    ),
-
-                    // Tab buttons
-                    Positioned.fill(
-                      child: Row(
-                        children: List.generate(items.length, (idx) {
-                          final item = items[idx];
-                          final isActive = currentIndex == idx;
-
-                          final labelColor = isActive
-                              ? Colors.white
-                              : (isDark
-                                  ? const Color(0xFFE2E8F0).withValues(alpha: 0.85)
-                                  : const Color(0xFF475569).withValues(alpha: 0.85));
-
-                          return Expanded(
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => onTap(idx),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  BouncingIcon(
-                                    isActive: isActive,
-                                    child: _buildIcon(
-                                      item.icon,
-                                      isActive,
-                                      isDark,
-                                      isActive ? 20.0 : 28.0,
-                                    ),
-                                  ),
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    curve: Curves.easeOutCubic,
-                                    height: isActive ? 16.0 : 0.0,
-                                    child: AnimatedOpacity(
-                                      duration: const Duration(milliseconds: 200),
-                                      opacity: isActive ? 1.0 : 0.0,
-                                      curve: Curves.easeOutCubic,
-                                      child: SingleChildScrollView(
-                                        physics: const NeverScrollableScrollPhysics(),
-                                        child: Column(
-                                          children: [
-                                            const SizedBox(height: 3),
-                                            Text(
-                                              item.label,
-                                              style: TextStyle(
-                                                color: labelColor,
-                                                fontSize: 10.5,
-                                                fontWeight: isActive
-                                                    ? FontWeight.bold
-                                                    : FontWeight.w600,
-                                                letterSpacing: 0.2,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  LinearGradient _getActivePillGradient(int index, bool isDark) {
-    switch (index) {
-      case 0: // Workouts - Green/Emerald
-        return isDark
-            ? const LinearGradient(
-                colors: [Color(0xFF178C6D), Color(0xFF50C19D)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              )
-            : const LinearGradient(
-                colors: [Color(0xFF178C6D), Color(0xFF3CA987)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              );
-      case 1: // Explore - Indigo/Violet
-        return const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
+  Widget _buildItemIcon(dynamic icon, {required bool isActive}) {
+    final color = isActive ? const Color(0xFF12141C) : Colors.white.withValues(alpha: 0.90);
+
+    if (icon is IconData) {
+      return FaIcon(
+        icon as FaIconData,
+        size: isActive ? 19.0 : 18.0,
+        color: color,
+      );
+    } else if (icon is String) {
+      if (icon.endsWith('.svg')) {
+        return SvgPicture.asset(
+          icon,
+          width: isActive ? 20.0 : 19.0,
+          height: isActive ? 20.0 : 19.0,
+          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
         );
-      case 2: // Meals - Sunset/Amber/Coral
-        return const LinearGradient(
-          colors: [Color(0xFFD97706), Color(0xFFDC2626)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
+      } else {
+        return Image.asset(
+          icon,
+          width: isActive ? 20.0 : 19.0,
+          height: isActive ? 20.0 : 19.0,
+          color: color,
         );
-      case 3: // Analytics - Sky/Royal Blue
-      default:
-        return const LinearGradient(
-          colors: [Color(0xFF0284C7), Color(0xFF2563EB)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        );
+      }
     }
+    return Icon(Icons.circle, size: 18, color: color);
+  }
+}
+
+/// CustomPainter rendering connected metaball liquid container with smooth concave waist curves
+class _LiquidMetaballPainter extends CustomPainter {
+  final Color bgColor;
+  final int itemCount;
+
+  _LiquidMetaballPainter({
+    required this.bgColor,
+    required this.itemCount,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final r = h / 2;
+
+    final paint = Paint()
+      ..color = bgColor
+      ..style = PaintingStyle.fill;
+
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.35)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+
+    final path = Path();
+
+    if (itemCount == 5) {
+      final cx = w / 2;
+      const rCenter = 27.0; // Center circle node radius
+      const bridgeInset = 14.0;
+
+      final leftPillEnd = cx - rCenter - bridgeInset;
+      final rightPillStart = cx + rCenter + bridgeInset;
+
+      // Top edge left capsule
+      path.moveTo(r, 0);
+      path.lineTo(leftPillEnd, 0);
+
+      // Concave waist into top-left center circle
+      path.cubicTo(
+        cx - rCenter - 2, 0,
+        cx - rCenter, h * 0.20,
+        cx - rCenter + 2, h * 0.24,
+      );
+
+      // Arc over top of center circle
+      path.arcToPoint(
+        Offset(cx + rCenter - 2, h * 0.24),
+        radius: const Radius.circular(rCenter),
+        clockwise: true,
+      );
+
+      // Concave waist out to top-right pill
+      path.cubicTo(
+        cx + rCenter, h * 0.20,
+        cx + rCenter + 2, 0,
+        rightPillStart, 0,
+      );
+
+      // Top edge right capsule
+      path.lineTo(w - r, 0);
+
+      // Right cap arc
+      path.arcToPoint(
+        Offset(w - r, h),
+        radius: Radius.circular(r),
+        clockwise: true,
+      );
+
+      // Bottom edge right capsule
+      path.lineTo(rightPillStart, h);
+
+      // Concave waist into bottom-right center circle
+      path.cubicTo(
+        cx + rCenter + 2, h,
+        cx + rCenter, h * 0.80,
+        cx + rCenter - 2, h * 0.76,
+      );
+
+      // Arc under bottom of center circle
+      path.arcToPoint(
+        Offset(cx - rCenter + 2, h * 0.76),
+        radius: const Radius.circular(rCenter),
+        clockwise: true,
+      );
+
+      // Concave waist out to bottom-left pill
+      path.cubicTo(
+        cx - rCenter, h * 0.80,
+        cx - rCenter - 2, h,
+        leftPillEnd, h,
+      );
+
+      // Bottom edge left capsule
+      path.lineTo(r, h);
+
+      // Left cap arc
+      path.arcToPoint(
+        Offset(r, 0),
+        radius: Radius.circular(r),
+        clockwise: true,
+      );
+
+      path.close();
+    } else {
+      path.addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, w, h),
+        Radius.circular(r),
+      ));
+    }
+
+    // Draw shadow then fill path
+    canvas.drawPath(path.shift(const Offset(0, 6)), shadowPaint);
+    canvas.drawPath(path, paint);
   }
 
-  Color _getActiveShadowColor(int index) {
-    switch (index) {
-      case 0:
-        return const Color(0xFF10B981);
-      case 1:
-        return const Color(0xFF8B5CF6);
-      case 2:
-        return const Color(0xFFF59E0B);
-      case 3:
-      default:
-        return const Color(0xFF0EA5E9);
-    }
-  }
-
-  Widget _buildIcon(dynamic iconData, bool isActive, bool isDark, double targetSize) {
-    final Color color = isActive
-        ? Colors.white
-        : (isDark
-            ? const Color(0xFFE2E8F0).withValues(alpha: 0.85)
-            : const Color(0xFF475569).withValues(alpha: 0.85));
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: targetSize, end: targetSize),
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutCubic,
-      builder: (context, size, child) {
-        if (iconData is String) {
-          if (iconData.endsWith('.png')) {
-            return Image.asset(
-              iconData,
-              width: size,
-              height: size,
-              color: color,
-            );
-          }
-          return SvgPicture.asset(
-            iconData,
-            width: size,
-            height: size,
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          );
-        } else if (iconData is IconData) {
-          return Icon(
-            iconData,
-            size: size,
-            color: color,
-          );
-        }
-        return const SizedBox.shrink();
-      },
-    );
+  @override
+  bool shouldRepaint(covariant _LiquidMetaballPainter oldDelegate) {
+    return oldDelegate.bgColor != bgColor || oldDelegate.itemCount != itemCount;
   }
 }
