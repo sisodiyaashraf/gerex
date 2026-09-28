@@ -19,6 +19,7 @@ import 'package:gerex/core/presentation/widgets/gerex_avatar.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/widgets/global_connectivity_banner.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_dashboard_app_bar.dart';
 
 
 class WorkoutsTab extends StatefulWidget {
