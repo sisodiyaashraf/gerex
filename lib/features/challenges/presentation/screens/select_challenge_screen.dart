@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:gerex/core/presentation/widgets/gerex_animated_list_tile.dart';
 import 'package:gerex/core/presentation/widgets/gerex_staggered_list_view.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
