@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_theme.dart';
+import '../../theme/app_theme.dart';
 import 'mascot_ai_hub_sheet.dart';
 
 class LiquidGlassNavBarItem {
@@ -251,7 +251,8 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar> {
           width: size,
           height: size,
           fit: BoxFit.contain,
-          colorFilter: ColorFilter.mode(targetColor, BlendMode.srcIn),
+          color: targetColor,
+          colorBlendMode: BlendMode.srcIn,
         );
       }
     }
