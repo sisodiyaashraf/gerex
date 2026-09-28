@@ -53,12 +53,13 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
           'Compare Progress',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -202,9 +203,10 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
           'Compare Progress',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+            color: theme.colorScheme.onSurface,
           ),
         ),
+
         actions: [
           IconButton(
             icon: const Icon(Icons.tune_rounded, color: AppColors.accentEmeraldLight),
