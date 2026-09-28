@@ -18,42 +18,48 @@ class AppColors {
   static const Color badgeGoldAccent = Color(0xFFFFDA61);
   static const Color badgeDarkNavy = Color(0xFF042537);
 
-  // Typography & Content Colors
   static Color get textDarkHeading {
     try {
-      final themeProvider = di.sl<ThemeProvider>();
-      final isDark = themeProvider.themeMode == ThemeMode.dark ||
-          (themeProvider.themeMode == ThemeMode.system &&
-              WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
-      return isDark ? const Color(0xFFFFFFFF) : const Color(0xFF0B1220);
-    } catch (_) {
-      return const Color(0xFFFFFFFF);
-    }
+      if (di.sl.isRegistered<ThemeProvider>()) {
+        final themeProvider = di.sl<ThemeProvider>();
+        final isDark = themeProvider.themeMode == ThemeMode.dark ||
+            (themeProvider.themeMode == ThemeMode.system &&
+                WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+        return isDark ? const Color(0xFFFFFFFF) : const Color(0xFF0B1220);
+      }
+    } catch (_) {}
+    final isPlatformDark = WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+    return isPlatformDark ? const Color(0xFFFFFFFF) : const Color(0xFF0B1220);
   }
 
   static Color get textDarkBody {
     try {
-      final themeProvider = di.sl<ThemeProvider>();
-      final isDark = themeProvider.themeMode == ThemeMode.dark ||
-          (themeProvider.themeMode == ThemeMode.system &&
-              WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
-      return isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B);
-    } catch (_) {
-      return const Color(0xFFF1F5F9);
-    }
+      if (di.sl.isRegistered<ThemeProvider>()) {
+        final themeProvider = di.sl<ThemeProvider>();
+        final isDark = themeProvider.themeMode == ThemeMode.dark ||
+            (themeProvider.themeMode == ThemeMode.system &&
+                WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+        return isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B);
+      }
+    } catch (_) {}
+    final isPlatformDark = WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+    return isPlatformDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B);
   }
 
   static Color get textDarkMuted {
     try {
-      final themeProvider = di.sl<ThemeProvider>();
-      final isDark = themeProvider.themeMode == ThemeMode.dark ||
-          (themeProvider.themeMode == ThemeMode.system &&
-              WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
-      return isDark ? const Color(0x99F1F5F9) : const Color(0x991E293B);
-    } catch (_) {
-      return const Color(0x99F1F5F9);
-    }
+      if (di.sl.isRegistered<ThemeProvider>()) {
+        final themeProvider = di.sl<ThemeProvider>();
+        final isDark = themeProvider.themeMode == ThemeMode.dark ||
+            (themeProvider.themeMode == ThemeMode.system &&
+                WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+        return isDark ? const Color(0x99F1F5F9) : const Color(0x991E293B);
+      }
+    } catch (_) {}
+    final isPlatformDark = WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+    return isPlatformDark ? const Color(0x99F1F5F9) : const Color(0x991E293B);
   }
+
 
   static const Color textLightHeading = Color(0xFF0B1220);
   static const Color textLightBody = Color(0xFF1E293B);
