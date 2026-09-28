@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -243,7 +240,26 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         onNotificationTap: () => context.push('/notifications'),
         onQuickWinTap: () => context.push('/quick-win'),
         onStreakTap: () => context.push('/metrics'),
+        customActions: [
+          GerexGlassIconButton(
+            icon: FontAwesomeIcons.camera,
+            iconSize: 13,
+            iconColor: const Color(0xFF10B981),
+            glowColor: const Color(0xFF10B981),
+            tooltip: 'AI Food Scanner',
+            onTap: () => context.push('/meal-food-scanner'),
+          ),
+          GerexGlassIconButton(
+            icon: FontAwesomeIcons.plus,
+            iconSize: 13,
+            iconColor: const Color(0xFF3B82F6),
+            glowColor: const Color(0xFF3B82F6),
+            tooltip: 'Log Custom Meal',
+            onTap: () => _showLogMealDialog(context, mealProvider),
+          ),
+        ],
       ),
+
 
       body: Container(
         decoration: BoxDecoration(
