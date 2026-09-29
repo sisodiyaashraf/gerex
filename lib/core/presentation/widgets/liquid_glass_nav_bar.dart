@@ -106,7 +106,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    const navBarHeight = 78.0;
+    const navBarHeight = 84.0;
 
     // Organic Metaball container colors
     final barBgColor = isDark
@@ -130,7 +130,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
 
           // Compute continuous active lobe X position
           final activeLobeCenterX = (_currentSlot + 0.5) * slotWidth;
-          const activeLobeRadius = 28.5;
+          const activeLobeRadius = 27.5;
 
           return Stack(
             clipBehavior: Clip.none,
@@ -258,17 +258,17 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
             child: _buildIconWidget(item.icon, iconColor, isActive),
           ),
           if (item.label.isNotEmpty && !isActive) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  item.label,
+                  item.label.trim(),
                   maxLines: 1,
                   style: GoogleFonts.inter(
-                    fontSize: 10.0,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
                     color: inactiveColor,
                     letterSpacing: -0.1,
                   ),
@@ -282,7 +282,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
   }
 
   Widget _buildIconWidget(dynamic icon, Color targetColor, bool isActive) {
-    final size = isActive ? 24.0 : 19.5;
+    final size = isActive ? 23.5 : 21.0;
 
     if (icon is IconData) {
       return FaIcon(
@@ -388,13 +388,13 @@ class OrganicBlobPainter extends CustomPainter {
     // Calculate dynamic upper & lower radius at each slot center
     final List<double> r = List.generate(numSlots, (i) {
       final distToActive = (i - activeSlotProgress).abs();
-      // Active lobe swells to 34.0, inactive is 27.0, center mascot is 28.5
-      double baseR = (i == 2) ? 28.5 : 27.0;
-      double activeBoost = 7.0 * (1.0 - distToActive.clamp(0.0, 1.0));
+      // Active lobe swells to 35.0, inactive is 29.5, center mascot is 31.0
+      double baseR = (i == 2) ? 31.0 : 29.5;
+      double activeBoost = 5.5 * (1.0 - distToActive.clamp(0.0, 1.0));
       return baseR + activeBoost;
     });
 
-    const bridgeR = 21.5; // Concave valley radius between lobes
+    const bridgeR = 23.5; // Concave valley radius between lobes
     const kCircle = 0.5522847; // Magic constant for exact circular Bezier arc
 
     final path = Path();

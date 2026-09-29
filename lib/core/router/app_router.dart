@@ -44,7 +44,6 @@ import '../../features/nutrition/presentation/screens/scanner_page.dart';
 import '../../features/profile/presentation/screens/guided_photo_capture_screen.dart';
 import '../../features/metrics/presentation/screens/heart_rate_connection_screen.dart';
 
-
 import '../../features/profile/presentation/screens/progress_comparison_screen.dart';
 import '../../features/workout/presentation/screens/quick_workout_screen.dart';
 import '../../features/workout/presentation/screens/quick_win_screen.dart';
@@ -56,7 +55,6 @@ import '../presentation/widgets/floating_mascot_widget.dart';
 import '../presentation/widgets/sprite_animator.dart';
 import '../presentation/providers/mascot_controller.dart';
 import '../../features/profile/presentation/providers/profile_provider.dart';
-
 
 class AppRouter {
   AppRouter._();
@@ -184,11 +182,7 @@ class AppRouter {
           if (workout != null) {
             return WorkoutDetailsScreen(workout: workout);
           }
-          return const Scaffold(
-            body: Center(
-              child: Text('Workout not found'),
-            ),
-          );
+          return const Scaffold(body: Center(child: Text('Workout not found')));
         },
       ),
       GoRoute(
@@ -249,11 +243,7 @@ class AppRouter {
           if (recipe != null) {
             return MealDetailsScreen(recipe: recipe);
           }
-          return const Scaffold(
-            body: Center(
-              child: Text('Recipe not found'),
-            ),
-          );
+          return const Scaffold(body: Center(child: Text('Recipe not found')));
         },
       ),
       GoRoute(
@@ -273,26 +263,27 @@ class AppRouter {
             final id = state.uri.queryParameters['id'];
             if (id != null) {
               try {
-                final ep = Provider.of<ExerciseProvider>(context, listen: false);
+                final ep = Provider.of<ExerciseProvider>(
+                  context,
+                  listen: false,
+                );
                 exercise = ep.allRawExercises.firstWhere((e) => e.id == id);
               } catch (_) {
                 try {
-                  final ep = Provider.of<ExerciseProvider>(context, listen: false);
+                  final ep = Provider.of<ExerciseProvider>(
+                    context,
+                    listen: false,
+                  );
                   exercise = ep.exercises.firstWhere((e) => e.id == id);
                 } catch (_) {}
               }
             }
           }
           if (exercise != null) {
-            return ExerciseDetailScreen(
-              exercise: exercise,
-              isPicker: isPicker,
-            );
+            return ExerciseDetailScreen(exercise: exercise, isPicker: isPicker);
           }
           return const Scaffold(
-            body: Center(
-              child: Text('Exercise not found'),
-            ),
+            body: Center(child: Text('Exercise not found')),
           );
         },
       ),
@@ -407,7 +398,10 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
               currentIndex: _currentIndex,
               onTap: (index) {
                 try {
-                  final mascotController = Provider.of<MascotController>(context, listen: false);
+                  final mascotController = Provider.of<MascotController>(
+                    context,
+                    listen: false,
+                  );
                   mascotController.navigateToTab(index);
                 } catch (_) {}
                 setState(() {
@@ -417,7 +411,7 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
               items: const [
                 LiquidGlassNavBarItem(
                   icon: 'assets/svg icons/barbel.svg',
-                  label: 'Workouts',
+                  label: '  Workouts',
                 ),
                 LiquidGlassNavBarItem(
                   icon: 'assets/images/explore_icon.png',
@@ -435,8 +429,6 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             ),
           ),
 
-
-
           if (activeAlarm != null)
             Positioned.fill(
               child: Container(
@@ -446,9 +438,13 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
                     margin: const EdgeInsets.symmetric(horizontal: 32),
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1B4B), // Premium dark indigo background
+                      color: const Color(
+                        0xFF1E1B4B,
+                      ), // Premium dark indigo background
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: Colors.indigoAccent.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.indigoAccent.withValues(alpha: 0.3),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.indigoAccent.withValues(alpha: 0.2),
@@ -467,7 +463,9 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          activeAlarm.isSmartAlarm ? 'Smart Alarm ⏰' : 'Wake Up Alarm ⏰',
+                          activeAlarm.isSmartAlarm
+                              ? 'Smart Alarm ⏰'
+                              : 'Wake Up Alarm ⏰',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -491,7 +489,9 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981), // Emerald Green
+                              backgroundColor: const Color(
+                                0xFF10B981,
+                              ), // Emerald Green
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -503,7 +503,10 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
                             },
                             child: const Text(
                               'Dismiss Alarm',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ),
