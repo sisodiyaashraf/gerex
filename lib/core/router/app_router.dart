@@ -400,8 +400,8 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             ),
 
           Positioned(
-            left: 12,
-            right: 12,
+            left: 16,
+            right: 16,
             bottom: 12 + MediaQuery.of(context).padding.bottom,
             child: LiquidGlassNavBar(
               currentIndex: _currentIndex,
