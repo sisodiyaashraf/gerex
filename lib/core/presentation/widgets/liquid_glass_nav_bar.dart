@@ -128,14 +128,14 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
           final totalWidth = constraints.maxWidth;
           final slotWidth = totalWidth / 5.0;
 
-          // Compute continuous active lobe X position (centered)
+          // Compute continuous active lobe X position
           final activeLobeCenterX = (_currentSlot + 0.5) * slotWidth;
-          const activeLobeRadius = 27.5;
+          const activeLobeRadius = 26.5;
 
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              // 1. Organic Bezier Metaball Blob Background Surface (Centered)
+              // 1. Organic Bezier Metaball Blob Background Surface
               Positioned.fill(
                 child: CustomPaint(
                   painter: OrganicBlobPainter(
@@ -147,7 +147,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                 ),
               ),
 
-              // 2. Enlarged Active Tab Inverted Bubble Indicator (Centered Lobe)
+              // 2. Enlarged Active Tab Inverted Bubble Indicator (Floating Lobe)
               Positioned(
                 left: activeLobeCenterX - activeLobeRadius,
                 top: (navBarHeight - activeLobeRadius * 2) / 2.0,
@@ -187,7 +187,6 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                         isActive: widget.currentIndex == 0,
                         inactiveColor: inactiveIconColor,
                         onTap: () => widget.onTap(0),
-                        contentOffset: -3.0,
                       ),
                     ),
 
@@ -198,7 +197,6 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                         isActive: widget.currentIndex == 1,
                         inactiveColor: inactiveIconColor,
                         onTap: () => widget.onTap(1),
-                        contentOffset: -1.5,
                       ),
                     ),
 
@@ -214,7 +212,6 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                         isActive: widget.currentIndex == 2,
                         inactiveColor: inactiveIconColor,
                         onTap: () => widget.onTap(2),
-                        contentOffset: 1.5,
                       ),
                     ),
 
@@ -225,7 +222,6 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                         isActive: widget.currentIndex == 3,
                         inactiveColor: inactiveIconColor,
                         onTap: () => widget.onTap(3),
-                        contentOffset: 3.0,
                       ),
                     ),
                   ],
@@ -243,58 +239,45 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
     required bool isActive,
     required Color inactiveColor,
     required VoidCallback onTap,
-    double contentOffset = 0.0,
   }) {
     if (item == null) return const SizedBox.shrink();
 
     // Active item icon gets inverted high-contrast dark green / obsidian color
     final iconColor = isActive ? const Color(0xFF042F2E) : inactiveColor;
 
-    Widget content = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedScale(
-          scale: isActive ? 1.15 : 1.0,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          child: _buildIconWidget(item.icon, iconColor, isActive),
-        ),
-        if (item.label.isNotEmpty && !isActive) ...[
-          Transform.translate(
-            offset: const Offset(0, -2.0), // Move text slightly higher towards icon
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2.0),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedScale(
+            scale: isActive ? 1.15 : 1.0,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            child: _buildIconWidget(item.icon, iconColor, isActive),
+          ),
+          if (item.label.isNotEmpty && !isActive) ...[
+            const SizedBox(height: 2.5),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   item.label.trim(),
                   maxLines: 1,
                   style: GoogleFonts.inter(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.w600,
                     color: inactiveColor,
-                    letterSpacing: -0.2,
+                    letterSpacing: 0.0,
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
-    );
-
-    if (contentOffset != 0.0) {
-      content = Transform.translate(
-        offset: Offset(contentOffset, 0),
-        child: content,
-      );
-    }
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: content,
+      ),
     );
   }
 
