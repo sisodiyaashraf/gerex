@@ -259,15 +259,20 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
           ),
           if (item.label.isNotEmpty && !isActive) ...[
             const SizedBox(height: 2),
-            Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: inactiveColor,
-                letterSpacing: 0.1,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  style: GoogleFonts.inter(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: inactiveColor,
+                    letterSpacing: -0.1,
+                  ),
+                ),
               ),
             ),
           ],
@@ -383,13 +388,13 @@ class OrganicBlobPainter extends CustomPainter {
     // Calculate dynamic upper & lower radius at each slot center
     final List<double> r = List.generate(numSlots, (i) {
       final distToActive = (i - activeSlotProgress).abs();
-      // Active lobe swells to 31.0, inactive is 22.0, center mascot is 25.0
-      double baseR = (i == 2) ? 25.0 : 22.0;
-      double activeBoost = 9.0 * (1.0 - distToActive.clamp(0.0, 1.0));
+      // Active lobe swells to 31.0, inactive is 24.5, center mascot is 26.0
+      double baseR = (i == 2) ? 26.0 : 24.5;
+      double activeBoost = 6.5 * (1.0 - distToActive.clamp(0.0, 1.0));
       return baseR + activeBoost;
     });
 
-    const bridgeR = 17.5; // Concave valley radius between lobes
+    const bridgeR = 19.5; // Concave valley radius between lobes
 
     final path = Path();
 
