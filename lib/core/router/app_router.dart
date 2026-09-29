@@ -354,7 +354,6 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
   @override
   Widget build(BuildContext context) {
     final sleepProvider = Provider.of<SleepProvider>(context);
-    final profileProvider = Provider.of<ProfileProvider>(context);
     final activeAlarm = sleepProvider.activeFiringAlarm;
 
     return Scaffold(
