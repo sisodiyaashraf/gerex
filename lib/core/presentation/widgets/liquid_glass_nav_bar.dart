@@ -128,8 +128,11 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
           final totalWidth = constraints.maxWidth;
           final slotWidth = totalWidth / 5.0;
 
+          // Slide all nav bar lobes, active bubble, and icons slightly to the left
+          const horizontalShift = -5.0;
+
           // Compute continuous active lobe X position
-          final activeLobeCenterX = (_currentSlot + 0.5) * slotWidth;
+          final activeLobeCenterX = (_currentSlot + 0.5) * slotWidth + horizontalShift;
           const activeLobeRadius = 27.5;
 
           return Stack(
@@ -176,55 +179,58 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                 ),
               ),
 
-              // 3. Interactive Touch Slots & Icons Layer
+              // 3. Interactive Touch Slots & Icons Layer (Shifted Left)
               Positioned.fill(
-                child: Row(
-                  children: [
-                    // Slot 0: Workouts (Tab 0)
-                    Expanded(
-                      child: _buildSlot(
-                        item: widget.items.isNotEmpty ? widget.items[0] : null,
-                        isActive: widget.currentIndex == 0,
-                        inactiveColor: inactiveIconColor,
-                        onTap: () => widget.onTap(0),
+                child: Transform.translate(
+                  offset: const Offset(horizontalShift, 0),
+                  child: Row(
+                    children: [
+                      // Slot 0: Workouts (Tab 0)
+                      Expanded(
+                        child: _buildSlot(
+                          item: widget.items.isNotEmpty ? widget.items[0] : null,
+                          isActive: widget.currentIndex == 0,
+                          inactiveColor: inactiveIconColor,
+                          onTap: () => widget.onTap(0),
+                        ),
                       ),
-                    ),
 
-                    // Slot 1: Explore (Tab 1)
-                    Expanded(
-                      child: _buildSlot(
-                        item: widget.items.length > 1 ? widget.items[1] : null,
-                        isActive: widget.currentIndex == 1,
-                        inactiveColor: inactiveIconColor,
-                        onTap: () => widget.onTap(1),
+                      // Slot 1: Explore (Tab 1)
+                      Expanded(
+                        child: _buildSlot(
+                          item: widget.items.length > 1 ? widget.items[1] : null,
+                          isActive: widget.currentIndex == 1,
+                          inactiveColor: inactiveIconColor,
+                          onTap: () => widget.onTap(1),
+                        ),
                       ),
-                    ),
 
-                    // Slot 2: Mascot AI Hub Center Action Node
-                    Expanded(
-                      child: _buildCenterMascotNode(context),
-                    ),
-
-                    // Slot 3: Meals (Tab 2)
-                    Expanded(
-                      child: _buildSlot(
-                        item: widget.items.length > 2 ? widget.items[2] : null,
-                        isActive: widget.currentIndex == 2,
-                        inactiveColor: inactiveIconColor,
-                        onTap: () => widget.onTap(2),
+                      // Slot 2: Mascot AI Hub Center Action Node
+                      Expanded(
+                        child: _buildCenterMascotNode(context),
                       ),
-                    ),
 
-                    // Slot 4: Analytics (Tab 3)
-                    Expanded(
-                      child: _buildSlot(
-                        item: widget.items.length > 3 ? widget.items[3] : null,
-                        isActive: widget.currentIndex == 3,
-                        inactiveColor: inactiveIconColor,
-                        onTap: () => widget.onTap(3),
+                      // Slot 3: Meals (Tab 2)
+                      Expanded(
+                        child: _buildSlot(
+                          item: widget.items.length > 2 ? widget.items[2] : null,
+                          isActive: widget.currentIndex == 2,
+                          inactiveColor: inactiveIconColor,
+                          onTap: () => widget.onTap(2),
+                        ),
                       ),
-                    ),
-                  ],
+
+                      // Slot 4: Analytics (Tab 3)
+                      Expanded(
+                        child: _buildSlot(
+                          item: widget.items.length > 3 ? widget.items[3] : null,
+                          isActive: widget.currentIndex == 3,
+                          inactiveColor: inactiveIconColor,
+                          onTap: () => widget.onTap(3),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -378,11 +384,12 @@ class OrganicBlobPainter extends CustomPainter {
     final midY = height / 2.0;
     const numSlots = 5;
     final slotWidth = width / numSlots;
+    const horizontalShift = -5.0;
 
-    // Center X of each slot lobe
+    // Center X of each slot lobe (shifted slightly left)
     final List<double> cx = List.generate(
       numSlots,
-      (i) => (i + 0.5) * slotWidth,
+      (i) => (i + 0.5) * slotWidth + horizontalShift,
     );
 
     // Calculate dynamic upper & lower radius at each slot center
