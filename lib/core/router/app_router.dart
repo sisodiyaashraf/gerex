@@ -53,7 +53,6 @@ import '../di/injection_container.dart';
 import '../presentation/widgets/liquid_glass_nav_bar.dart';
 import '../presentation/widgets/sprite_animator.dart';
 import '../presentation/providers/mascot_controller.dart';
-import '../../features/profile/presentation/providers/profile_provider.dart';
 
 class AppRouter {
   AppRouter._();
