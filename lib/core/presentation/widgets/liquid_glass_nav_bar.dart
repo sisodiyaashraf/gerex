@@ -106,7 +106,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    const navBarHeight = 72.0;
+    const navBarHeight = 78.0;
 
     // Organic Metaball container colors
     final barBgColor = isDark
@@ -130,7 +130,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
 
           // Compute continuous active lobe X position
           final activeLobeCenterX = (_currentSlot + 0.5) * slotWidth;
-          const activeLobeRadius = 26.0;
+          const activeLobeRadius = 28.5;
 
           return Stack(
             clipBehavior: Clip.none,
@@ -267,7 +267,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                   item.label,
                   maxLines: 1,
                   style: GoogleFonts.inter(
-                    fontSize: 9.5,
+                    fontSize: 10.0,
                     fontWeight: FontWeight.w600,
                     color: inactiveColor,
                     letterSpacing: -0.1,
@@ -282,7 +282,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
   }
 
   Widget _buildIconWidget(dynamic icon, Color targetColor, bool isActive) {
-    final size = isActive ? 22.0 : 18.0;
+    final size = isActive ? 24.0 : 19.5;
 
     if (icon is IconData) {
       return FaIcon(
@@ -322,8 +322,8 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
       onTap: () => MascotAiHubBottomSheet.show(context),
       child: Center(
         child: Container(
-          width: 44.0,
-          height: 44.0,
+          width: 46.0,
+          height: 46.0,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
@@ -346,7 +346,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
           child: const Center(
             child: FaIcon(
               FontAwesomeIcons.wandMagicSparkles,
-              size: 18.0,
+              size: 19.0,
               color: Colors.white,
             ),
           ),
@@ -388,13 +388,13 @@ class OrganicBlobPainter extends CustomPainter {
     // Calculate dynamic upper & lower radius at each slot center
     final List<double> r = List.generate(numSlots, (i) {
       final distToActive = (i - activeSlotProgress).abs();
-      // Active lobe swells to 31.0, inactive is 24.5, center mascot is 26.0
-      double baseR = (i == 2) ? 26.0 : 24.5;
-      double activeBoost = 6.5 * (1.0 - distToActive.clamp(0.0, 1.0));
+      // Active lobe swells to 34.0, inactive is 27.0, center mascot is 28.5
+      double baseR = (i == 2) ? 28.5 : 27.0;
+      double activeBoost = 7.0 * (1.0 - distToActive.clamp(0.0, 1.0));
       return baseR + activeBoost;
     });
 
-    const bridgeR = 19.5; // Concave valley radius between lobes
+    const bridgeR = 21.5; // Concave valley radius between lobes
 
     final path = Path();
 

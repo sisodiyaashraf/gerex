@@ -380,7 +380,7 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             Positioned(
               left: 24,
               right: 24,
-              bottom: 84 + MediaQuery.of(context).padding.bottom,
+              bottom: 90 + MediaQuery.of(context).padding.bottom,
               height: 52,
               child: IgnorePointer(
                 ignoring: false,
