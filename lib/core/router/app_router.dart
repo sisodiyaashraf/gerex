@@ -51,7 +51,6 @@ import '../../features/exercise/presentation/screens/add_exercise_screen.dart';
 import '../../features/exercise/presentation/screens/create_exercise_screen.dart';
 import '../di/injection_container.dart';
 import '../presentation/widgets/liquid_glass_nav_bar.dart';
-import '../presentation/widgets/floating_mascot_widget.dart';
 import '../presentation/widgets/sprite_animator.dart';
 import '../presentation/providers/mascot_controller.dart';
 import '../../features/profile/presentation/providers/profile_provider.dart';
