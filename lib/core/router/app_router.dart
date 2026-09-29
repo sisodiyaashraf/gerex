@@ -371,7 +371,7 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             Positioned(
               left: 24,
               right: 24,
-              bottom: 90 + MediaQuery.of(context).padding.bottom,
+              bottom: 96 + MediaQuery.of(context).padding.bottom,
               height: 52,
               child: IgnorePointer(
                 ignoring: false,
@@ -391,8 +391,8 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             ),
 
           Positioned(
-            left: 16,
-            right: 16,
+            left: 10,
+            right: 10,
             bottom: 12 + MediaQuery.of(context).padding.bottom,
             child: LiquidGlassNavBar(
               currentIndex: _currentIndex,
@@ -411,7 +411,7 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
               items: const [
                 LiquidGlassNavBarItem(
                   icon: 'assets/svg icons/barbel.svg',
-                  label: '  Workouts',
+                  label: 'Workouts',
                 ),
                 LiquidGlassNavBarItem(
                   icon: 'assets/images/explore_icon.png',
