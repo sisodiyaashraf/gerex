@@ -395,20 +395,20 @@ class OrganicBlobPainter extends CustomPainter {
     });
 
     const bridgeR = 21.5; // Concave valley radius between lobes
-    const outerCapOffset = 8.0; // Extra horizontal bulb extension on left/right outer ends for text room
+    const kCircle = 0.5522847; // Magic constant for exact circular Bezier arc
 
     final path = Path();
 
-    final leftX = cx[0] - r[0] - outerCapOffset;
-    final rightX = cx[4] + r[4] + outerCapOffset;
+    final r0 = r[0];
+    final r4 = r[4];
 
-    // 1. Start at Left Outer Cap (Slot 0 left) with outer bulb extension
-    path.moveTo(leftX, midY);
-    // Upper arc around slot 0 left side
+    // 1. Start at Leftmost Point of Slot 0 (perfect circular arc)
+    path.moveTo(cx[0] - r0, midY);
+    // Upper Left Arc (from cx[0]-r0, midY to cx[0], midY - r0)
     path.cubicTo(
-      leftX, midY - r[0] * 0.55,
-      cx[0] - r[0] * 0.55, midY - r[0],
-      cx[0], midY - r[0],
+      cx[0] - r0, midY - r0 * kCircle,
+      cx[0] - r0 * kCircle, midY - r0,
+      cx[0], midY - r0,
     );
 
     // 2. Trace Top Contour through smooth concave Bezier valleys
@@ -432,18 +432,18 @@ class OrganicBlobPainter extends CustomPainter {
       );
     }
 
-    // 3. Upper Right Cap around slot 4 right side extending outwards
+    // 3. Upper Right Cap around slot 4 (perfect circular arc: cx[4], midY - r4 to cx[4] + r4, midY)
     path.cubicTo(
-      cx[4] + r[4] * 0.55, midY - r[4],
-      rightX, midY - r[4] * 0.55,
-      rightX, midY,
+      cx[4] + r4 * kCircle, midY - r4,
+      cx[4] + r4, midY - r4 * kCircle,
+      cx[4] + r4, midY,
     );
 
-    // 4. Lower Right Cap
+    // 4. Lower Right Cap around slot 4 (perfect circular arc: cx[4] + r4, midY to cx[4], midY + r4)
     path.cubicTo(
-      rightX, midY + r[4] * 0.55,
-      cx[4] + r[4] * 0.55, midY + r[4],
-      cx[4], midY + r[4],
+      cx[4] + r4, midY + r4 * kCircle,
+      cx[4] + r4 * kCircle, midY + r4,
+      cx[4], midY + r4,
     );
 
     // 5. Trace Bottom Contour back from right to left
@@ -467,11 +467,11 @@ class OrganicBlobPainter extends CustomPainter {
       );
     }
 
-    // 6. Lower Left Cap back to start
+    // 6. Lower Left Cap back to start (perfect circular arc: cx[0], midY + r0 to cx[0] - r0, midY)
     path.cubicTo(
-      cx[0] - r[0] * 0.55, midY + r[0],
-      leftX, midY + r[0] * 0.55,
-      leftX, midY,
+      cx[0] - r0 * kCircle, midY + r0,
+      cx[0] - r0, midY + r0 * kCircle,
+      cx[0] - r0, midY,
     );
 
     path.close();
