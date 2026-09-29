@@ -395,14 +395,18 @@ class OrganicBlobPainter extends CustomPainter {
     });
 
     const bridgeR = 21.5; // Concave valley radius between lobes
+    const outerCapOffset = 8.0; // Extra horizontal bulb extension on left/right outer ends for text room
 
     final path = Path();
 
-    // 1. Start at Left Outer Cap (Slot 0 left)
-    path.moveTo(cx[0] - r[0], midY);
+    final leftX = cx[0] - r[0] - outerCapOffset;
+    final rightX = cx[4] + r[4] + outerCapOffset;
+
+    // 1. Start at Left Outer Cap (Slot 0 left) with outer bulb extension
+    path.moveTo(leftX, midY);
     // Upper arc around slot 0 left side
     path.cubicTo(
-      cx[0] - r[0], midY - r[0] * 0.55,
+      leftX, midY - r[0] * 0.55,
       cx[0] - r[0] * 0.55, midY - r[0],
       cx[0], midY - r[0],
     );
@@ -428,16 +432,16 @@ class OrganicBlobPainter extends CustomPainter {
       );
     }
 
-    // 3. Upper Right Cap around slot 4 right side
+    // 3. Upper Right Cap around slot 4 right side extending outwards
     path.cubicTo(
       cx[4] + r[4] * 0.55, midY - r[4],
-      cx[4] + r[4], midY - r[4] * 0.55,
-      cx[4] + r[4], midY,
+      rightX, midY - r[4] * 0.55,
+      rightX, midY,
     );
 
     // 4. Lower Right Cap
     path.cubicTo(
-      cx[4] + r[4], midY + r[4] * 0.55,
+      rightX, midY + r[4] * 0.55,
       cx[4] + r[4] * 0.55, midY + r[4],
       cx[4], midY + r[4],
     );
@@ -466,8 +470,8 @@ class OrganicBlobPainter extends CustomPainter {
     // 6. Lower Left Cap back to start
     path.cubicTo(
       cx[0] - r[0] * 0.55, midY + r[0],
-      cx[0] - r[0], midY + r[0] * 0.55,
-      cx[0] - r[0], midY,
+      leftX, midY + r[0] * 0.55,
+      leftX, midY,
     );
 
     path.close();
