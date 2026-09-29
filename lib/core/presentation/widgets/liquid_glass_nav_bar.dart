@@ -252,6 +252,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
 
     Widget content = Column(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         AnimatedScale(
           scale: isActive ? 1.15 : 1.0,
@@ -260,19 +261,21 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
           child: _buildIconWidget(item.icon, iconColor, isActive),
         ),
         if (item.label.isNotEmpty && !isActive) ...[
-          const SizedBox(height: 3),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                item.label.trim(),
-                maxLines: 1,
-                style: GoogleFonts.inter(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: inactiveColor,
-                  letterSpacing: -0.1,
+          Transform.translate(
+            offset: const Offset(0, -2.0), // Move text slightly higher towards icon
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2.0),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.label.trim(),
+                  maxLines: 1,
+                  style: GoogleFonts.inter(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: inactiveColor,
+                    letterSpacing: -0.2,
+                  ),
                 ),
               ),
             ),
