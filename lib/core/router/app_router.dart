@@ -335,7 +335,18 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
     SelectChallengeScreen(),
     MealPlannerScreen(),
     MetricsDashboardScreen(),
-  ];
+  @override
+  Widget build(BuildContext context) {
+    final sleepProvider = Provider.of<SleepProvider>(context);
+    final activeAlarm = sleepProvider.activeFiringAlarm;
+
+    return Scaffold(
+      extendBody: true, // Allows body stack to bleed behind navigation overlay
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: IndexedStack(index: _currentIndex, children: _tabs),
+          ),
 
           Positioned(
             left: 10,
