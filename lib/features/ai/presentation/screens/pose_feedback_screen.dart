@@ -1951,19 +1951,11 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   }
 
   Widget _buildSimulationGraphic(ThemeData theme) {
-    final hands = _handLandmarkService.generateSimulationHands(
-      const Size(200, 200),
-      _simPalmGesture,
-      _simThumbsUpGesture,
-    );
-
     return CustomPaint(
       painter: _StickmanPainter(
         theme: theme,
         kneeAngle: _simKneeAngle,
         spineAngle: _simSpineAngle,
-        isGoodForm: _isGoodForm,
-        hands: hands,
       ),
     );
   }
