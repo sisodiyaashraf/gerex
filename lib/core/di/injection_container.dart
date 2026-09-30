@@ -134,5 +134,4 @@ Future<void> init() async {
   sl.registerLazySingleton<ActivityProvider>(() => ActivityProvider(sl()));
   sl.registerLazySingleton<NotificationProvider>(() => NotificationProvider(sl()));
   sl.registerLazySingleton<HeartRateProvider>(() => HeartRateProvider(sl(), sl()));
-  sl.registerLazySingleton<MascotController>(() => MascotController());
 }
