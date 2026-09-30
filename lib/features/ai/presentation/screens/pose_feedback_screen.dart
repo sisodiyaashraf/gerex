@@ -1042,74 +1042,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     );
   }
 
-  Widget _buildExerciseSelectorChip() {
-    final label = _exerciseDisplayName(_selectedExerciseKey);
-    return GestureDetector(
-      onTap: _showExercisePickerModal,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.accentEmeraldLight, width: 1.2),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.fitness_center_rounded,
-              color: AppColors.accentEmeraldLight,
-              size: 14,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.accentEmeraldLight,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
-            ),
-            const SizedBox(width: 2),
-            const Icon(
-              Icons.arrow_drop_down_rounded,
-              color: AppColors.accentEmeraldLight,
-              size: 16,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildExerciseGuideChip() {
-    return GestureDetector(
-      onTap: () => _showExerciseGuideModal(_selectedExerciseKey),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.amber.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.amber, width: 1.2),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.menu_book_rounded, color: Colors.amber, size: 14),
-            SizedBox(width: 4),
-            Text(
-              'Guide',
-              style: TextStyle(
-                color: Colors.amber,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showExercisePickerModal() {
     showModalBottomSheet(
