@@ -108,10 +108,6 @@ class _QuickWinScreenState extends State<QuickWinScreen> {
       120,
       loggedSets,
     );
-
-    try {
-      sl<MascotController>().triggerWorkoutCompletion();
-    } catch (_) {}
   }
 
   @override
