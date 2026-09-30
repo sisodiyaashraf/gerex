@@ -337,30 +337,6 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
     MetricsDashboardScreen(),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        SpriteAnimator.preloadAllAssets();
-        sl<MascotController>().triggerWave();
-      } catch (_) {}
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sleepProvider = Provider.of<SleepProvider>(context);
-    final activeAlarm = sleepProvider.activeFiringAlarm;
-
-    return Scaffold(
-      extendBody: true, // Allows body stack to bleed behind navigation overlay
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: IndexedStack(index: _currentIndex, children: _tabs),
-          ),
-
           Positioned(
             left: 10,
             right: 10,
@@ -368,13 +344,6 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
             child: LiquidGlassNavBar(
               currentIndex: _currentIndex,
               onTap: (index) {
-                try {
-                  final mascotController = Provider.of<MascotController>(
-                    context,
-                    listen: false,
-                  );
-                  mascotController.navigateToTab(index);
-                } catch (_) {}
                 setState(() {
                   _currentIndex = index;
                 });
