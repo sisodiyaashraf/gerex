@@ -16,7 +16,6 @@ class ProfileProvider extends ChangeNotifier {
   bool _streakFlameEnabled = true;
   bool _confettiEnabled = true;
   bool _ghostTrainerEnabled = false;
-  bool _mascotEnabled = true;
 
   String _voiceCoachLanguage = 'english';
   String _voiceCoachPersona = 'motivator';
@@ -32,7 +31,6 @@ class ProfileProvider extends ChangeNotifier {
   bool get streakFlameEnabled => _streakFlameEnabled;
   bool get confettiEnabled => _confettiEnabled;
   bool get ghostTrainerEnabled => _ghostTrainerEnabled;
-  bool get mascotEnabled => _mascotEnabled;
 
   String get voiceCoachLanguage => _voiceCoachLanguage;
   String get voiceCoachPersona => _voiceCoachPersona;
@@ -49,7 +47,6 @@ class ProfileProvider extends ChangeNotifier {
     _streakFlameEnabled = _prefs.getBool('streak_flame_enabled') ?? true;
     _confettiEnabled = _prefs.getBool('confetti_enabled') ?? true;
     _ghostTrainerEnabled = _prefs.getBool('ghost_trainer_enabled') ?? false;
-    _mascotEnabled = _prefs.getBool('mascot_enabled') ?? true;
 
     _voiceCoachLanguage = _prefs.getString('voice_coach_language') ?? 'english';
     _voiceCoachPersona = _prefs.getString('voice_coach_persona') ?? 'motivator';
