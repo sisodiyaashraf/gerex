@@ -2196,7 +2196,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       ),
     );
   }
-}
 
   Widget _buildKemtaiRepCounterBlock() {
     return Container(
