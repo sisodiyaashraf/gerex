@@ -970,7 +970,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                           ),
                         ),
                       ),
-                         // 8. Floating Controls Toggle Chip (Bottom Right)
+                    ),
+
+                  // 8. Floating Controls Toggle Chip (Bottom Right)
                   Positioned(
                     bottom: 12,
                     right: 12,
@@ -1013,6 +1015,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
