@@ -1336,6 +1336,29 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                   ),
                 ),
                 icon: const Icon(
+                  Icons.fitness_center_rounded,
+                  color: Color(0xFF0D807B),
+                  size: 16,
+                ),
+                label: const Text(
+                  'Change Exercise',
+                  style: TextStyle(
+                    color: Color(0xFF0D807B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+                onPressed: _showExercisePickerModal,
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF0D807B)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                ),
+                icon: const Icon(
                   Icons.restart_alt_rounded,
                   color: Color(0xFF0D807B),
                   size: 16,
