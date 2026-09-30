@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:gerex/core/services/performance_tier_service.dart';
 import '../../data/services/pose_detector_service.dart';
 import '../../data/services/form_analyzer.dart';
 import '../../data/services/exercise_classifier.dart';
