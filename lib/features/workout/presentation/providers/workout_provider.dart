@@ -385,11 +385,8 @@ class WorkoutProvider extends ChangeNotifier {
 
     sets[index] = current.copyWith(isCompleted: nextState);
 
-    // If completed, trigger rest timer & mascot feedback
+    // If completed, trigger rest timer & voice feedback
     if (nextState) {
-      try {
-        di.sl<MascotController>().setMascotState(MascotState.exercise);
-      } catch (_) {}
       di.sl<VoiceCoachService>().speakTrigger('set_complete');
       _triggerRestTimerForExercise(exerciseId);
 
@@ -416,9 +413,6 @@ class WorkoutProvider extends ChangeNotifier {
           weight: current.weight,
           reps: current.reps,
         );
-        try {
-          di.sl<MascotController>().setMascotState(MascotState.smiling);
-        } catch (_) {}
       }
     }
 
