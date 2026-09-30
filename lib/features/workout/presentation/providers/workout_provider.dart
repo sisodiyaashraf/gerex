@@ -523,9 +523,6 @@ class WorkoutProvider extends ChangeNotifier {
         try {
           di.sl<VoiceCoachService>().speakTrigger('finish');
         } catch (_) {}
-        try {
-          di.sl<MascotController>().triggerFlexAnimation();
-        } catch (_) {}
         return true;
       },
       onFailure: (failure) {
@@ -560,9 +557,6 @@ class WorkoutProvider extends ChangeNotifier {
         } catch (_) {}
         try {
           di.sl<VoiceCoachService>().speakTrigger('finish');
-        } catch (_) {}
-        try {
-          di.sl<MascotController>().triggerFlexAnimation();
         } catch (_) {}
         return true;
       },
