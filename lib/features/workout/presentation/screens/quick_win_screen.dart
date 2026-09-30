@@ -9,7 +9,6 @@ import 'package:gerex/core/theme/app_theme.dart';
 import '../../domain/entities/workout_entities.dart';
 import '../providers/workout_provider.dart';
 import 'package:gerex/core/di/injection_container.dart';
-import 'package:gerex/core/presentation/providers/mascot_controller.dart';
 
 class QuickWinScreen extends StatefulWidget {
   const QuickWinScreen({super.key});
