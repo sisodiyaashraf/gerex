@@ -1013,10 +1013,8 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
-            ),),
             ),
 
             // Bottom Control Panel (Hides when _showBottomPanel is false for 100% full screen view)
