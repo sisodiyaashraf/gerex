@@ -72,7 +72,6 @@ void main() async {
         ChangeNotifierProvider.value(value: di.sl<NotificationProvider>()),
         ChangeNotifierProvider.value(value: di.sl<ChallengeProvider>()),
         ChangeNotifierProvider.value(value: di.sl<HeartRateProvider>()),
-        ChangeNotifierProvider.value(value: di.sl<MascotController>()),
       ],
       child: const MainApp(),
     ),
