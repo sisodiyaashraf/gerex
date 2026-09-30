@@ -104,12 +104,6 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleMascot(bool value) async {
-    _mascotEnabled = value;
-    await _prefs.setBool('mascot_enabled', value);
-    notifyListeners();
-  }
-
   Future<void> setVoiceCoachLanguage(String value) async {
     _voiceCoachLanguage = value;
     await _prefs.setString('voice_coach_language', value);
