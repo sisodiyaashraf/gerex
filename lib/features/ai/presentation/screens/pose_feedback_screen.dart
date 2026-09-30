@@ -763,9 +763,15 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // 1. Camera preview or simulation
+                  // 1. Camera preview or simulation (Kemtai clean design with dimmed backdrop)
                   _isSimulationMode
-                      ? _buildSimulationGraphic(theme)
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _buildSimulationGraphic(theme),
+                            Container(color: Colors.black.withValues(alpha: 0.25)),
+                          ],
+                        )
                       : _isCameraInitialized && _cameraController != null
                       ? ClipRect(
                           child: SizedBox.expand(
@@ -778,78 +784,46 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                                   fit: StackFit.expand,
                                   children: [
                                     CameraPreview(_cameraController!),
-                                    // Isolated RepaintBoundary for high-frequency pose skeleton overlay
+                                    // Subtle dark overlay (~25% black) so white skeleton stands out clearly
+                                    Container(
+                                      color: Colors.black.withValues(alpha: 0.25),
+                                    ),
+                                    // Isolated RepaintBoundary for high-frequency plain white pose skeleton overlay
                                     RepaintBoundary(
-                                      child: AnimatedBuilder(
-                                        animation: _radarPulseController,
-                                        builder: (context, _) {
-                                          return ValueListenableBuilder<
-                                            PoseOverlayData?
-                                          >(
-                                            valueListenable:
-                                                _poseOverlayNotifier,
-                                            builder: (context, overlayData, _) {
-                                              final bool showSkeleton =
-                                                  overlayData != null &&
-                                                  !_isCalibrating;
-                                              return AnimatedOpacity(
-                                                duration: const Duration(
-                                                  milliseconds: 300,
-                                                ),
-                                                opacity: showSkeleton
-                                                    ? 1.0
-                                                    : 0.0,
-                                                child: overlayData == null
-                                                    ? const SizedBox.shrink()
-                                                    : CustomPaint(
-                                                        painter: _SkeletonOverlayPainter(
-                                                          pose:
-                                                              overlayData.pose,
-                                                          hands:
-                                                              overlayData.hands,
-                                                          imageSize:
-                                                              _cameraPreviewSize,
-                                                          isFrontCamera:
-                                                              _cameraController
-                                                                  ?.description
-                                                                  .lensDirection ==
-                                                              CameraLensDirection
-                                                                  .front,
-                                                          isGoodForm:
-                                                              overlayData
-                                                                  .isGoodForm,
-                                                          showGhostTrainer:
-                                                              Provider.of<
-                                                                    ProfileProvider
-                                                                  >(
-                                                                    context,
-                                                                    listen:
-                                                                        false,
-                                                                  )
-                                                                  .ghostTrainerEnabled,
-                                                          exercise: overlayData
-                                                              .exercise,
-                                                          phase: overlayData
-                                                              .currentPhase,
-                                                          measuredAngle: overlayData
-                                                              .currentJointAngle,
-                                                          jointType: overlayData
-                                                              .primaryJointType,
-                                                          perfConfig:
-                                                              _perfConfig,
-                                                          pulseValue:
-                                                              _radarPulseController
-                                                                  .value,
-                                                          rotation:
-                                                              CameraRotationHelper
-                                                                  .computeInputImageRotation(
-                                                            _cameraController
-                                                                ?.description,
-                                                          ),
-                                                        ),
+                                      child: ValueListenableBuilder<
+                                        PoseOverlayData?
+                                      >(
+                                        valueListenable: _poseOverlayNotifier,
+                                        builder: (context, overlayData, _) {
+                                          final bool showSkeleton =
+                                              overlayData != null &&
+                                              !_isCalibrating;
+                                          return AnimatedOpacity(
+                                            duration: const Duration(
+                                              milliseconds: 300,
+                                            ),
+                                            opacity: showSkeleton ? 1.0 : 0.0,
+                                            child: overlayData == null
+                                                ? const SizedBox.shrink()
+                                                : CustomPaint(
+                                                    painter: _SkeletonOverlayPainter(
+                                                      pose: overlayData.pose,
+                                                      imageSize:
+                                                          _cameraPreviewSize,
+                                                      isFrontCamera:
+                                                          _cameraController
+                                                              ?.description
+                                                              .lensDirection ==
+                                                          CameraLensDirection
+                                                              .front,
+                                                      rotation:
+                                                          CameraRotationHelper
+                                                              .computeInputImageRotation(
+                                                        _cameraController
+                                                            ?.description,
                                                       ),
-                                              );
-                                            },
+                                                    ),
+                                                  ),
                                           );
                                         },
                                       ),
@@ -866,72 +840,53 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                           ),
                         ),
 
-                  // 2. HUD Live Form Quality Circular Status Ring
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: HUDFormQualityRingPainter(
-                          isGoodForm: _isGoodForm,
-                          confidence: _repProgress > 0 ? _repProgress : 1.0,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // 2.5 Sci-Fi HUD Corner Brackets (Targeting Reticle)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: HUDCornerBracketsPainter(
-                          bracketColor: _isGoodForm
-                              ? AppColors.accentEmeraldLight
-                              : Colors.amber,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // 2.6 Rep Completion Particle Burst Layer
-                  if (_activeParticles.isNotEmpty)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: RepaintBoundary(
-                          child: CustomPaint(
-                            painter: ParticleBurstPainter(
-                              particles: _activeParticles,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // 2.7 Calibration Scan-Line Sweeping Effect
-                  if (_isCalibrating && _perfConfig.enableScanLine)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: AnimatedBuilder(
-                          animation: _scanLineController,
-                          builder: (context, _) {
-                            return CustomPaint(
-                              painter: HUDScanLinePainter(
-                                progress: _scanLineController.value,
-                                scanColor: AppColors.accentEmeraldLight,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-
-                  // 3. Vertical Gradient Progress Slider (Right Edge)
+                  // 2. Vertical Gradient Progress Slider (Right Edge)
                   Positioned(
-                    right: 8,
-                    top: 60,
-                    bottom: 60,
+                    right: 12,
+                    top: 50,
+                    bottom: 50,
                     child: _buildVerticalProgressSlider(),
                   ),
 
-                  // 4. Calibration & No Person Detected AI Face Scanning Crossfade Graphic Overlay
+                  // 3. Kemtai-style Rep Counter (Bottom-Left: Bold "REPS", Large "X/10", Dot Row)
+                  if (!_isCalibrating)
+                    Positioned(
+                      left: 16,
+                      bottom: 24,
+                      child: _buildKemtaiRepCounterBlock(),
+                    ),
+
+                  // 4. Subtle App Watermark (Top-Right)
+                  Positioned(
+                    top: 16,
+                    right: 28,
+                    child: _buildBrandingWatermark(),
+                  ),
+
+                  // 5. Clean Top-Left Navigation Back Button
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: SafeArea(
+                      child: IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  ),
+
+                  // 6. Calibration & No Person Detected AI Face Scanning Crossfade Graphic Overlay
                   ValueListenableBuilder<PoseOverlayData?>(
                     valueListenable: _poseOverlayNotifier,
                     builder: (context, overlayData, _) {
@@ -1039,7 +994,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                     },
                   ),
 
-                  // 4.5 Paused by Gesture Overlay Banner
+                  // 7. Paused by Gesture Overlay Banner
                   if (_isPausedByGesture)
                     Positioned(
                       top: 180,
@@ -1091,158 +1046,50 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       ),
                     ),
 
-                  // 5. Active Header UI & Notifications
-                  if (!_isCalibrating)
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      right: 28,
-                      child: Column(
-                        children: [
-                          // Top Status Row (horizontal scroll prevents any overflow)
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildRepCounterBadge(),
-                                const SizedBox(width: 6),
-                                _buildExerciseSelectorChip(),
-                                const SizedBox(width: 6),
-                                _buildExerciseGuideChip(),
-                                const SizedBox(width: 6),
-                                _buildPhaseChip(_currentPhase),
-                                const SizedBox(width: 6),
-                                if (_classifiedExercise != null)
-                                  _buildInfoBadge(
-                                    'DETECTED',
-                                    _exerciseDisplayName(_classifiedExercise!),
-                                    Colors.amber,
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Progress Ticks Dot Row
-                          _buildProgressDotsRow(),
-                          const SizedBox(height: 8),
-
-                          // Form Feedback Banner
-                          _buildFeedbackCard(
-                            _feedbackMessage,
-                            _isGoodForm
-                                ? AppColors.accentEmeraldLight
-                                : Colors.orange,
-                          ),
-                          const SizedBox(height: 6),
-
-                          // Live rep progress indicator
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: _repProgress,
-                              minHeight: 4,
-                              backgroundColor: Colors.white12,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _isGoodForm
-                                    ? AppColors.accentEmeraldLight
-                                    : Colors.orange,
-                              ),
-                            ),
-                          ),
-
-                          // Multi-exercise Live Tally Panel (Freestyle Mode — hidden when AI is actively detecting for full screen view)
-                          if (_isFreestyleMode && _lastPose == null) ...[
-                            const SizedBox(height: 8),
-                            _buildFreestyleTallyPanel(),
-                          ],
-
-                          // Gesture Toast Notification Alert
-                          if (_gestureNotice != null) ...[
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.accentEmeraldLight.withValues(
-                                  alpha: 0.9,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                _gestureNotice!,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-
-                          // Mismatch Notice
-                          if (!_isFreestyleMode && _mismatchNotice != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: Colors.amber,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.info_outline,
-                                      color: Colors.amber,
-                                      size: 14,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        _mismatchNotice!,
-                                        style: const TextStyle(
-                                          color: Colors.amber,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                  // 6. Floating Controls Toggle Chip (Bottom Center)
+                  // 8. Floating Controls Toggle Chip (Bottom Right)
                   Positioned(
                     bottom: 12,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: InkWell(
-                        onTap: () => setState(
-                          () => _showBottomPanel = !_showBottomPanel,
+                    right: 12,
+                    child: InkWell(
+                      onTap: () => setState(
+                        () => _showBottomPanel = !_showBottomPanel,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
                         ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 6,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.75),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white24,
                           ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _showBottomPanel
+                                  ? Icons.keyboard_arrow_down_rounded
+                                  : Icons.tune_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _showBottomPanel ? 'Hide Controls' : 'Controls',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.75),
                             borderRadius: BorderRadius.circular(20),
