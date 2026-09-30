@@ -298,7 +298,7 @@ class _MascotAiHubBottomSheetState extends State<MascotAiHubBottomSheet> {
                             width: 28,
                             height: 28,
                             errorBuilder: (_, __, ___) => FaIcon(
-                              icon ?? FontAwesomeIcons.sparkles,
+                              icon ?? FontAwesomeIcons.wandMagicSparkles,
                               color: Colors.white,
                               size: 20,
                             ),
