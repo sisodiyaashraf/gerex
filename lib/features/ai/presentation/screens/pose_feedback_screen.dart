@@ -128,8 +128,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   // HUD Animation Controllers
   late AnimationController _scanLineController;
   late AnimationController _radarPulseController;
-  late AnimationController _particleTicker;
-  final List<RepParticle> _activeParticles = [];
 
   // Throttle
   DateTime _lastProcessedAt = DateTime.now();
@@ -167,11 +165,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
       duration: const Duration(milliseconds: 1100),
     )..repeat();
 
-    _particleTicker = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 16),
-    )..addListener(_updateParticles);
-
     _poseDetectorService.initialize();
     if (!_isSimulationMode) {
       _initializeCamera();
@@ -182,70 +175,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
         setState(() => _isCalibrating = false);
       }
     });
-  }
-
-  void _updateParticles() {
-    if (_activeParticles.isEmpty) return;
-    const double dt = 0.016;
-    for (final p in _activeParticles) {
-      p.update(dt);
-    }
-    _activeParticles.removeWhere((p) => p.isDead);
-    if (mounted) setState(() {});
-    if (_activeParticles.isNotEmpty) {
-      _particleTicker.forward(from: 0.0);
-    }
-  }
-
-  void _triggerRepParticleBurst(Pose pose) {
-    if (_perfConfig.maxParticleCount <= 0) return;
-
-    final targetJoint =
-        pose.landmarks[_primaryJointType] ??
-        pose.landmarks[PoseLandmarkType.leftKnee] ??
-        pose.landmarks[PoseLandmarkType.leftElbow];
-    if (targetJoint == null) return;
-
-    final double imageW = _cameraPreviewSize.width > 0
-        ? _cameraPreviewSize.width
-        : 480;
-    final double imageH = _cameraPreviewSize.height > 0
-        ? _cameraPreviewSize.height
-        : 640;
-    final double normX = (targetJoint.x / imageW).clamp(0.0, 1.0);
-    final double normY = (targetJoint.y / imageH).clamp(0.0, 1.0);
-
-    final bool isFront =
-        _cameraController?.description.lensDirection ==
-        CameraLensDirection.front;
-    final Size screenSize = MediaQuery.of(context).size;
-    final double screenX = isFront
-        ? (1.0 - normX) * screenSize.width
-        : normX * screenSize.width;
-    final double screenY = normY * (screenSize.height * 0.7);
-
-    final Random random = Random();
-    final Color sparkColor = _isGoodForm
-        ? AppColors.accentEmeraldLight
-        : Colors.amber;
-
-    for (int i = 0; i < _perfConfig.maxParticleCount; i++) {
-      final double angle = random.nextDouble() * 2 * pi;
-      final double speed = 90.0 + random.nextDouble() * 140.0;
-      _activeParticles.add(
-        RepParticle(
-          position: Offset(screenX, screenY),
-          velocity: Offset(cos(angle) * speed, sin(angle) * speed),
-          radius: 3.5 + random.nextDouble() * 4.0,
-          opacity: 1.0,
-          maxLifetime: 0.35 + random.nextDouble() * 0.25,
-          color: sparkColor,
-        ),
-      );
-    }
-    if (!_particleTicker.isAnimating) {
-      _particleTicker.forward(from: 0.0);
-    }
   }
 
   @override
@@ -279,7 +208,6 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
     _pulseController.dispose();
     _scanLineController.dispose();
     _radarPulseController.dispose();
-    _particleTicker.dispose();
     _stopAndDisposeCamera();
     _poseDetectorService.dispose();
     _poseOverlayNotifier.dispose();
