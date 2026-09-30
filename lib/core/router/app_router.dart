@@ -335,6 +335,8 @@ class _MainNavigationShellState extends State<_MainNavigationShell> {
     SelectChallengeScreen(),
     MealPlannerScreen(),
     MetricsDashboardScreen(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final sleepProvider = Provider.of<SleepProvider>(context);
