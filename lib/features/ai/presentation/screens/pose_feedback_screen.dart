@@ -86,6 +86,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   final bool _enableGesturePause =
       false; // Off by default to avoid accidental pause loops during workout
   DateTime? _resumeCooldownUntil;
+  // ignore: unused_field
   String? _gestureNotice;
   DateTime? _noticeDismissAt;
 
@@ -93,6 +94,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
   bool _showBottomPanel = false;
 
   // Last detected pose & hand landmarks (for skeleton painter)
+  // ignore: unused_field
   Pose? _lastPose;
   // ignore: unused_field
   List<HandSkeleton> _lastHands = [];
@@ -112,6 +114,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
   // Classifier state
   String? _classifiedExercise;
+  // ignore: unused_field
   String? _mismatchNotice;
 
   // Simulation demo controls
