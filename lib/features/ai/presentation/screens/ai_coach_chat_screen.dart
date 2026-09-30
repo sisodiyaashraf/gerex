@@ -647,7 +647,7 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
       ),
       child: ClipOval(
         child: Image.asset(
-          'assets/images/robot_mascot/gerex_robot_idle.png',
+          'assets/images/robot_mascot/ai_face_detector.png',
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const FaIcon(
             FontAwesomeIcons.robot,
