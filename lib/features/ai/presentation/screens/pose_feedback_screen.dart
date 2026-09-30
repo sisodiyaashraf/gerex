@@ -1045,9 +1045,7 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                           ),
                         ),
                       ),
-                    ),
-
-                  // 8. Floating Controls Toggle Chip (Bottom Right)
+                         // 8. Floating Controls Toggle Chip (Bottom Right)
                   Positioned(
                     bottom: 12,
                     right: 12,
@@ -1091,47 +1089,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
                       ),
                     ),
                   ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.75),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppColors.accentEmeraldLight.withValues(
-                                alpha: 0.6,
-                              ),
-                            ),
-                            boxShadow: const [
-                              BoxShadow(color: Colors.black38, blurRadius: 6),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _showBottomPanel
-                                    ? Icons.keyboard_arrow_down_rounded
-                                    : Icons.tune_rounded,
-                                color: AppColors.accentEmeraldLight,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _showBottomPanel
-                                    ? 'Hide Controls'
-                                    : 'Show Controls',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
+            ),),
             ),
 
             // Bottom Control Panel (Hides when _showBottomPanel is false for 100% full screen view)
