@@ -117,8 +117,6 @@ class _QuickWinScreenState extends State<QuickWinScreen> {
     final timeStr = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     final progress = (120 - _secondsRemaining) / 120.0;
 
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
-
     return GerexScaffold(
       appBar: const GerexAppBar.standard(
         title: 'Quick Win Training',
