@@ -99,24 +99,12 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
     final theme = Theme.of(context);
     final provider = Provider.of<AIProvider>(context);
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'AI Plan Generator',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: theme.colorScheme.onSurface,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'AI Plan Generator',
+        subtitle: 'Personalized Workout Strategy',
       ),
 
       body: provider.isPlanLoading
