@@ -164,8 +164,6 @@ class _GuidedPhotoCaptureScreenState extends State<GuidedPhotoCaptureScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: const GerexAppBar.standard(
