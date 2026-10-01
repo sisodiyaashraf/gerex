@@ -74,21 +74,9 @@ class _MealScheduleScreenState extends State<MealScheduleScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Meal Schedule',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.textDarkHeading,
-            fontSize: 18,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppColors.textDarkHeading),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'Meal Schedule',
+        subtitle: 'Daily Nutrition Planner',
       ),
       floatingActionButton: Container(
         decoration: BoxDecoration(
