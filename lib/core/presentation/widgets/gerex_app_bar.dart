@@ -89,12 +89,13 @@ class GerexAppBar extends StatelessWidget implements PreferredSizeWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // Leading Widget or Back Button
-                      if (leading != null)
-                        leading!
-                      else if (shouldShowBack)
+                      if (leading != null) ...[
+                        leading!,
+                        const SizedBox(width: 12),
+                      ] else if (shouldShowBack) ...[
                         GerexAppBarBackButton(onPressed: onBack),
-
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 12),
+                      ],
 
                       // Title & Optional Subtitle / Breadcrumb
                       Expanded(
@@ -282,12 +283,13 @@ class _SliverGerexAppBarDelegate extends SliverPersistentHeaderDelegate {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // Leading or Back Button
-                      if (leading != null)
-                        leading!
-                      else if (shouldShowBack)
+                      if (leading != null) ...[
+                        leading!,
+                        const SizedBox(width: 12),
+                      ] else if (shouldShowBack) ...[
                         GerexAppBarBackButton(onPressed: onBack),
-
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 12),
+                      ],
 
                       // Collapsed Compact Title (Fades in on collapse)
                       Expanded(
@@ -634,7 +636,7 @@ class GerexAvatarAction extends StatelessWidget {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/profile'),
       child: Container(
-        margin: const EdgeInsets.only(right: 6),
+        margin: const EdgeInsets.only(right: 8),
         child: Stack(
           alignment: Alignment.center,
           children: [
