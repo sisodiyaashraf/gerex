@@ -24,8 +24,6 @@ class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
 
     final activeAlarmsForDay = sleepProvider.alarms.where((a) => a.repeatDays.contains(_selectedDayIndex)).toList();
 
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
-
     return GerexScaffold(
       appBar: GerexAppBar.standard(
         title: 'Sleep Schedule',
