@@ -13,6 +13,7 @@ import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class SleepTrackerScreen extends StatefulWidget {
   const SleepTrackerScreen({super.key});
