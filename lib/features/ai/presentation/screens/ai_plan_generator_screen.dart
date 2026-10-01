@@ -6,7 +6,7 @@ import '../providers/ai_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
-import 'package0/gerex/core/presentation/widgets/gerex_app_bar.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class GoalOption {
   final String title;
