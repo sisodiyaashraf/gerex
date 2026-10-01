@@ -6,6 +6,8 @@ import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
 
@@ -28,16 +30,9 @@ class NotificationScreen extends StatelessWidget {
     }).toList();
 
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Notifications',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: GerexAppBar.standard(
+        title: 'Notifications',
+        subtitle: 'Activity & System Updates',
         actions: [
           if (provider.unreadCount > 0)
             TextButton(

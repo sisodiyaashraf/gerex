@@ -269,22 +269,17 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
     );
   }
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = Provider.of<ProgressPhotosProvider>(context);
 
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Progress Photos',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: GerexAppBar.standard(
+        title: 'Progress Photos',
+        subtitle: 'Visual Transformation Timeline',
         actions: [
           IconButton(
             icon: const Icon(Icons.camera_alt_rounded, color: AppColors.accentEmeraldLight),
