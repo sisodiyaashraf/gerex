@@ -117,21 +117,12 @@ class _QuickWinScreenState extends State<QuickWinScreen> {
     final timeStr = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     final progress = (120 - _secondsRemaining) / 120.0;
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Quick Win Training',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: theme.colorScheme.onSurface),
-          onPressed: () => context.pop(),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'Quick Win Training',
+        subtitle: '2-Minute Energy Spark',
       ),
 
       body: SingleChildScrollView(
