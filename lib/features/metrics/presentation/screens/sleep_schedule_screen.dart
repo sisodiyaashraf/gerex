@@ -6,6 +6,7 @@ import '../providers/sleep_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class SleepScheduleScreen extends StatefulWidget {
   const SleepScheduleScreen({super.key});
