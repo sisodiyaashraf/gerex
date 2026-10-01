@@ -83,7 +83,6 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
       appBar: GerexAppBar.standard(
         title: 'Exercise Database',
