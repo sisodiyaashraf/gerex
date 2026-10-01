@@ -24,17 +24,18 @@ class _SleepScheduleScreenState extends State<SleepScheduleScreen> {
 
     final activeAlarmsForDay = sleepProvider.alarms.where((a) => a.repeatDays.contains(_selectedDayIndex)).toList();
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Sleep Schedule',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
+      appBar: GerexAppBar.standard(
+        title: 'Sleep Schedule',
+        subtitle: 'Alarms & Circadian Rhythm',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_alarm_rounded, color: AppColors.accentEmeraldLight),
+            onPressed: () => context.push('/add-alarm'),
           ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        ],
       ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
