@@ -11,6 +11,7 @@ import '../providers/workout_provider.dart';
 import '../../../exercise/presentation/providers/exercise_provider.dart';
 import '../../../exercise/presentation/screens/add_exercise_screen.dart';
 import '../../../../models/exercise.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class QuickWorkoutScreen extends StatefulWidget {
   const QuickWorkoutScreen({super.key});
@@ -87,20 +88,10 @@ class _QuickWorkoutScreenState extends State<QuickWorkoutScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Quick Workout Setup',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: headingColor,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: headingColor, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
+
+      appBar: const GerexAppBar.standard(
+        title: 'Quick Workout Setup',
+        subtitle: 'Instant Routine Builder',
       ),
       body: LiquidBackground(
         child: Stack(
