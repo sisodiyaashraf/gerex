@@ -220,18 +220,12 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
 
     final headerTextColor = isDark ? Colors.white : AppColors.textLightHeading;
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return GerexScaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'AI Performance Coach',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: headerTextColor,
-            fontSize: 20,
-          ),
-        ),
+      appBar: GerexAppBar.standard(
+        title: 'AI Performance Coach',
+        subtitle: provider.isLocalModelActive ? 'Local On-Device LLM' : 'Gemini 2.5 Flash',
         actions: [
           IconButton(
             icon: const Icon(
