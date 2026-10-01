@@ -451,6 +451,7 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                         controller: _tabController,
                         indicatorSize: TabBarIndicatorSize.tab,
                         dividerColor: Colors.transparent,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
                         indicator: BoxDecoration(
                           gradient: GerexGradients.primaryCTA,
                           borderRadius: BorderRadius.circular(16),
@@ -461,12 +462,31 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                             : Colors.black54,
                         labelStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                         ),
                         tabs: const [
-                          Tab(text: 'All Workouts'),
-                          Tab(text: 'Challenges'),
-                          Tab(text: 'My Workouts'),
+                          Tab(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('All Workouts'),
+                            ),
+                          ),
+                          Tab(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('Challenges'),
+                            ),
+                          ),
+                          Tab(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('My Workouts'),
+                            ),
+                          ),
                         ],
                       ),
                     ),
