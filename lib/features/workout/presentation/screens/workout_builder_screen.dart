@@ -42,20 +42,11 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Create Template',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: headingColor,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: headingColor, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
+      appBar: const GerexAppBar.standard(
+        title: 'Create Template',
+        subtitle: 'Custom Workout Design',
       ),
       body: LiquidBackground(
         child: Form(
