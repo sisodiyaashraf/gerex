@@ -7,6 +7,7 @@ import '../providers/progress_photos_provider.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class GuidedPhotoCaptureScreen extends StatefulWidget {
   const GuidedPhotoCaptureScreen({super.key});

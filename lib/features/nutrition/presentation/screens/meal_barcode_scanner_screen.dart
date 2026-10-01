@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/utils/logger.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class MealBarcodeScannerScreen extends StatefulWidget {
   const MealBarcodeScannerScreen({super.key});
@@ -122,14 +123,9 @@ class _MealBarcodeScannerScreenState extends State<MealBarcodeScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Scan Product Barcode', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'Scan Product Barcode',
+        subtitle: 'OpenFoodFacts Scanner',
       ),
       body: Stack(
         children: [
