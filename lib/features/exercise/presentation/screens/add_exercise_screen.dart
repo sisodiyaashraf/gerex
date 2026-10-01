@@ -7,6 +7,7 @@ import '../../../../models/exercise.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 import '../widgets/exercise_image_widget.dart';
 
 class AddExerciseScreen extends StatefulWidget {
