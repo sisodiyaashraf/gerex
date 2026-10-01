@@ -10,6 +10,7 @@ import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/validation/validators.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class WorkoutBuilderScreen extends StatefulWidget {
   const WorkoutBuilderScreen({super.key});
