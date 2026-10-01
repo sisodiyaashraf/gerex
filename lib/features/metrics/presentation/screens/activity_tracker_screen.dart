@@ -10,6 +10,7 @@ import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/presentation/widgets/segmented_pill_nav.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class ActivityTrackerScreen extends StatefulWidget {
   const ActivityTrackerScreen({super.key});
@@ -46,16 +47,9 @@ class _ActivityTrackerScreenState extends State<ActivityTrackerScreen> {
     final chartPoints = _selectedNavIdx == 0 ? weeklyPoints : monthlyPoints;
 
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Activity Tracker',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: const GerexAppBar.standard(
+        title: 'Activity Tracker',
+        subtitle: 'Calorie Burn & Daily Movement',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
