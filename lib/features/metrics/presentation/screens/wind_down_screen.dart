@@ -150,22 +150,12 @@ class _WindDownScreenState extends State<WindDownScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Wind-Down Sanctuary',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.textDarkHeading,
-            fontSize: 18,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppColors.textDarkHeading),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'Wind-Down Sanctuary',
+        subtitle: 'Sleep Preparation & Soundscapes',
       ),
       body: Container(
         decoration: BoxDecoration(
