@@ -6,6 +6,7 @@ import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 import '../../domain/entities/workout_entities.dart';
 import '../providers/workout_provider.dart';
 
