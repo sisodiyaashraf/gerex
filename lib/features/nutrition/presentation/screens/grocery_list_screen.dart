@@ -90,21 +90,11 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgDarkPrimary,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Shopping List',
-          style: GoogleFonts.outfit(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
+      appBar: GerexAppBar.standard(
+        title: 'Shopping List',
+        subtitle: 'Meal Planner / Ingredients',
         actions: [
           IconButton(
             icon: const Icon(Icons.share_rounded, color: accentMint),
