@@ -30,6 +30,7 @@ import 'package:gerex/core/di/injection_container.dart' as di;
 
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
 import 'package:gerex/core/providers/activity_provider.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
