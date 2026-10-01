@@ -17,8 +17,6 @@ class HeartRateConnectionScreen extends StatelessWidget {
     final hrProvider = Provider.of<HeartRateProvider>(context);
     final activityProvider = Provider.of<ActivityProvider>(context, listen: false);
 
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
-
     return GerexScaffold(
       appBar: const GerexAppBar.standard(
         title: 'Heart Rate Monitor',
