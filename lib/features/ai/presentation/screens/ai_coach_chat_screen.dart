@@ -13,6 +13,7 @@ import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/validation/validators.dart';
 import 'package:gerex/core/di/injection_container.dart' as di;
 import 'package:gerex/core/services/voice_coach_service.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class AICoachChatScreen extends StatefulWidget {
   const AICoachChatScreen({super.key});
