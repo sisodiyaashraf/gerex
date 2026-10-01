@@ -146,17 +146,9 @@ class _WorkoutTrackerScreenState extends State<WorkoutTrackerScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Workout Tracker',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: headingColor,
-          ),
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: GerexAppBar.standard(
+        title: 'Workout Tracker',
+        subtitle: 'Weekly Schedule & Completion',
         actions: [
           IconButton(
             icon: Container(
