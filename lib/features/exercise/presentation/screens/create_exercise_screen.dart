@@ -224,21 +224,12 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Create Custom Exercise',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: theme.colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'Create Custom Exercise',
+        subtitle: 'Biomechanical Model Recording',
       ),
 
       body: SingleChildScrollView(
