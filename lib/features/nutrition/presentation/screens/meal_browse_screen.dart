@@ -6,6 +6,7 @@ import '../providers/meal_provider.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class MealBrowseScreen extends StatefulWidget {
   const MealBrowseScreen({super.key});
@@ -68,20 +69,9 @@ class _MealBrowseScreenState extends State<MealBrowseScreen> {
         .toList();
 
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Browse Recipes',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: theme.colorScheme.onSurface),
-          onPressed: () => context.pop(),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'Browse Recipes',
+        subtitle: 'Meal Database & Nutrition',
       ),
       body: Column(
           children: [

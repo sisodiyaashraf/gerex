@@ -11,6 +11,7 @@ import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/presentation/widgets/gerex_line_chart.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class ProgressComparisonScreen extends StatefulWidget {
   const ProgressComparisonScreen({super.key});
@@ -48,16 +49,9 @@ class _ProgressComparisonScreenState extends State<ProgressComparisonScreen> {
     final isCompareEnabled = _startMonth != null && _startYear != null && _endMonth != null && _endYear != null;
 
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Compare Progress',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: const GerexAppBar.standard(
+        title: 'Compare Progress',
+        subtitle: 'Transformation Analytics',
       ),
 
       body: Padding(
