@@ -10,6 +10,7 @@ import '../providers/grocery_provider.dart';
 import '../providers/meal_provider.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class GroceryListScreen extends StatefulWidget {
   const GroceryListScreen({super.key});
