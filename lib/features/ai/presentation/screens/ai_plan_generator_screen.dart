@@ -99,8 +99,6 @@ class _AIPlanGeneratorScreenState extends State<AIPlanGeneratorScreen> {
     final theme = Theme.of(context);
     final provider = Provider.of<AIProvider>(context);
 
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
-
     return GerexScaffold(
       appBar: const GerexAppBar.standard(
         title: 'AI Plan Generator',
