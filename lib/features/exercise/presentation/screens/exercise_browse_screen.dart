@@ -11,6 +11,7 @@ import 'package:gerex/core/presentation/widgets/gerex_animated_list_tile.dart';
 import 'package:gerex/core/presentation/widgets/gerex_staggered_list_view.dart';
 import 'package:gerex/core/presentation/widgets/difficulty_tag.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class ExerciseBrowseScreen extends StatefulWidget {
   const ExerciseBrowseScreen({super.key});
