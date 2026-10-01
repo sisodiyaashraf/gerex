@@ -224,7 +224,7 @@ class _AICoachChatScreenState extends State<AICoachChatScreen>
     return GerexScaffold(
       appBar: GerexAppBar.standard(
         title: 'AI Performance Coach',
-        subtitle: provider.isLocalModelActive ? 'Local On-Device LLM' : 'Gemini 2.5 Flash',
+        subtitle: provider.isOfflineOnly ? 'Local On-Device LLM' : 'Gemini 2.5 Flash',
         actions: [
           IconButton(
             icon: const Icon(
