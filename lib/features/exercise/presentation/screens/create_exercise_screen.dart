@@ -7,6 +7,7 @@ import 'package:gerex/core/services/camera_rotation_helper.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 import '../../../../models/exercise.dart';
 import '../../../ai/data/services/pose_detector_service.dart';
 import '../../../ai/data/services/form_analyzer.dart';
