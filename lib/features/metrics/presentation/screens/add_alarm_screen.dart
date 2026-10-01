@@ -7,6 +7,7 @@ import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/widgets/slide_to_confirm_button.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class AddAlarmScreen extends StatefulWidget {
   const AddAlarmScreen({super.key});
@@ -86,16 +87,9 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
     );
 
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Add Bedtime Alarm',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDarkHeading,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: const GerexAppBar.standard(
+        title: 'Add Bedtime Alarm',
+        subtitle: 'Circadian Rhythm Target',
       ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
