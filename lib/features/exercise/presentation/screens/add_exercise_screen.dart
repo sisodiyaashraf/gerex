@@ -88,21 +88,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     }).toList();
 
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Add Exercises',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: theme.colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-
+      appBar: GerexAppBar.standard(
+        title: 'Add Exercises',
+        subtitle: '${_selectedExercises.length} Selected',
         actions: [
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.circlePlus, size: 20, color: AppColors.accentEmeraldLight),
