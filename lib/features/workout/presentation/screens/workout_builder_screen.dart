@@ -42,7 +42,6 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
       appBar: const GerexAppBar.standard(
         title: 'Create Template',
