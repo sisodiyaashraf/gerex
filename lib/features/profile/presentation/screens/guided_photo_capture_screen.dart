@@ -164,13 +164,13 @@ class _GuidedPhotoCaptureScreenState extends State<GuidedPhotoCaptureScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Guided Align Capture', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+      appBar: const GerexAppBar.standard(
+        title: 'Guided Align Capture',
+        subtitle: 'Biomechanical Pose Overlay',
       ),
       body: Stack(
         children: [
