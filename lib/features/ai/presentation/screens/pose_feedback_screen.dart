@@ -15,6 +15,7 @@ import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 
 class PoseOverlayData {
@@ -634,17 +635,9 @@ class _PoseFeedbackScreenState extends State<PoseFeedbackScreen>
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        title: Text(
-          activeExerciseLabel,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
+      appBar: GerexAppBar.standard(
+        title: activeExerciseLabel,
+        subtitle: 'Live AI Vision & Pose Feedback',
         actions: [
           _buildPerformanceTierChip(),
           if (kDebugMode)

@@ -8,6 +8,7 @@ import '../providers/meal_provider.dart';
 import 'scanner_camera_view.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
@@ -329,17 +330,14 @@ class _ScannerPageState extends State<ScannerPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F1319),
-      appBar: AppBar(
-        title: Text('Gerex Nutrition Scanner', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            scannerProvider.reset();
-            Navigator.pop(context);
-          },
-        ),
+
+      appBar: GerexAppBar.standard(
+        title: 'Gerex Nutrition Scanner',
+        subtitle: 'AI Vision & Food Analysis',
+        onBack: () {
+          scannerProvider.reset();
+          Navigator.pop(context);
+        },
         actions: [
           if (_useCamera)
             IconButton(
