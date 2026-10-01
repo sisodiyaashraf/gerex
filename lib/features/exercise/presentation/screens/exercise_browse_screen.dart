@@ -83,21 +83,11 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Exercise Database',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.colorScheme.onSurface, size: 20),
-          onPressed: () => context.pop(),
-        ),
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
+      appBar: GerexAppBar.standard(
+        title: 'Exercise Database',
+        subtitle: 'Library & Movement Models',
         actions: [
           IconButton(
             icon: Icon(Icons.refresh_rounded, color: theme.colorScheme.onSurface),
