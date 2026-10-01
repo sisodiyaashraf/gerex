@@ -90,7 +90,6 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgDarkPrimary,
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
       appBar: GerexAppBar.standard(
         title: 'Shopping List',
