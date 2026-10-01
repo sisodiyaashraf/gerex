@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class WindDownScreen extends StatefulWidget {
   const WindDownScreen({super.key});
