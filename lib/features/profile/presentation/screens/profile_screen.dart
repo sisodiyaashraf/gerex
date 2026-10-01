@@ -237,15 +237,18 @@ class ProfileScreen extends StatelessWidget {
             CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(
-              16.0,
-              MediaQuery.of(context).padding.top + AppBar().preferredSize.height + 12.0,
-              16.0,
-              12.0,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
+                SliverGerexAppBar(
+                  title: 'Profile & Settings',
+                  subtitle: displayName,
+                  showBackButton: false,
+                  actions: [
+                    GerexNotificationAction(onTap: () => context.push('/notifications')),
+                  ],
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
                 // Signature Hero Mint Card Profile Summary
                 HeroMintCard(
                   margin: const EdgeInsets.only(bottom: 20),
