@@ -81,22 +81,12 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> {
     final lightHours = totalHours * lightPct;
     final awakeHours = totalHours * awakePct;
 
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
+
     return GerexScaffold(
-      appBar: AppBar(
-        title: Text(
-          'Sleep Tracker',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-            fontSize: 18,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const GerexAppBar.standard(
+        title: 'Sleep Tracker',
+        subtitle: 'Circadian Rhythm & Recovery',
       ),
 
       body: CustomScrollView(
