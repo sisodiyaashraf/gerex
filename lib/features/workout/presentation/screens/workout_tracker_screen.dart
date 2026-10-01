@@ -8,6 +8,7 @@ import 'package:gerex/core/presentation/widgets/liquid_background.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class WorkoutTrackerScreen extends StatefulWidget {
   const WorkoutTrackerScreen({super.key});
