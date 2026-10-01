@@ -265,11 +265,7 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
           ),
           const SizedBox(height: 12),
         ],
-      ),
-    );
   }
-
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
   @override
   Widget build(BuildContext context) {
