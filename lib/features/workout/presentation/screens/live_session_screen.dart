@@ -866,7 +866,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
 
     if (!provider.isSessionActive) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Live Workout')),
+        appBar: const GerexAppBar.standard(
+          title: 'Live Workout',
+          subtitle: 'No Active Session',
+        ),
         body: LiquidBackground(
           child: Center(
             child: Padding(
@@ -901,24 +904,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Column(
-          children: [
-            Text(
-              provider.activeSessionName,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              formatDuration(provider.sessionDurationSeconds),
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+      appBar: GerexAppBar.standard(
+        title: provider.activeSessionName,
+        subtitle: formatDuration(provider.sessionDurationSeconds),
+        showBackButton: false,
         actions: [
           Consumer<ProfileProvider>(
             builder: (context, profile, _) {
