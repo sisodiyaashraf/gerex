@@ -242,21 +242,15 @@ class _MealPlannerScreenState extends State<MealPlannerScreen> {
         onQuickWinTap: () => context.push('/quick-win'),
         onStreakTap: () => context.push('/metrics'),
         customActions: [
-          GerexGlassIconButton(
-            icon: FontAwesomeIcons.camera,
-            iconSize: 13,
-            iconColor: const Color(0xFF10B981),
-            glowColor: const Color(0xFF10B981),
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.camera, size: 16, color: Color(0xFF10B981)),
             tooltip: 'AI Food Scanner',
-            onTap: () => context.push('/meal-food-scanner'),
+            onPressed: () => context.push('/meal-food-scanner'),
           ),
-          GerexGlassIconButton(
-            icon: FontAwesomeIcons.plus,
-            iconSize: 13,
-            iconColor: const Color(0xFF3B82F6),
-            glowColor: const Color(0xFF3B82F6),
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.plus, size: 16, color: Color(0xFF3B82F6)),
             tooltip: 'Log Custom Meal',
-            onTap: () => _showLogMealDialog(context, mealProvider),
+            onPressed: () => _showLogMealDialog(context, mealProvider),
           ),
         ],
       ),

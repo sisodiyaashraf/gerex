@@ -266,6 +266,8 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
           ),
           const SizedBox(height: 12),
         ],
+      ),
+    );
   }
 
   @override
