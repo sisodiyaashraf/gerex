@@ -11,6 +11,7 @@ import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/gerex_scaffold.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/presentation/utils/responsive_helper.dart';
+import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
 
 class ProgressPhotosScreen extends StatefulWidget {
   const ProgressPhotosScreen({super.key});
