@@ -223,8 +223,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return GerexScaffold(
       appBar: const GerexAppBar.standard(
         title: 'Create Custom Exercise',
