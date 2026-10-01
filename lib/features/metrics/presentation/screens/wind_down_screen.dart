@@ -150,8 +150,6 @@ class _WindDownScreenState extends State<WindDownScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
-
     return GerexScaffold(
       appBar: const GerexAppBar.standard(
         title: 'Wind-Down Sanctuary',
