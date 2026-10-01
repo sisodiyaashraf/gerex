@@ -81,8 +81,6 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> {
     final lightHours = totalHours * lightPct;
     final awakeHours = totalHours * awakePct;
 
-import 'package:gerex/core/presentation/widgets/gerex_app_bar.dart';
-
     return GerexScaffold(
       appBar: const GerexAppBar.standard(
         title: 'Sleep Tracker',
