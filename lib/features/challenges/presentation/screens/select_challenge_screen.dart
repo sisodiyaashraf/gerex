@@ -464,9 +464,9 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                           fontSize: 13,
                         ),
                         tabs: const [
-                          Tab(text: 'My Workouts'),
                           Tab(text: 'All Workouts'),
                           Tab(text: 'Challenges'),
+                          Tab(text: 'My Workouts'),
                         ],
                       ),
                     ),
@@ -479,20 +479,20 @@ class _SelectChallengeScreenState extends State<SelectChallengeScreen>
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        // Tab 1: My Workouts
-                        _buildExerciseList(
-                          context,
-                          myExercises,
-                          'No custom workouts created yet.',
-                        ),
-                        // Tab 2: All Workouts
+                        // Tab 1: All Workouts
                         _buildExerciseList(
                           context,
                           allExercises,
                           'No exercises found.',
                         ),
-                        // Tab 3: Challenges
+                        // Tab 2: Challenges
                         _buildChallengesList(context, challengeProvider),
+                        // Tab 3: My Workouts
+                        _buildExerciseList(
+                          context,
+                          myExercises,
+                          'No custom workouts created yet.',
+                        ),
                       ],
                     ),
                   ),
