@@ -97,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Are you sure you want to sign out? Your local data will remain safe on your device.',
                 style: TextStyle(color: AppColors.textDarkMuted),
                 textAlign: TextAlign.center,
