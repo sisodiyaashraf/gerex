@@ -129,7 +129,7 @@ class ProfileScreen extends StatelessWidget {
       appBar: GerexAppBar.standard(
         title: 'Athlete Profile',
         subtitle: displayName,
-        showBackButton: false,
+        showBackButton: true,
         actions: [
           IconButton(
             icon: FaIcon(
