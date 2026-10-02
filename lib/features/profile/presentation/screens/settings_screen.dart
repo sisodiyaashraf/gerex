@@ -141,8 +141,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               FaIcon(FontAwesomeIcons.triangleExclamation, color: Color(0xFFEF4444), size: 20),
               SizedBox(width: 10),
               Text('Delete Account?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
