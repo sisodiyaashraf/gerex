@@ -632,9 +632,9 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
   Widget _buildIconWidget(dynamic icon, Color targetColor, bool isActive) {
     final size = isActive ? 23.5 : 21.0;
 
-    if (icon is IconData || icon is FaIconData) {
+    if (icon is IconData) {
       return FaIcon(
-        icon is IconData ? icon : (icon as FaIconData),
+        icon,
         size: size,
         color: targetColor,
       );
