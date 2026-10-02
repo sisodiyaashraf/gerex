@@ -19,6 +19,7 @@ import '../../features/ai/presentation/screens/ai_coach_chat_screen.dart';
 import '../../features/ai/presentation/screens/ai_plan_generator_screen.dart';
 import '../../features/ai/presentation/screens/pose_feedback_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../features/workout/presentation/screens/workout_tracker_screen.dart';
 import '../../features/workout/domain/entities/workout_entities.dart';
 import '../../features/workout/presentation/screens/workout_details_screen.dart';
