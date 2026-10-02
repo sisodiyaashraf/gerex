@@ -635,7 +635,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
     if (icon is IconData) {
       if (icon is FaIconData) {
         return FaIcon(
-          icon,
+          icon as FaIconData,
           size: size,
           color: targetColor,
         );
