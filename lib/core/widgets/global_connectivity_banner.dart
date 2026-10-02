@@ -90,46 +90,6 @@ class OfflineCacheHeaderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ConnectivityProvider>(
-      builder: (context, conn, _) {
-        if (conn.isOnline && conn.pendingSyncCount == 0) {
-          return const SizedBox.shrink();
-        }
-
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.amber.shade900.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.amber.shade700.withValues(alpha: 0.5),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                conn.isOffline ? Icons.history_rounded : Icons.sync_rounded,
-                color: Colors.amber.shade300,
-                size: 12,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                conn.isOffline
-                    ? 'Showing data from ${conn.lastSyncFormatted}'
-                    : '${conn.pendingSyncCount} pending write(s)...',
-                style: TextStyle(
-                  color: Colors.amber.shade200,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    return const SizedBox.shrink();
   }
 }
