@@ -627,7 +627,7 @@ class GerexAvatarAction extends StatelessWidget {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/profile'),
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
+        margin: EdgeInsets.zero,
         child: Stack(
           alignment: Alignment.center,
           children: [
