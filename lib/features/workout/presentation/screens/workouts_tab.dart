@@ -16,7 +16,6 @@ import 'package:gerex/core/presentation/widgets/pastel_gradient_card.dart';
 import 'package:gerex/core/presentation/widgets/hero_mint_card.dart';
 import 'package:gerex/core/presentation/widgets/big_stat_number.dart';
 import 'package:gerex/core/presentation/widgets/animated_tappable.dart';
-import 'package:gerex/core/widgets/global_connectivity_banner.dart';
 import 'package:gerex/core/theme/app_theme.dart';
 import 'package:gerex/core/presentation/widgets/gerex_dashboard_app_bar.dart';
 
