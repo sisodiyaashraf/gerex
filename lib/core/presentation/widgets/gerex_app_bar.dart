@@ -109,10 +109,10 @@ class GerexAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.inter(
-                                  fontSize: 10.5,
+                                  fontSize: 11.5,
                                   fontWeight: FontWeight.w600,
                                   color: textColorSecondary,
-                                  letterSpacing: 0.3,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                               const SizedBox(height: 1),
@@ -122,7 +122,7 @@ class GerexAppBar extends StatelessWidget implements PreferredSizeWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.outfit(
-                                fontSize: subtitle != null ? 16.5 : 18,
+                                fontSize: subtitle != null ? 17.0 : 18.5,
                                 fontWeight: FontWeight.w700,
                                 color: textColorPrimary,
                                 letterSpacing: -0.2,
@@ -175,7 +175,7 @@ class SliverGerexAppBar extends StatelessWidget {
     this.showBackButton = false,
     this.onBack,
     this.actions,
-    this.expandedHeight = 110.0,
+    this.expandedHeight = 96.0,
     this.pinned = true,
     this.floating = false,
     this.flexibleBackground,
@@ -271,95 +271,86 @@ class _SliverGerexAppBarDelegate extends SliverPersistentHeaderDelegate {
                   child: flexibleBackground!,
                 ),
 
-              // Collapsed Top Toolbar Content (Visible as app bar collapses)
+              // Main Header Layout containing Avatar, Greeting & Name, Actions
               Positioned(
                 top: topPadding,
                 left: 0,
                 right: 0,
-                height: kToolbarHeight,
+                bottom: 0,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
                     children: [
-                      // Leading or Back Button
-                      if (leading != null) ...[
-                        leading!,
-                        const SizedBox(width: 12),
-                      ] else if (shouldShowBack) ...[
-                        GerexAppBarBackButton(onPressed: onBack),
-                        const SizedBox(width: 12),
-                      ],
-
-                      // Collapsed Compact Title (Fades in on collapse)
-                      Expanded(
-                        child: Opacity(
-                          opacity: collapseRatio,
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: textColorPrimary,
-                              letterSpacing: -0.2,
-                            ),
+                      // Top Right Action Buttons (Always Pinned in Header)
+                      if (actions != null && actions!.isNotEmpty)
+                        Positioned(
+                          top: (kToolbarHeight - 38) / 2,
+                          right: 0,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: actions!,
                           ),
+                        ),
+
+                      // Avatar + Greeting Subtitle & Name Title Column
+                      Positioned(
+                        top: Tween<double>(
+                          begin: ((maxHeight - topPadding) - 44) / 2,
+                          end: (kToolbarHeight - 42) / 2,
+                        ).transform(collapseRatio),
+                        left: 0,
+                        right: actions != null && actions!.isNotEmpty ? 115.0 : 0.0,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Leading / Avatar / Back Button
+                            if (leading != null) ...[
+                              leading!,
+                              const SizedBox(width: 10),
+                            ] else if (shouldShowBack) ...[
+                              GerexAppBarBackButton(onPressed: onBack),
+                              const SizedBox(width: 10),
+                            ],
+
+                            // Subtitle (e.g. "Good Afternoon 🌤️") & Title (e.g. "Ashraf")
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+                                    Text(
+                                      subtitle!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        fontSize: Tween<double>(begin: 12.0, end: 10.5).transform(collapseRatio),
+                                        fontWeight: FontWeight.w600,
+                                        color: textColorSecondary,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                  ],
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: Tween<double>(begin: 20.0, end: 17.0).transform(collapseRatio),
+                                      fontWeight: FontWeight.w800,
+                                      color: textColorPrimary,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-
-                      // Action Icons
-                      if (actions != null && actions!.isNotEmpty)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: actions!,
-                        ),
                     ],
-                  ),
-                ),
-              ),
-
-              // Large Expanded Title Content (Fades & slides up on scroll)
-              Positioned(
-                left: 16.0,
-                right: 16.0,
-                bottom: 12.0,
-                child: Opacity(
-                  opacity: (1.0 - (collapseRatio * 1.5)).clamp(0.0, 1.0),
-                  child: Transform.translate(
-                    offset: Offset(0, -10 * collapseRatio),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-                          Text(
-                            subtitle!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: textColorSecondary,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                        ],
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.outfit(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: textColorPrimary,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
