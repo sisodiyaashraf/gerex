@@ -158,6 +158,10 @@ class AppRouter {
         builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
         path: '/workout-tracker',
         builder: (context, state) => const WorkoutTrackerScreen(),
       ),
