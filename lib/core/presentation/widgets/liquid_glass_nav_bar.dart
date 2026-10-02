@@ -18,7 +18,7 @@ class LiquidGlassNavBarItem {
 class SpeedDialOption {
   final String id;
   final String title;
-  final IconData icon;
+  final dynamic icon; // IconData or FaIconData
   final List<Color> gradient;
   final VoidCallback onTap;
 
@@ -268,7 +268,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
               left: 0,
               right: 0,
               child: Material(
-                type: MaterialType.translucent,
+                type: MaterialType.transparency,
                 child: Align(
                   alignment: Alignment.bottomCenter,
                   child: Column(
@@ -430,11 +430,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                       ],
                     ),
                     child: Center(
-                      child: FaIcon(
-                        option.icon,
-                        size: 18.0,
-                        color: Colors.white,
-                      ),
+                      child: _buildIconWidget(option.icon, Colors.white, true),
                     ),
                   ),
                 ],
@@ -636,9 +632,9 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
   Widget _buildIconWidget(dynamic icon, Color targetColor, bool isActive) {
     final size = isActive ? 23.5 : 21.0;
 
-    if (icon is IconData) {
+    if (icon is IconData || icon is FaIconData) {
       return FaIcon(
-        icon as FaIconData,
+        icon is IconData ? icon : (icon as FaIconData),
         size: size,
         color: targetColor,
       );
