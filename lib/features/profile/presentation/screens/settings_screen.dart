@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -142,8 +141,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
-            children: [
+          title: Row(
+            children: const [
               FaIcon(FontAwesomeIcons.triangleExclamation, color: Color(0xFFEF4444), size: 20),
               SizedBox(width: 10),
               Text('Delete Account?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
@@ -223,6 +222,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         user?.email ??
         'Gerex Athlete';
     final email = user?.email ?? 'athlete@gerex.com';
+
+    final bool isHrConnected = hrProvider.connectionState == HeartRateConnectionState.live || hrProvider.activeSource != HeartRateSource.none;
+    final String deviceName = hrProvider.pairedDeviceName ?? 'Connected Device';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -449,19 +451,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSettingsRow(
               icon: FontAwesomeIcons.heartPulse,
               title: 'Heart Rate Monitor',
-              subtitle: hrProvider.isConnected
-                  ? 'Connected: ${hrProvider.connectedDeviceName}'
-                  : 'No BLE sensor connected',
+              subtitle: isHrConnected ? 'Connected: $deviceName' : 'No BLE sensor connected',
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: hrProvider.isConnected ? Colors.emerald.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.15),
+                  color: isHrConnected ? const Color(0xFF10B981).withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  hrProvider.isConnected ? 'Connected' : 'Manage',
+                  isHrConnected ? 'Connected' : 'Manage',
                   style: TextStyle(
-                    color: hrProvider.isConnected ? Colors.emerald : theme.colorScheme.primary,
+                    color: isHrConnected ? const Color(0xFF10B981) : theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -541,13 +541,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: connProvider.pendingSyncCount > 0 ? Colors.amber.withValues(alpha: 0.2) : Colors.emerald.withValues(alpha: 0.15),
+                  color: connProvider.pendingSyncCount > 0 ? Colors.amber.withValues(alpha: 0.2) : const Color(0xFF10B981).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   connProvider.pendingSyncCount > 0 ? '${connProvider.pendingSyncCount} pending' : 'Synced',
                   style: TextStyle(
-                    color: connProvider.pendingSyncCount > 0 ? Colors.amber.shade800 : Colors.emerald,
+                    color: connProvider.pendingSyncCount > 0 ? Colors.amber.shade800 : const Color(0xFF10B981),
                     fontWeight: FontWeight.bold,
                     fontSize: 11,
                   ),
@@ -745,7 +745,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               IconButton(
                 icon: const FaIcon(FontAwesomeIcons.play, size: 14, color: Color(0xFF10B981)),
                 tooltip: 'Preview Voice',
-                onPressed: () => voiceCoach.speakPreview(context),
+                onPressed: () => voiceCoach.speakPreview(
+                  language: profileProvider.voiceCoachLanguage,
+                  persona: profileProvider.voiceCoachPersona,
+                  rate: profileProvider.voiceCoachRate,
+                  pitch: profileProvider.voiceCoachPitch,
+                ),
               ),
             ],
           ),
