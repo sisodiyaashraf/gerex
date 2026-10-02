@@ -23,23 +23,26 @@ class SplashScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           // Full-screen background image covering all edges
-          Image.asset(
-            'assets/images/app icon/gerex splash_screen.jpeg',
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: AppColors.bgDarkPrimary,
-                child: const Center(
-                  child: Icon(
-                    Icons.fitness_center_rounded,
-                    size: 80,
-                    color: AppColors.accentEmeraldLight,
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/app icon/gerex splash_screen.jpeg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              alignment: Alignment.center,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: AppColors.bgDarkPrimary,
+                  child: const Center(
+                    child: Icon(
+                      Icons.fitness_center_rounded,
+                      size: 80,
+                      color: AppColors.accentEmeraldLight,
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
 
           // Subtle gradient overlay at the bottom for smooth indicator readability
