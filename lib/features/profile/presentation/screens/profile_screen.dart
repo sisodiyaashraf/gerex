@@ -1,6 +1,4 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -97,6 +95,7 @@ class ProfileScreen extends StatelessWidget {
         ? metricsProvider.weightLogs.last.value
         : 72.0;
     final double userHeight = activity.userHeight;
+    final int userAge = user?.userMetadata?['age'] as int? ?? 25;
     final double bmiValue = _calculateBmi(latestWeight, userHeight);
     final String bmiStatus = _getBmiStatus(bmiValue);
     final Color bmiColor = _getBmiColor(bmiValue);
@@ -124,8 +123,6 @@ class ProfileScreen extends StatelessWidget {
       }
       return '${kgs.round()} kg';
     }
-
-    const accentColor = Color(0xFF10B981); // Emerald Accent
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -276,7 +273,7 @@ class ProfileScreen extends StatelessWidget {
                   child: _buildMetricPill(
                     theme,
                     label: 'Age',
-                    value: '${activity.userAge} yrs',
+                    value: '$userAge yrs',
                     icon: FontAwesomeIcons.calendar,
                   ),
                 ),
