@@ -88,7 +88,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     final totalBurn = _selectedReps * baseBurn;
 
     // Expandable text description
-    final description = 'The ${widget.exercise.name} targeting ${widget.exercise.muscleGroup} is an excellent exercise for building muscular strength and cardiovascular stamina. It requires using ${widget.exercise.equipment} with strict biomechanical control to avoid spinal pressure and focus load on key muscle pathways.';
+    final description =
+        'The ${widget.exercise.name} targeting ${widget.exercise.muscleGroup} is an excellent exercise for building muscular strength and cardiovascular stamina. It requires using ${widget.exercise.equipment} with strict biomechanical control to avoid spinal pressure and focus load on key muscle pathways.';
 
     Color difficultyColor = theme.colorScheme.primary;
     final diffLower = difficulty.toLowerCase();
@@ -106,7 +107,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       'Beginner': LinearGradient(
         colors: [
           const Color(0xFF10B981).withValues(alpha: 0.15),
-          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+          isDark
+              ? const Color(0xFF14181F).withValues(alpha: 0.95)
+              : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -114,7 +117,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       'Intermediate': LinearGradient(
         colors: [
           const Color(0xFFF59E0B).withValues(alpha: 0.15),
-          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+          isDark
+              ? const Color(0xFF14181F).withValues(alpha: 0.95)
+              : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -122,7 +127,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       'Advanced': LinearGradient(
         colors: [
           const Color(0xFFEF4444).withValues(alpha: 0.15),
-          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+          isDark
+              ? const Color(0xFF14181F).withValues(alpha: 0.95)
+              : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -130,14 +137,22 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       'Expert': LinearGradient(
         colors: [
           const Color(0xFFEF4444).withValues(alpha: 0.15),
-          isDark ? const Color(0xFF14181F).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
+          isDark
+              ? const Color(0xFF14181F).withValues(alpha: 0.95)
+              : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ),
     };
 
-    final headerGradient = difficultyGradients[difficulty] ?? (isDark ? GerexGradients.scaffoldBackground : const LinearGradient(colors: [Color(0xFFF8FAFC), Color(0xFFEEF2F6)]));
+    final headerGradient =
+        difficultyGradients[difficulty] ??
+        (isDark
+            ? GerexGradients.scaffoldBackground
+            : const LinearGradient(
+                colors: [Color(0xFFF8FAFC), Color(0xFFEEF2F6)],
+              ));
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -163,7 +178,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: difficultyColor.withValues(alpha: isDark ? 0.15 : 0.06),
+                      color: difficultyColor.withValues(
+                        alpha: isDark ? 0.15 : 0.06,
+                      ),
                       blurRadius: 100,
                       spreadRadius: 50,
                     ),
@@ -181,7 +198,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: difficultyColor.withValues(alpha: isDark ? 0.1 : 0.04),
+                      color: difficultyColor.withValues(
+                        alpha: isDark ? 0.1 : 0.04,
+                      ),
                       blurRadius: 120,
                       spreadRadius: 60,
                     ),
@@ -219,14 +238,17 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     background: Stack(
                       fit: StackFit.expand,
                       children: [
-                        if (widget.exercise.effectiveImagePath != null && widget.exercise.effectiveImagePath!.isNotEmpty)
+                        if (widget.exercise.effectiveImagePath != null &&
+                            widget.exercise.effectiveImagePath!.isNotEmpty)
                           Container(
-                            decoration: BoxDecoration(
-                              gradient: headerGradient,
-                            ),
-                            child: widget.exercise.effectiveImagePath!.startsWith('http')
+                            decoration: BoxDecoration(gradient: headerGradient),
+                            child:
+                                widget.exercise.effectiveImagePath!.startsWith(
+                                  'http',
+                                )
                                 ? CachedNetworkImage(
-                                    imageUrl: widget.exercise.effectiveImagePath!,
+                                    imageUrl:
+                                        widget.exercise.effectiveImagePath!,
                                     fit: BoxFit.cover,
                                     placeholder: (context, url) => Center(
                                       child: CircularProgressIndicator(
@@ -240,15 +262,20 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                       size: 40,
                                     ),
                                   )
-                                : widget.exercise.effectiveImagePath!.startsWith('assets/')
-                                    ? Image.asset(widget.exercise.effectiveImagePath!, fit: BoxFit.cover)
-                                    : Image.file(File(widget.exercise.effectiveImagePath!), fit: BoxFit.cover),
+                                : widget.exercise.effectiveImagePath!
+                                      .startsWith('assets/')
+                                ? Image.asset(
+                                    widget.exercise.effectiveImagePath!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.file(
+                                    File(widget.exercise.effectiveImagePath!),
+                                    fit: BoxFit.cover,
+                                  ),
                           )
                         else
                           Container(
-                            decoration: BoxDecoration(
-                              gradient: headerGradient,
-                            ),
+                            decoration: BoxDecoration(gradient: headerGradient),
                             child: Icon(
                               Icons.fitness_center_rounded,
                               color: difficultyColor,
@@ -261,7 +288,13 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.transparent,
-                                isDark ? const Color(0xFF0F1319).withValues(alpha: 0.85) : const Color(0xFFF8FAFC).withValues(alpha: 0.85),
+                                isDark
+                                    ? const Color(
+                                        0xFF0F1319,
+                                      ).withValues(alpha: 0.85)
+                                    : const Color(
+                                        0xFFF8FAFC,
+                                      ).withValues(alpha: 0.85),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -341,7 +374,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      _buildSectionHeader('Description', difficultyColor, theme),
+                      _buildSectionHeader(
+                        'Description',
+                        difficultyColor,
+                        theme,
+                      ),
                       const SizedBox(height: 8),
                       GestureDetector(
                         onTap: () => setState(
@@ -351,7 +388,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                            color: isDark
+                                ? theme.colorScheme.surface.withValues(
+                                    alpha: 0.4,
+                                  )
+                                : theme.colorScheme.surface,
                             borderRadius: const BorderRadius.only(
                               topRight: Radius.circular(16),
                               bottomRight: Radius.circular(16),
@@ -362,13 +403,17 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                 width: 3,
                               ),
                             ),
-                            boxShadow: isDark ? null : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
+                            boxShadow: isDark
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.03,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,20 +448,32 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      _buildSectionHeader('How To Do It', difficultyColor, theme),
+                      _buildSectionHeader(
+                        'How To Do It',
+                        difficultyColor,
+                        theme,
+                      ),
                       const SizedBox(height: 12),
                       if (widget.exercise.instructions.isEmpty)
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                            color: isDark
+                                ? theme.colorScheme.surface.withValues(
+                                    alpha: 0.4,
+                                  )
+                                : theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: isDark ? 0.05 : 0.08,
+                              ),
                               width: 1,
                             ),
                           ),
-                          child: const Text('No instruction steps registered for this exercise.'),
+                          child: const Text(
+                            'No instruction steps registered for this exercise.',
+                          ),
                         )
                       else
                         ListView.builder(
@@ -435,7 +492,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                     height: 28,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: difficultyColor.withValues(alpha: 0.15),
+                                      color: difficultyColor.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       border: Border.all(
                                         color: difficultyColor,
                                         width: 1.5,
@@ -457,26 +516,36 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(14),
                                       decoration: BoxDecoration(
-                                        color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.4) : theme.colorScheme.surface,
+                                        color: isDark
+                                            ? theme.colorScheme.surface
+                                                  .withValues(alpha: 0.4)
+                                            : theme.colorScheme.surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+                                          color: theme.colorScheme.onSurface
+                                              .withValues(
+                                                alpha: isDark ? 0.05 : 0.08,
+                                              ),
                                           width: 1,
                                         ),
-                                        boxShadow: isDark ? null : [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.02),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          )
-                                        ],
+                                        boxShadow: isDark
+                                            ? null
+                                            : [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.02),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
                                       ),
                                       child: Text(
                                         step,
                                         style: TextStyle(
                                           fontSize: 14,
                                           height: 1.4,
-                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.95),
+                                          color: theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.95),
                                         ),
                                       ),
                                     ),
@@ -487,7 +556,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                           },
                         ),
                       const SizedBox(height: 24),
-                      _buildSectionHeader('Custom Repetitions Count', difficultyColor, theme),
+                      _buildSectionHeader(
+                        'Custom Repetitions Count',
+                        difficultyColor,
+                        theme,
+                      ),
                       const SizedBox(height: 14),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,7 +570,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                             scrollDirection: Axis.horizontal,
                             physics: const BouncingScrollPhysics(),
                             child: Row(
-                              children: [5, 8, 10, 12, 15, 20, 25, 30, 50].map((preset) {
+                              children: [5, 8, 10, 12, 15, 20, 25, 30, 50].map((
+                                preset,
+                              ) {
                                 final isSelected = _selectedReps == preset;
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
@@ -509,20 +584,31 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                         setState(() => _selectedReps = preset);
                                         _wheelController.animateToItem(
                                           preset - 1,
-                                          duration: const Duration(milliseconds: 300),
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
                                           curve: Curves.easeOutCubic,
                                         );
                                       },
                                       borderRadius: BorderRadius.circular(14),
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: isSelected
                                               ? difficultyColor
                                               : (isDark
-                                                  ? Colors.white.withValues(alpha: 0.06)
-                                                  : Colors.black.withValues(alpha: 0.04)),
-                                          borderRadius: BorderRadius.circular(14),
+                                                    ? Colors.white.withValues(
+                                                        alpha: 0.06,
+                                                      )
+                                                    : Colors.black.withValues(
+                                                        alpha: 0.04,
+                                                      )),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
                                           border: Border.all(
                                             color: isSelected
                                                 ? difficultyColor
@@ -531,7 +617,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                           boxShadow: isSelected
                                               ? [
                                                   BoxShadow(
-                                                    color: difficultyColor.withValues(alpha: 0.4),
+                                                    color: difficultyColor
+                                                        .withValues(alpha: 0.4),
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 2),
                                                   ),
@@ -542,10 +629,16 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                           '$preset reps',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w600,
                                             color: isSelected
                                                 ? Colors.white
-                                                : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                                                : (isDark
+                                                      ? Colors.white70
+                                                      : const Color(
+                                                          0xFF475569,
+                                                        )),
                                           ),
                                         ),
                                       ),
@@ -553,8 +646,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                   ),
                                 );
                               }).toList(),
-                              ),
                             ),
+                          ),
                           const SizedBox(height: 12),
 
                           // Futuristic 3D Cyber Cylinder Wheel
@@ -562,7 +655,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                             height: 140,
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? const Color(0xFF0F172A).withValues(alpha: 0.7)
+                                  ? const Color(
+                                      0xFF0F172A,
+                                    ).withValues(alpha: 0.7)
                                   : Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
@@ -571,7 +666,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: difficultyColor.withValues(alpha: 0.12),
+                                  color: difficultyColor.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   blurRadius: 20,
                                   spreadRadius: 2,
                                 ),
@@ -584,17 +681,25 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                 Center(
                                   child: Container(
                                     height: 44,
-                                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: difficultyColor.withValues(alpha: 0.12),
+                                      color: difficultyColor.withValues(
+                                        alpha: 0.12,
+                                      ),
                                       borderRadius: BorderRadius.circular(14),
                                       border: Border.all(
-                                        color: difficultyColor.withValues(alpha: 0.5),
+                                        color: difficultyColor.withValues(
+                                          alpha: 0.5,
+                                        ),
                                         width: 1.5,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: difficultyColor.withValues(alpha: 0.25),
+                                          color: difficultyColor.withValues(
+                                            alpha: 0.25,
+                                          ),
                                           blurRadius: 10,
                                           spreadRadius: 1,
                                         ),
@@ -613,10 +718,16 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                           colors: [
-                                            (isDark ? const Color(0xFF0F172A) : Colors.white).withValues(alpha: 0.85),
+                                            (isDark
+                                                    ? const Color(0xFF0F172A)
+                                                    : Colors.white)
+                                                .withValues(alpha: 0.85),
                                             Colors.transparent,
                                             Colors.transparent,
-                                            (isDark ? const Color(0xFF0F172A) : Colors.white).withValues(alpha: 0.85),
+                                            (isDark
+                                                    ? const Color(0xFF0F172A)
+                                                    : Colors.white)
+                                                .withValues(alpha: 0.85),
                                           ],
                                           stops: const [0.0, 0.28, 0.72, 1.0],
                                         ),
@@ -643,42 +754,66 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                     childCount: 100,
                                     builder: (context, index) {
                                       final itemValue = index + 1;
-                                      final isSelected = itemValue == _selectedReps;
+                                      final isSelected =
+                                          itemValue == _selectedReps;
                                       return Center(
                                         child: AnimatedDefaultTextStyle(
-                                          duration: const Duration(milliseconds: 150),
+                                          duration: const Duration(
+                                            milliseconds: 150,
+                                          ),
                                           style: TextStyle(
                                             fontFamily: 'Outfit',
                                             fontSize: isSelected ? 22 : 15,
-                                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w900
+                                                : FontWeight.w500,
                                             color: isSelected
                                                 ? difficultyColor
                                                 : (isDark
-                                                    ? Colors.white.withValues(alpha: 0.35)
-                                                    : const Color(0xFF64748B)),
-                                            letterSpacing: isSelected ? 1.0 : 0.0,
+                                                      ? Colors.white.withValues(
+                                                          alpha: 0.35,
+                                                        )
+                                                      : const Color(
+                                                          0xFF64748B,
+                                                        )),
+                                            letterSpacing: isSelected
+                                                ? 1.0
+                                                : 0.0,
                                             shadows: isSelected
                                                 ? [
                                                     Shadow(
-                                                      color: difficultyColor.withValues(alpha: 0.5),
+                                                      color: difficultyColor
+                                                          .withValues(
+                                                            alpha: 0.5,
+                                                          ),
                                                       blurRadius: 10,
                                                     ),
                                                   ]
                                                 : null,
                                           ),
                                           child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Text('$itemValue'),
                                               const SizedBox(width: 6),
                                               Text(
                                                 'REPS',
                                                 style: TextStyle(
-                                                  fontSize: isSelected ? 12 : 10,
-                                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                  fontSize: isSelected
+                                                      ? 12
+                                                      : 10,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
                                                   color: isSelected
-                                                      ? difficultyColor.withValues(alpha: 0.9)
-                                                      : (isDark ? Colors.white24 : Colors.black26),
+                                                      ? difficultyColor
+                                                            .withValues(
+                                                              alpha: 0.9,
+                                                            )
+                                                      : (isDark
+                                                            ? Colors.white24
+                                                            : Colors.black26),
                                                 ),
                                               ),
                                             ],
@@ -713,8 +848,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         side: BorderSide(color: difficultyColor),
                         foregroundColor: difficultyColor,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        backgroundColor: isDark ? Colors.black.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        backgroundColor: isDark
+                            ? Colors.black.withValues(alpha: 0.4)
+                            : Colors.white.withValues(alpha: 0.8),
                       ),
                       icon: const FaIcon(FontAwesomeIcons.robot, size: 18),
                       label: const Text(
@@ -726,26 +865,34 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         String? targetKey;
                         if (name.contains('squat')) {
                           targetKey = 'squat';
-                        } else if (name.contains('push') || name.contains('pushup')) {
+                        } else if (name.contains('push') ||
+                            name.contains('pushup')) {
                           targetKey = 'push_up';
-                        } else if (name.contains('jumping') || name.contains('jack')) {
+                        } else if (name.contains('jumping') ||
+                            name.contains('jack')) {
                           targetKey = 'jumping_jack';
                         } else if (name.contains('plank')) {
                           targetKey = 'plank';
                         } else if (widget.exercise.posePattern != null) {
                           targetKey = 'custom';
                         }
-                        context.push('/pose-feedback', extra: {
-                          'targetExercise': targetKey,
-                          'customPattern': widget.exercise.posePattern,
-                        });
+                        context.push(
+                          '/pose-feedback',
+                          extra: {
+                            'targetExercise': targetKey,
+                            'customPattern': widget.exercise.posePattern,
+                          },
+                        );
                       },
                     ),
                   if (!widget.isPicker) const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [difficultyColor.withValues(alpha: 0.9), difficultyColor.withValues(alpha: 0.7)],
+                        colors: [
+                          difficultyColor.withValues(alpha: 0.9),
+                          difficultyColor.withValues(alpha: 0.7),
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -767,21 +914,36 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                           Navigator.pop(context, _selectedReps);
                         } else {
                           if (workoutProvider.isSessionActive) {
-                            workoutProvider.addExerciseToSession(widget.exercise);
+                            workoutProvider.addExerciseToSession(
+                              widget.exercise,
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Added ${widget.exercise.name} with $_selectedReps reps to active workout session!')),
+                              SnackBar(
+                                content: Text(
+                                  'Added ${widget.exercise.name} with $_selectedReps reps to active workout session!',
+                                ),
+                              ),
                             );
                             context.pop();
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('No active workout session. Open the Workout tab or Workout Builder to save exercises!')),
+                              const SnackBar(
+                                content: Text(
+                                  'No active workout session. Open the Workout tab or Workout Builder to save exercises!',
+                                ),
+                              ),
                             );
                           }
                         }
                       },
                       child: Text(
-                        widget.isPicker ? 'Confirm Custom Reps' : 'Save to Active Workout',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        widget.isPicker
+                            ? 'Confirm Custom Reps'
+                            : 'Save to Active Workout',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -823,11 +985,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           ),
           child: Column(
             children: [
-              FaIcon(
-                icon,
-                color: color,
-                size: 14,
-              ),
+              FaIcon(icon, color: color, size: 14),
               const SizedBox(height: 8),
               Text(
                 value,
