@@ -305,24 +305,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSectionHeader(theme, 'App Preferences'),
             const SizedBox(height: 10),
             _buildSettingsControlCard(
-              icon: FontAwesomeIcons.palette,
-              title: 'Theme Mode',
-              subtitle: 'Visual experience (Auto, Light, Dark)',
-              control: SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'system', label: Text('Auto')),
-                  ButtonSegment(value: 'light', label: Text('Light')),
-                  ButtonSegment(value: 'dark', label: Text('Dark')),
-                ],
-                selected: {profileProvider.themeMode},
-                onSelectionChanged: (Set<String> selection) {
-                  profileProvider.setThemeMode(selection.first);
-                },
-                style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildSettingsControlCard(
               icon: FontAwesomeIcons.scaleBalanced,
               title: 'Weight Units',
               subtitle: 'Display unit for exercises & weight logs',
