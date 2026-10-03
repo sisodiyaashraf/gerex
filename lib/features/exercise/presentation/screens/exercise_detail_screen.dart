@@ -559,7 +559,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                 }).toList(),
                               ),
                             ),
-                          ),
                           const SizedBox(height: 12),
 
                           // Futuristic 3D Cyber Cylinder Wheel
