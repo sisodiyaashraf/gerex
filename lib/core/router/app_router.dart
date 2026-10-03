@@ -193,6 +193,10 @@ class AppRouter {
         builder: (context, state) => const HeartRateConnectionScreen(),
       ),
       GoRoute(
+        path: '/heart-rate',
+        builder: (context, state) => const HeartRateConnectionScreen(),
+      ),
+      GoRoute(
         path: '/sleep-tracker',
         builder: (context, state) => const SleepTrackerScreen(),
       ),
