@@ -299,6 +299,10 @@ class AppRouter {
         builder: (context, state) => const MetricsDashboardScreen(),
       ),
       GoRoute(
+        path: '/metrics',
+        builder: (context, state) => const MetricsDashboardScreen(),
+      ),
+      GoRoute(
         path: '/guided-capture',
         builder: (context, state) => const GuidedPhotoCaptureScreen(),
       ),
