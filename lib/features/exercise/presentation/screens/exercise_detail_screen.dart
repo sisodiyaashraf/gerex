@@ -27,13 +27,8 @@ class ExerciseDetailScreen extends StatefulWidget {
 class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   bool _isDescriptionExpanded = false;
   int _selectedReps = 10;
-  late FixedExtentScrollController _wheelController;
-
-  @override
-  void initState() {
-    super.initState();
-    _wheelController = FixedExtentScrollController(initialItem: _selectedReps - 1);
-  }
+  late final FixedExtentScrollController _wheelController =
+      FixedExtentScrollController(initialItem: 9);
 
   @override
   void dispose() {
