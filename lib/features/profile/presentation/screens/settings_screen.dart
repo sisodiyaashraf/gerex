@@ -11,18 +11,16 @@ import 'package:gerex/core/presentation/widgets/glass_container.dart';
 import 'package:gerex/core/presentation/widgets/gerex_button.dart';
 import 'package:gerex/core/providers/notification_provider.dart';
 import 'package:gerex/core/providers/connectivity_provider.dart';
-import 'package:gerex/core/notifications/notification_models.dart';
 import 'package:gerex/core/notifications/content_packs.dart';
 import 'package:gerex/core/services/voice_coach_service.dart';
 import 'package:gerex/core/di/injection_container.dart' as di;
 
 import '../providers/profile_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../ai/presentation/providers/ai_provider.dart';
 import '../../../metrics/presentation/providers/heart_rate_provider.dart';
 
-/// Consolidated Settings Screen for Gerex.
-/// Houses all preferences, account options, AI/voice toggles, notifications, and device management.
+/// Clean & Responsive Consolidated Settings Screen for Gerex.
+/// Eliminates render overflow issues, removes dev clutter, and fixes navigation paths.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -211,7 +209,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final profileProvider = Provider.of<ProfileProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
-    final aiProvider = Provider.of<AIProvider>(context);
     final connProvider = Provider.of<ConnectivityProvider>(context);
     final hrProvider = Provider.of<HeartRateProvider>(context);
     final notificationProvider = Provider.of<NotificationProvider>(context);
@@ -247,7 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 40.0),
           children: [
-            // ================= SECTION 1: ACCOUNT & IDENTITY =================
+            // ================= SECTION 1: ACCOUNT & SECURITY =================
             _buildSectionHeader(theme, 'Account & Security'),
             const SizedBox(height: 10),
             _buildSettingsRow(
@@ -307,11 +304,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // ================= SECTION 2: APP PREFERENCES =================
             _buildSectionHeader(theme, 'App Preferences'),
             const SizedBox(height: 10),
-            _buildSettingsRow(
+            _buildSettingsControlCard(
               icon: FontAwesomeIcons.palette,
               title: 'Theme Mode',
-              subtitle: 'Light, Dark, or System Default',
-              trailing: SegmentedButton<String>(
+              subtitle: 'Visual experience (Auto, Light, Dark)',
+              control: SegmentedButton<String>(
                 segments: const [
                   ButtonSegment(value: 'system', label: Text('Auto')),
                   ButtonSegment(value: 'light', label: Text('Light')),
@@ -325,14 +322,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            _buildSettingsRow(
+            _buildSettingsControlCard(
               icon: FontAwesomeIcons.scaleBalanced,
               title: 'Weight Units',
-              subtitle: 'Preferred display unit across workouts',
-              trailing: SegmentedButton<String>(
+              subtitle: 'Display unit for exercises & weight logs',
+              control: SegmentedButton<String>(
                 segments: const [
-                  ButtonSegment(value: 'kg', label: Text('KG')),
-                  ButtonSegment(value: 'lb', label: Text('LB')),
+                  ButtonSegment(value: 'kg', label: Text('Kilograms (KG)')),
+                  ButtonSegment(value: 'lb', label: Text('Pounds (LB)')),
                 ],
                 selected: {profileProvider.units},
                 onSelectionChanged: (Set<String> selection) {
@@ -342,29 +339,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            _buildSettingsRow(
+            _buildSettingsControlCard(
               icon: FontAwesomeIcons.earthAsia,
               title: 'Regional Content Pack',
-              subtitle: 'Local notification phrasing & motivation',
-              trailing: DropdownButton<String>(
-                value: notificationProvider.service.contentPack.id,
-                underline: const SizedBox.shrink(),
-                dropdownColor: theme.cardColor,
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF14181F),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+              subtitle: 'Notification phrasing & motivational style',
+              control: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: notificationProvider.service.contentPack.id,
+                  dropdownColor: theme.cardColor,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF14181F),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  items: NotificationContentPacks.all
+                      .map((pack) => DropdownMenuItem(
+                            value: pack.id,
+                            child: Text(
+                              pack.label,
+                              style: TextStyle(color: isDark ? Colors.white : const Color(0xFF14181F)),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: notificationProvider.setContentPack,
                 ),
-                items: NotificationContentPacks.all
-                    .map((pack) => DropdownMenuItem(
-                          value: pack.id,
-                          child: Text(
-                            pack.label,
-                            style: TextStyle(color: isDark ? Colors.white : const Color(0xFF14181F)),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: notificationProvider.setContentPack,
               ),
             ),
 
@@ -402,33 +401,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildCategoryToggleRow('Streak Risk Alerts', _streakNotifs, (v) => _toggleCategoryNotif('notif_cat_streak', v, (val) => _streakNotifs = val)),
               const SizedBox(height: 6),
               _buildCategoryToggleRow('AI Health Insights', _aiNotifs, (v) => _toggleCategoryNotif('notif_cat_ai', v, (val) => _aiNotifs = val)),
-              const SizedBox(height: 8),
-              _buildSettingsRow(
-                icon: FontAwesomeIcons.vial,
-                title: 'Test Notification Trigger (Dev)',
-                subtitle: 'Preview push alert styles',
-                trailing: OutlinedButton(
-                  onPressed: () => _showTestNotificationSheet(context),
-                  child: const Text('Test'),
-                ),
-              ),
             ],
 
             const SizedBox(height: 24),
 
-            // ================= SECTION 4: AI & VOICE COACH =================
-            _buildSectionHeader(theme, 'AI Assistant & Voice Coach'),
+            // ================= SECTION 4: VOICE COACH =================
+            _buildSectionHeader(theme, 'Real-Time Voice Coach'),
             const SizedBox(height: 10),
-            _buildSettingsRow(
-              icon: FontAwesomeIcons.robot,
-              title: 'Offline-Only AI Mode',
-              subtitle: 'Force local Gemma model, never escalate to cloud',
-              trailing: Switch.adaptive(
-                value: aiProvider.isOfflineOnly,
-                onChanged: (val) => aiProvider.setOfflineOnly(val),
-              ),
-            ),
-            const SizedBox(height: 8),
             _buildSettingsRow(
               icon: FontAwesomeIcons.volumeHigh,
               title: 'Voice Coaching Audio',
@@ -467,7 +446,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
-              onTap: () => context.push('/heart-rate'),
+              onTap: () => context.push('/heart-rate-connect'),
             ),
             const SizedBox(height: 8),
             _buildSettingsRow(
@@ -516,16 +495,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               trailing: Switch.adaptive(
                 value: profileProvider.confettiEnabled,
                 onChanged: (val) => profileProvider.toggleConfetti(val),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildSettingsRow(
-              icon: FontAwesomeIcons.ghost,
-              title: 'AR Ghost Trainer Silhouette',
-              subtitle: 'Render trainer overlay during pose tracking',
-              trailing: Switch.adaptive(
-                value: profileProvider.ghostTrainerEnabled,
-                onChanged: (val) => profileProvider.toggleGhostTrainer(val),
               ),
             ),
 
@@ -712,6 +681,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildSettingsControlCard({
+    required dynamic icon,
+    required String title,
+    required String subtitle,
+    required Widget control,
+  }) {
+    return PastelGradientCard(
+      type: PastelCardType.slate,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF14181F).withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: FaIcon(
+                    icon,
+                    size: 14.0,
+                    color: const Color(0xFF14181F),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFF14181F),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: const Color(0xFF14181F).withValues(alpha: 0.65),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: control,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoryToggleRow(String title, bool val, Function(bool) onChanged) {
     return Padding(
       padding: const EdgeInsets.only(left: 12.0),
@@ -803,40 +840,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             max: 0.9,
             onChanged: (val) => profileProvider.setVoiceCoachRate(val),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showTestNotificationSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text('Select Test Notification Category', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          ...NotificationCategory.values.map((cat) {
-            return ListTile(
-              title: Text(cat.name.toUpperCase()),
-              onTap: () async {
-                Navigator.pop(context);
-                final provider = context.read<NotificationProvider>();
-                await provider.showCustomNotification(
-                  NotificationPayload(
-                    id: 'test_${cat.name}',
-                    title: 'Test ${cat.name} Reminder',
-                    body: 'Sample notification body from settings.',
-                    category: cat,
-                    scheduledTime: DateTime.now(),
-                  ),
-                );
-              },
-            );
-          }),
         ],
       ),
     );
