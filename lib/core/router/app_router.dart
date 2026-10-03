@@ -56,18 +56,13 @@ class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/',
     refreshListenable: sl<AuthProvider>(),
     redirect: (context, state) {
       final authProvider = sl<AuthProvider>();
       final isAuthenticated = authProvider.isAuthenticated;
       final isLoggingIn = state.matchedLocation == '/login';
-      final isSplashing = state.matchedLocation == '/splash';
       final isOnboarding = state.matchedLocation == '/onboarding';
-
-      if (!authProvider.isInitialized) {
-        return '/splash';
-      }
 
       if (!authProvider.onboardingCompleted) {
         if (isOnboarding) return null;
@@ -79,17 +74,13 @@ class AppRouter {
         return '/login';
       }
 
-      if (isAuthenticated && (isLoggingIn || isSplashing || isOnboarding)) {
+      if (isAuthenticated && (isLoggingIn || isOnboarding)) {
         return '/';
       }
 
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
