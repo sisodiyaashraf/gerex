@@ -582,13 +582,15 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                       onTap: () {
                                         HapticFeedback.selectionClick();
                                         setState(() => _selectedReps = preset);
-                                        _wheelController.animateToItem(
-                                          preset - 1,
-                                          duration: const Duration(
-                                            milliseconds: 300,
-                                          ),
-                                          curve: Curves.easeOutCubic,
-                                        );
+                                        if (_wheelController.hasClients) {
+                                          _wheelController.animateToItem(
+                                            preset - 1,
+                                            duration: const Duration(
+                                              milliseconds: 300,
+                                            ),
+                                            curve: Curves.easeOutCubic,
+                                          );
+                                        }
                                       },
                                       borderRadius: BorderRadius.circular(14),
                                       child: Container(
