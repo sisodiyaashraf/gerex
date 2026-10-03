@@ -379,42 +379,46 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // ================= 4. BMI SUMMARY CARD =================
-            PastelGradientCard(
-              type: PastelCardType.sky,
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: bmiColor.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        bmiValue > 0 ? bmiValue.toStringAsFixed(1) : '--',
-                        style: TextStyle(fontWeight: FontWeight.w900, color: bmiColor, fontSize: 16),
+            InkWell(
+              onTap: () => context.push('/metrics'),
+              borderRadius: BorderRadius.circular(20),
+              child: PastelGradientCard(
+                type: PastelCardType.sky,
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: bmiColor.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          bmiValue > 0 ? bmiValue.toStringAsFixed(1) : '--',
+                          style: TextStyle(fontWeight: FontWeight.w900, color: bmiColor, fontSize: 16),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Body Mass Index (BMI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF14181F))),
-                        const SizedBox(height: 2),
-                        Text('Status: $bmiStatus', style: TextStyle(fontSize: 12, color: bmiColor, fontWeight: FontWeight.bold)),
-                      ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Body Mass Index (BMI)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF14181F))),
+                          const SizedBox(height: 2),
+                          Text('Status: $bmiStatus', style: TextStyle(fontSize: 12, color: bmiColor, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
                     ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => context.push('/metrics'),
-                    icon: const Text('View Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0284C7))),
-                    label: const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF0284C7)),
-                  ),
-                ],
+                    TextButton.icon(
+                      onPressed: () => context.push('/metrics'),
+                      icon: const Text('View Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0284C7))),
+                      label: const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF0284C7)),
+                    ),
+                  ],
+                ),
               ),
             ),
 
