@@ -213,13 +213,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final hrProvider = Provider.of<HeartRateProvider>(context);
     final notificationProvider = Provider.of<NotificationProvider>(context);
 
-    final user = authProvider.user;
-    final displayName = user?.userMetadata?['full_name'] ??
-        user?.userMetadata?['name'] ??
-        user?.email ??
-        'Gerex Athlete';
-    final email = user?.email ?? 'athlete@gerex.com';
-
     final bool isHrConnected = hrProvider.connectionState == HeartRateConnectionState.live || hrProvider.activeSource != HeartRateSource.none;
     final String deviceName = hrProvider.pairedDeviceName ?? 'Connected Device';
 
@@ -227,7 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: const GerexAppBar.standard(
         title: 'Settings',
-        subtitle: 'App Preferences & Account',
+        subtitle: 'App Preferences & Customization',
         showBackButton: true,
       ),
       body: Container(
@@ -244,62 +237,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 40.0),
           children: [
-            // ================= SECTION 1: ACCOUNT & SECURITY =================
-            _buildSectionHeader(theme, 'Account & Security'),
-            const SizedBox(height: 10),
-            _buildSettingsRow(
-              icon: FontAwesomeIcons.solidUser,
-              title: 'Personal Info',
-              subtitle: '$displayName · $email',
-              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (c) => AlertDialog(
-                    title: const Text('Account Info'),
-                    content: Text('Name: $displayName\nEmail: $email\nProvider: Google OAuth'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(c),
-                        child: const Text('Close'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildSettingsRow(
-              icon: FontAwesomeIcons.google,
-              title: 'Linked Google Account',
-              subtitle: email,
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.accentEmeraldLight.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.accentEmeraldLight.withValues(alpha: 0.4)),
-                ),
-                child: const Text(
-                  'Connected',
-                  style: TextStyle(color: AppColors.accentEmeraldLight, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildSettingsRow(
-              icon: FontAwesomeIcons.lock,
-              title: 'Password & Security',
-              subtitle: 'OAuth protected account',
-              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Account secured via Google OAuth.')),
-                );
-              },
-            ),
-
-            const SizedBox(height: 24),
 
             // ================= SECTION 2: APP PREFERENCES =================
             _buildSectionHeader(theme, 'App Preferences'),
