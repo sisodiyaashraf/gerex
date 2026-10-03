@@ -555,8 +555,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                         ),
                                       ),
                                     ),
-                                  );
-                                }).toList(),
+                                  ),
+                                );
+                              }).toList(),
                               ),
                             ),
                           const SizedBox(height: 12),
