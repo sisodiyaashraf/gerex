@@ -480,45 +480,206 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         ),
                       const SizedBox(height: 24),
                       _buildSectionHeader('Custom Repetitions Count', difficultyColor, theme),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Container(
-                        height: 110,
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: isDark ? theme.colorScheme.surface.withValues(alpha: 0.3) : theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          color: isDark
+                              ? const Color(0xFF1E293B).withValues(alpha: 0.5)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
-                            width: 1,
+                            color: difficultyColor.withValues(alpha: 0.3),
+                            width: 1.5,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: difficultyColor.withValues(alpha: 0.1),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: ListWheelScrollView.useDelegate(
-                          itemExtent: 36,
-                          physics: const FixedExtentScrollPhysics(),
-                          perspective: 0.005,
-                          onSelectedItemChanged: (index) {
-                            setState(() {
-                              _selectedReps = index + 1;
-                            });
-                          },
-                          childDelegate: ListWheelChildBuilderDelegate(
-                            childCount: 100,
-                            builder: (context, index) {
-                              final itemValue = index + 1;
-                              final isSelected = itemValue == _selectedReps;
-                              return Center(
-                                child: Text(
-                                  '$itemValue Reps',
-                                  style: TextStyle(
-                                    fontSize: isSelected ? 18 : 14,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected
-                                        ? difficultyColor
-                                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        child: Column(
+                          children: [
+                            // Reps Display with Stepper Buttons
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Decrease Button (-)
+                                Material(
+                                  color: Colors.transparent,
+                                  shape: const CircleBorder(),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: InkWell(
+                                    onTap: () {
+                                      if (_selectedReps > 1) {
+                                        HapticFeedback.lightImpact();
+                                        setState(() => _selectedReps--);
+                                      }
+                                    },
+                                    child: Container(
+                                      width: 46,
+                                      height: 46,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isDark
+                                            ? Colors.white.withValues(alpha: 0.08)
+                                            : Colors.black.withValues(alpha: 0.05),
+                                        border: Border.all(
+                                          color: isDark
+                                              ? Colors.white.withValues(alpha: 0.12)
+                                              : Colors.black.withValues(alpha: 0.08),
+                                        ),
+                                      ),
+                                      child: const Center(
+                                        child: FaIcon(FontAwesomeIcons.minus, size: 14),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
+
+                                // Central Reps Value Display Badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        difficultyColor.withValues(alpha: 0.2),
+                                        difficultyColor.withValues(alpha: 0.08),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: difficultyColor.withValues(alpha: 0.4),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '$_selectedReps',
+                                        style: TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.w900,
+                                          color: difficultyColor,
+                                          fontFamily: 'Outfit',
+                                          height: 1.0,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'REPS',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: difficultyColor.withValues(alpha: 0.8),
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Increase Button (+)
+                                Material(
+                                  color: Colors.transparent,
+                                  shape: const CircleBorder(),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: InkWell(
+                                    onTap: () {
+                                      if (_selectedReps < 100) {
+                                        HapticFeedback.lightImpact();
+                                        setState(() => _selectedReps++);
+                                      }
+                                    },
+                                    child: Container(
+                                      width: 46,
+                                      height: 46,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isDark
+                                            ? Colors.white.withValues(alpha: 0.08)
+                                            : Colors.black.withValues(alpha: 0.05),
+                                        border: Border.all(
+                                          color: isDark
+                                              ? Colors.white.withValues(alpha: 0.12)
+                                              : Colors.black.withValues(alpha: 0.08),
+                                        ),
+                                      ),
+                                      child: const Center(
+                                        child: FaIcon(FontAwesomeIcons.plus, size: 14),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Preset Quick Selector Chips
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              child: Row(
+                                children: [5, 8, 10, 12, 15, 20, 25, 30, 50].map((preset) {
+                                  final isSelected = _selectedReps == preset;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      child: InkWell(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          setState(() => _selectedReps = preset);
+                                        },
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? difficultyColor
+                                                : (isDark
+                                                    ? Colors.white.withValues(alpha: 0.06)
+                                                    : Colors.black.withValues(alpha: 0.04)),
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: isSelected
+                                                  ? difficultyColor
+                                                  : Colors.transparent,
+                                            ),
+                                            boxShadow: isSelected
+                                                ? [
+                                                    BoxShadow(
+                                                      color: difficultyColor.withValues(alpha: 0.4),
+                                                      blurRadius: 8,
+                                                      offset: const Offset(0, 2),
+                                                    ),
+                                                  ]
+                                                : null,
+                                          ),
+                                          child: Text(
+                                            '$preset reps',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 140),
