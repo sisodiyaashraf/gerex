@@ -298,10 +298,10 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
+          SliverPadding(
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                   if (_showReminderBanner && provider.nextReminderDate != null) ...[
                     PastelGradientCard(
                       type: PastelCardType.indigo,
