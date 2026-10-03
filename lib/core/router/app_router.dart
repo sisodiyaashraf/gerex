@@ -6,7 +6,6 @@ import '../../features/workout/presentation/providers/workout_provider.dart';
 import '../../features/nutrition/presentation/providers/meal_provider.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/challenges/presentation/screens/select_challenge_screen.dart';
 import '../../features/challenges/presentation/screens/challenge_detail_screen.dart';
